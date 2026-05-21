@@ -6,6 +6,6 @@ import retrofit2.http.GET
 
 interface CategoriaApi {
     @GET("categorias")
-    suspend fun listarCategories(): List<CategoriaDto>
+    suspend fun listarCategorias(): List<CategoriaDto>
 
 }

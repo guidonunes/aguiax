@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.data.remote
 
+import br.com.fiap.aguiaexpress.data.remote.api.CategoriaApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -22,4 +23,6 @@ object RetrofitClient {
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
+
+    val categoriaApi: CategoriaApi = retrofit.create(CategoriaApi::class.java)
 }
