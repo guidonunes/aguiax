@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress.data.remote
 
 import br.com.fiap.aguiaexpress.data.remote.api.CategoriaApi
+import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
 import br.com.fiap.aguiaexpress.data.remote.api.OrientacaoApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -27,4 +28,5 @@ object RetrofitClient {
 
     val categoriaApi: CategoriaApi = retrofit.create(CategoriaApi::class.java)
     val orientacaoApi: OrientacaoApi = retrofit.create(OrientacaoApi::class.java)
+    val ideiaApi: IdeiaApi = retrofit.create(IdeiaApi::class.java)
 }
