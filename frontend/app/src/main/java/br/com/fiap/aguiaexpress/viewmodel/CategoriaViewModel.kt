@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 data class CategoriaUiState(
     val isLoading: Boolean = false,
     val categorias: List<Categoria> = emptyList(),
-    val error: String? = null
+    val errorMessage: String? = null
 )
 
 class CategoriaViewModel: ViewModel() {
@@ -23,11 +23,14 @@ class CategoriaViewModel: ViewModel() {
     private val _uiState = MutableStateFlow(CategoriaUiState())
     val uiState = _uiState.asStateFlow()
 
+    init {
+        carregarCategorias()
+    }
     fun carregarCategorias() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
-                error = null
+                errorMessage = null
                 )
 
             repository.listarCategorias()
@@ -35,21 +38,21 @@ class CategoriaViewModel: ViewModel() {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         categorias = categorias,
-                        error = null
+                        errorMessage = null
                     )
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         categorias = emptyList(),
-                        error = error.message
+                        errorMessage = error.message
                     )
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         categorias = emptyList(),
-                        error = error.message ?: "Erro ao carregar categorias"
+                        errorMessage = error.message ?: "Erro ao carregar categorias"
                     )
                 }
         }
