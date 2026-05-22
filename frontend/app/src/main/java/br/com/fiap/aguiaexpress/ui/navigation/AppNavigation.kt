@@ -4,10 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import br.com.fiap.aguiaexpress.ui.screens.IdeiasScreen
 import br.com.fiap.aguiaexpress.ui.screens.MedalhasScreen
 import br.com.fiap.aguiaexpress.ui.screens.categorias.CategoriasScreen
 import br.com.fiap.aguiaexpress.ui.screens.home.HomeScreen
-import br.com.fiap.aguiaexpress.ui.screens.ideias.IdeiasScreen
+import br.com.fiap.aguiaexpress.ui.screens.ideias.CriarIdeiaScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.OrientacoesScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.ProjetosScreen
 
@@ -39,7 +40,15 @@ fun AppNavigation() {
         }
 
         composable(Routes.IDEIAS) {
-            IdeiasScreen()
+            IdeiasScreen(
+                onCriarIdeiaClick = {
+                    navController.navigate(Routes.CRIAR_IDEIA)
+                }
+            )
+        }
+
+        composable(Routes.CRIAR_IDEIA) {
+            CriarIdeiaScreen()
         }
 
         composable(Routes.PROJETOS) {

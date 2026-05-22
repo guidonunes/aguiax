@@ -1,5 +1,5 @@
 package br.com.fiap.aguiaexpress.core.session
 
 object SessionMock {
-    const val USUARIO_ID = 1L
+    const val USUARIO_ID = 2L
 }

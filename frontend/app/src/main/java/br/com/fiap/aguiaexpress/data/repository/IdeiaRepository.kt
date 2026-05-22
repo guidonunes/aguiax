@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.data.repository
 
+import br.com.fiap.aguiaexpress.data.dto.CriarIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.toDomain
 import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
 import br.com.fiap.aguiaexpress.domain.model.Ideia
@@ -26,6 +27,16 @@ class IdeiaRepository(
             val ideia = ideiaApi.buscarIdeiaPorId(id).toDomain()
 
             Result.success(ideia)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun criarIdeia(request: CriarIdeiaRequestDto): Result<Ideia> {
+        return try {
+            val ideiaCriada = ideiaApi.criarIdeia(request).toDomain()
+
+            Result.success(ideiaCriada)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -1,13 +1,16 @@
-package br.com.fiap.aguiaexpress.ui.screens.ideias
+package br.com.fiap.aguiaexpress.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +32,7 @@ import br.com.fiap.aguiaexpress.viewmodel.IdeiaViewModel
 
 @Composable
 fun IdeiasScreen(
+    onCriarIdeiaClick: () -> Unit,
     viewModel: IdeiaViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -42,6 +46,15 @@ fun IdeiasScreen(
             text = "Ideias",
             style = MaterialTheme.typography.headlineMedium
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = onCriarIdeiaClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Cadastrar nova ideia")
+        }
 
         when {
             uiState.isLoading -> {
@@ -150,6 +163,8 @@ private fun IdeiaCard(
 @Composable
 private fun IdeiasScreenPreview() {
     AguiaExpressTheme {
-        IdeiasScreen()
+        IdeiasScreen(
+            onCriarIdeiaClick = {}
+        )
     }
 }
