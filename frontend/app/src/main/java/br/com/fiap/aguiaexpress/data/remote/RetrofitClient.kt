@@ -1,8 +1,10 @@
 package br.com.fiap.aguiaexpress.data.remote
 
+import br.com.fiap.aguiaexpress.data.remote.api.BadgeApi
 import br.com.fiap.aguiaexpress.data.remote.api.CategoriaApi
 import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
 import br.com.fiap.aguiaexpress.data.remote.api.OrientacaoApi
+import br.com.fiap.aguiaexpress.data.remote.api.UsuarioBadgeApi
 import br.com.fiap.aguiaexpress.data.remote.api.VotoIdeiaApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -31,4 +33,8 @@ object RetrofitClient {
     val orientacaoApi: OrientacaoApi = retrofit.create(OrientacaoApi::class.java)
     val ideiaApi: IdeiaApi = retrofit.create(IdeiaApi::class.java)
     val votoIdeiaApi: VotoIdeiaApi = retrofit.create(VotoIdeiaApi::class.java)
+
+    val badgeApi: BadgeApi = retrofit.create(BadgeApi::class.java)
+
+    val usuarioBadgeApi: UsuarioBadgeApi = retrofit.create(UsuarioBadgeApi::class.java)
 }
