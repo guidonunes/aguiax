@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.aguiaexpress.domain.model.Ideia
+import br.com.fiap.aguiaexpress.domain.model.StatusIdeia
 import br.com.fiap.aguiaexpress.ui.components.EmptyState
 import br.com.fiap.aguiaexpress.ui.components.ErrorMessage
 import br.com.fiap.aguiaexpress.ui.components.LoadingIndicator
@@ -76,7 +79,13 @@ fun IdeiasScreen(
 
             else -> {
                 IdeiaList(
-                    ideias = uiState.ideias
+                    ideias = uiState.ideias,
+                    onAtualizarStatus = { ideiaId, status ->
+                        viewModel.atualizarStatusIdeia(
+                            ideiaId = ideiaId,
+                            status = status
+                        )
+                    }
                 )
             }
         }
@@ -85,7 +94,8 @@ fun IdeiasScreen(
 
 @Composable
 private fun IdeiaList(
-    ideias: List<Ideia>
+    ideias: List<Ideia>,
+    onAtualizarStatus: (Long, StatusIdeia) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -93,14 +103,18 @@ private fun IdeiaList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(ideias) { ideia ->
-            IdeiaCard(ideia = ideia)
+            IdeiaCard(
+                ideia = ideia,
+                onAtualizarStatus = onAtualizarStatus
+            )
         }
     }
 }
 
 @Composable
 private fun IdeiaCard(
-    ideia: Ideia
+    ideia: Ideia,
+    onAtualizarStatus: (Long, StatusIdeia) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -153,9 +167,44 @@ private fun IdeiaCard(
             Column(
                 modifier = Modifier.padding(top = 12.dp)
             ) {
-                StatusTag(text = ideia.status)
+                StatusTag(text = formatarStatusIdeia(ideia.status))
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        onAtualizarStatus(ideia.id, StatusIdeia.PRIORIZADA)
+                    }
+                ) {
+                    Text("Priorizar")
+                }
+
+                Button(
+                    onClick = {
+                        onAtualizarStatus(ideia.id, StatusIdeia.APROVADA)
+                    }
+                ) {
+                    Text("Aprovar")
+                }
+            }
+
         }
+    }
+}
+
+private fun formatarStatusIdeia(status: String): String {
+    return when (status) {
+        "NOVA" -> "Nova"
+        "EM_ANALISE" -> "Em análise"
+        "PRIORIZADA" -> "Priorizada"
+        "APROVADA" -> "Aprovada"
+        "REJEITADA" -> "Rejeitada"
+        "CONVERTIDA_EM_PROJETO" -> "Convertida em projeto"
+        else -> status
     }
 }
 

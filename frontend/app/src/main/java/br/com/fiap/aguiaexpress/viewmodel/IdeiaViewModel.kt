@@ -11,6 +11,7 @@ import br.com.fiap.aguiaexpress.data.repository.OrientacaoRepository
 import br.com.fiap.aguiaexpress.domain.model.Categoria
 import br.com.fiap.aguiaexpress.domain.model.Ideia
 import br.com.fiap.aguiaexpress.domain.model.Orientacao
+import br.com.fiap.aguiaexpress.domain.model.StatusIdeia
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -185,6 +186,26 @@ class IdeiaViewModel : ViewModel() {
                 orientacoes = orientacoes,
                 errorMessage = errorMessage
             )
+        }
+    }
+
+    fun atualizarStatusIdeia(
+        ideiaId: Long,
+        status: StatusIdeia
+    ) {
+        viewModelScope.launch {
+            repository.atualizarStatus(
+                ideiaId = ideiaId,
+                status = status.name
+            )
+                .onSuccess {
+                    carregarIdeias()
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = error.message ?: "Erro ao atualizar status da ideia"
+                    )
+                }
         }
     }
 }

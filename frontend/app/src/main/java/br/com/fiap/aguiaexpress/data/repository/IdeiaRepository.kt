@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.data.repository
 
+import br.com.fiap.aguiaexpress.data.dto.AtualizarStatusIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.CriarIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.toDomain
 import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
@@ -37,6 +38,26 @@ class IdeiaRepository(
             val ideiaCriada = ideiaApi.criarIdeia(request).toDomain()
 
             Result.success(ideiaCriada)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun atualizarStatus(
+        ideiaId: Long,
+        status: String
+    ): Result<Ideia> {
+        return try {
+            val request = AtualizarStatusIdeiaRequestDto(
+                status = status
+            )
+
+            val ideiaAtualizada = ideiaApi.atualizarStatusIdeia(
+                id = ideiaId,
+                request = request
+            ).toDomain()
+
+            Result.success(ideiaAtualizada)
         } catch (e: Exception) {
             Result.failure(e)
         }
