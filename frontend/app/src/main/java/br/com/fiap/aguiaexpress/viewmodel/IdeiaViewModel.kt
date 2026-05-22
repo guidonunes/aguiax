@@ -8,6 +8,7 @@ import br.com.fiap.aguiaexpress.data.remote.RetrofitClient
 import br.com.fiap.aguiaexpress.data.repository.CategoriaRepository
 import br.com.fiap.aguiaexpress.data.repository.IdeiaRepository
 import br.com.fiap.aguiaexpress.data.repository.OrientacaoRepository
+import br.com.fiap.aguiaexpress.data.repository.VotoIdeiaRepository
 import br.com.fiap.aguiaexpress.domain.model.Categoria
 import br.com.fiap.aguiaexpress.domain.model.Ideia
 import br.com.fiap.aguiaexpress.domain.model.Orientacao
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 data class IdeiaUiState(
     val isLoading: Boolean = false,
     val ideias: List<Ideia> = emptyList(),
+    val votosPorIdeia: Map<Long, Int> = emptyMap(),
     val errorMessage: String? = null
 )
 
@@ -71,9 +73,12 @@ class IdeiaViewModel : ViewModel() {
 
             repository.listarIdeias()
                 .onSuccess { ideias ->
+                    val votosPorIdeia = buscarQuantidadeVotosPorIdeia(ideias)
+
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         ideias = ideias,
+                        votosPorIdeia = votosPorIdeia,
                         errorMessage = null
                     )
                 }
@@ -110,6 +115,9 @@ class IdeiaViewModel : ViewModel() {
         _criarIdeiaUiState.value = _criarIdeiaUiState.value.copy(orientacaoId = orientacaoId)
     }
 
+    private val votoIdeiaRepository = VotoIdeiaRepository(
+        votoIdeiaApi = RetrofitClient.votoIdeiaApi
+    )
     fun criarIdeia() {
         val state = _criarIdeiaUiState.value
 
@@ -207,5 +215,57 @@ class IdeiaViewModel : ViewModel() {
                     )
                 }
         }
+    }
+
+    fun votarIdeia(ideiaId: Long) {
+        viewModelScope.launch {
+            votoIdeiaRepository.votarIdeia(
+                usuarioId = SessionMock.USUARIO_ID,
+                ideiaId = ideiaId
+            )
+                .onSuccess {
+                    carregarIdeias()
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = error.message ?: "Erro ao votar na ideia"
+                    )
+                }
+        }
+    }
+
+    fun removerVotoIdeia(ideiaId: Long) {
+        viewModelScope.launch {
+            votoIdeiaRepository.removerVotoIdeia(
+                usuarioId = SessionMock.USUARIO_ID,
+                ideiaId = ideiaId
+            )
+                .onSuccess {
+                    carregarIdeias()
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = error.message ?: "Erro ao remover voto da ideia"
+                    )
+                }
+        }
+    }
+
+    private suspend fun buscarQuantidadeVotosPorIdeia(
+        ideias: List<Ideia>
+    ): Map<Long, Int> {
+        val votosMap = mutableMapOf<Long, Int>()
+
+        ideias.forEach { ideia ->
+            votoIdeiaRepository.listarVotosPorIdeia(ideia.id)
+                .onSuccess { votos ->
+                    votosMap[ideia.id] = votos.size
+                }
+                .onFailure {
+                    votosMap[ideia.id] = 0
+                }
+        }
+
+        return votosMap
     }
 }

@@ -80,6 +80,13 @@ fun IdeiasScreen(
             else -> {
                 IdeiaList(
                     ideias = uiState.ideias,
+                    quantidadeVotos = uiState.votosPorIdeia,
+                    onVotarClick = { ideiaId ->
+                        viewModel.votarIdeia(ideiaId)
+                    },
+                    onRemoverVotoClick = { ideiaId ->
+                        viewModel.removerVotoIdeia(ideiaId)
+                    },
                     onAtualizarStatus = { ideiaId, status ->
                         viewModel.atualizarStatusIdeia(
                             ideiaId = ideiaId,
@@ -95,7 +102,10 @@ fun IdeiasScreen(
 @Composable
 private fun IdeiaList(
     ideias: List<Ideia>,
-    onAtualizarStatus: (Long, StatusIdeia) -> Unit
+    quantidadeVotos: Map<Long, Int>,
+    onAtualizarStatus: (Long, StatusIdeia) -> Unit,
+    onVotarClick: (Long) -> Unit,
+    onRemoverVotoClick: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -105,7 +115,10 @@ private fun IdeiaList(
         items(ideias) { ideia ->
             IdeiaCard(
                 ideia = ideia,
-                onAtualizarStatus = onAtualizarStatus
+                quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
+                onAtualizarStatus = onAtualizarStatus,
+                onVotarClick = onVotarClick,
+                onRemoverVotoClick = onRemoverVotoClick
             )
         }
     }
@@ -114,7 +127,10 @@ private fun IdeiaList(
 @Composable
 private fun IdeiaCard(
     ideia: Ideia,
-    onAtualizarStatus: (Long, StatusIdeia) -> Unit
+    quantidadeVotos: Int,
+    onAtualizarStatus: (Long, StatusIdeia) -> Unit,
+    onVotarClick: (Long) -> Unit,
+    onRemoverVotoClick: (Long) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -170,6 +186,37 @@ private fun IdeiaCard(
                 StatusTag(text = formatarStatusIdeia(ideia.status))
             }
 
+            Text(
+                text = "Votos: $quantidadeVotos",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        onVotarClick(ideia.id)
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = "Votar")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        onRemoverVotoClick(ideia.id)
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = "Remover voto")
+                }
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
@@ -214,6 +261,7 @@ private fun IdeiasScreenPreview() {
     AguiaExpressTheme {
         IdeiasScreen(
             onCriarIdeiaClick = {}
+
         )
     }
 }
