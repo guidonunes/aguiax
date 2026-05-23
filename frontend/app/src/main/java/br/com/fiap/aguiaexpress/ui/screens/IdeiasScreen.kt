@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.AlertDialog
@@ -55,6 +57,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 
 @Composable
 fun IdeiasScreen(
@@ -205,6 +211,10 @@ private fun IdeiaCard(
     onEditarClick: (Long) -> Unit,
     onExcluirClick: (Long) -> Unit
 ) {
+
+    var menuExpanded by remember { mutableStateOf(false) }
+    var detalhesExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -216,7 +226,7 @@ private fun IdeiaCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            var menuExpanded by remember { mutableStateOf(false) }
+
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -252,7 +262,10 @@ private fun IdeiaCard(
                         expanded = menuExpanded,
                         onDismissRequest = {
                             menuExpanded = false
-                        }
+                        },
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 0.dp,
+                        shadowElevation = 4.dp
                     ) {
                         DropdownMenuItem(
                             text = {
@@ -287,30 +300,60 @@ private fun IdeiaCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            InfoText(
-                label = "Problema",
-                value = ideia.problema
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = {
+                        detalhesExpanded = !detalhesExpanded
+                    }
+                ) {
+                    Text(
+                        text = if (detalhesExpanded) {
+                            "Ocultar detalhes"
+                        } else {
+                            "Ver detalhes"
+                        }
+                    )
 
-            InfoText(
-                label = "Solução proposta",
-                value = ideia.solucaoProposta
-            )
+                    Icon(
+                        imageVector = if (detalhesExpanded) {
+                            Icons.Default.KeyboardArrowUp
+                        } else {
+                            Icons.Default.KeyboardArrowDown
+                        },
+                        contentDescription = null
+                    )
+                }
+            }
 
-            InfoText(
-                label = "Categoria",
-                value = ideia.nomeCategoria
-            )
+            if (detalhesExpanded) {
+                InfoText(
+                    label = "Problema",
+                    value = ideia.problema
+                )
 
-            InfoText(
-                label = "Orientação",
-                value = ideia.tituloOrientacao
-            )
+                InfoText(
+                    label = "Solução proposta",
+                    value = ideia.solucaoProposta
+                )
 
-            InfoText(
-                label = "Autor",
-                value = ideia.nomeUsuario
-            )
+                InfoText(
+                    label = "Orientação",
+                    value = ideia.tituloOrientacao
+                )
+
+                InfoText(
+                    label = "Autor",
+                    value = ideia.nomeUsuario
+                )
+
+                InfoText(
+                    label = "Categoria",
+                    value = ideia.nomeCategoria
+                )
+            }
 
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -378,7 +421,15 @@ private fun InfoText(
     value: String
 ) {
     Text(
-        text = "$label: $value",
+        text = buildAnnotatedString {
+            withStyle(
+                style = SpanStyle(fontWeight = FontWeight.Bold)
+            ) {
+                append("$label: ")
+            }
+
+            append(value)
+        },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 4.dp)
