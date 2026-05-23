@@ -62,4 +62,32 @@ class IdeiaRepository(
             Result.failure(e)
         }
     }
+
+    suspend fun deletarIdeia(
+        ideiaId: Long
+    ): Result<Unit> {
+        return try {
+            ideiaApi.deletarIdeia(id = ideiaId)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun editarIdeia(
+        ideiaId: Long,
+        request: CriarIdeiaRequestDto
+    ): Result<Ideia> {
+        return try {
+            val ideiaAtualizada = ideiaApi.editarIdeia(
+                id = ideiaId,
+                request = request
+            ).toDomain()
+
+            Result.success(ideiaAtualizada)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

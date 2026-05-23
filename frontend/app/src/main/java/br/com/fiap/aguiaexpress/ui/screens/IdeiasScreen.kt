@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,14 +51,35 @@ import br.com.fiap.aguiaexpress.ui.components.LoadingIndicator
 import br.com.fiap.aguiaexpress.ui.components.StatusTag
 import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
 import br.com.fiap.aguiaexpress.viewmodel.IdeiaViewModel
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
 fun IdeiasScreen(
     onCriarIdeiaClick: () -> Unit,
+    onEditarClick: (Long) -> Unit,
     viewModel: IdeiaViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var ideiaIdParaExcluir by remember { mutableStateOf<Long?>(null) }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.carregarIdeias()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
         Column(
             modifier = Modifier
@@ -96,18 +119,52 @@ fun IdeiasScreen(
                             )
                         },
                         onEditarClick = { ideiaId ->
-                            // TODO: navegar para tela de edição
+                            onEditarClick(ideiaId)
                         },
                         onExcluirClick = { ideiaId ->
-                            // TODO: chamar função de deletar ideia
+                            ideiaIdParaExcluir = ideiaId
                         }
                     )
                 }
             }
         }
+
+    if (ideiaIdParaExcluir != null) {
+        AlertDialog(
+            onDismissRequest = {
+                ideiaIdParaExcluir = null
+            },
+            title = {
+                Text(text = "Excluir ideia")
+            },
+            text = {
+                Text(text = "Tem certeza que deseja excluir esta ideia? Esta ação não pode ser desfeita.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        ideiaIdParaExcluir?.let { ideiaId ->
+                            viewModel.deletarIdeia(ideiaId)
+                        }
+
+                        ideiaIdParaExcluir = null
+                    }
+                ) {
+                    Text(text = "Excluir")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        ideiaIdParaExcluir = null
+                    }
+                ) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
     }
-
-
+}
 
 @Composable
 private fun IdeiaList(
@@ -345,7 +402,8 @@ private fun formatarStatusIdeia(status: String): String {
 private fun IdeiasScreenPreview() {
     AguiaExpressTheme {
         IdeiasScreen(
-            onCriarIdeiaClick = {}
+            onCriarIdeiaClick = {},
+            onEditarClick = {}
 
         )
     }

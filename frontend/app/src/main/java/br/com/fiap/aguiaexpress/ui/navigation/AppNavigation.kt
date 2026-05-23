@@ -33,6 +33,10 @@ import br.com.fiap.aguiaexpress.ui.screens.medalhas.MedalhasScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.OrientacoesScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.ProjetosScreen
 import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
+
 
 private data class BottomNavItem(
     val route: String,
@@ -148,6 +152,9 @@ fun AppNavigation() {
                 IdeiasScreen(
                     onCriarIdeiaClick = {
                         navController.navigate(Routes.CRIAR_IDEIA)
+                    },
+                    onEditarClick = { ideiaId ->
+                        navController.navigate(Routes.editarIdeiaRoute(ideiaId))
                     }
                 )
             }
@@ -162,6 +169,24 @@ fun AppNavigation() {
 
             composable(Routes.MEDALHAS) {
                 MedalhasScreen()
+            }
+
+            composable(
+                route = "${Routes.EDITAR_IDEIA}/{ideiaId}",
+                arguments = listOf(
+                    navArgument("ideiaId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val ideiaId = backStackEntry.arguments?.getLong("ideiaId") ?: return@composable
+
+                EditarIdeiaScreen(
+                    ideiaId = ideiaId,
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }
