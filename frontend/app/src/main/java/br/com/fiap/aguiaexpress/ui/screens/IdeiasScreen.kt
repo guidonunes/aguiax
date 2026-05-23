@@ -92,6 +92,22 @@ fun IdeiasScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
+            Text(
+                text = "Feed de Ideias",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Acompanhe, vote e interaja com as ideias cadastradas.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             when {
                 uiState.isLoading -> {
                     LoadingIndicator(message = "Carregando ideias...")
