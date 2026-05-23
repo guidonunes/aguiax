@@ -36,6 +36,9 @@ import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 
 
 private data class BottomNavItem(
@@ -160,7 +163,11 @@ fun AppNavigation() {
             }
 
             composable(Routes.CRIAR_IDEIA) {
-                CriarIdeiaScreen()
+                CriarIdeiaScreen(
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    }
+                )
             }
 
             composable(Routes.PROJETOS) {
@@ -191,6 +198,8 @@ fun AppNavigation() {
         }
     }
 }
+
+
 
 @Preview(showBackground = false)
 @Composable
