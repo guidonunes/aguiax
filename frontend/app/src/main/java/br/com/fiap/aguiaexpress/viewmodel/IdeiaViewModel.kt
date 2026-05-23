@@ -21,6 +21,7 @@ data class IdeiaUiState(
     val isLoading: Boolean = false,
     val ideias: List<Ideia> = emptyList(),
     val votosPorIdeia: Map<Long, Int> = emptyMap(),
+    val ideiasVotadasPeloUsuario: Set<Long> = emptySet(),
     val errorMessage: String? = null
 )
 
@@ -75,10 +76,19 @@ class IdeiaViewModel : ViewModel() {
                 .onSuccess { ideias ->
                     val votosPorIdeia = buscarQuantidadeVotosPorIdeia(ideias)
 
+                    val votosUsuario = votoIdeiaRepository
+                        .listarVotosPorUsuario(SessionMock.USUARIO_ID)
+                        .getOrElse { emptyList() }
+
+                    val ideiasVotadasPeloUsuario = votosUsuario
+                        .map { voto -> voto.ideiaId }
+                        .toSet()
+
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         ideias = ideias,
                         votosPorIdeia = votosPorIdeia,
+                        ideiasVotadasPeloUsuario = ideiasVotadasPeloUsuario,
                         errorMessage = null
                     )
                 }
@@ -267,5 +277,39 @@ class IdeiaViewModel : ViewModel() {
         }
 
         return votosMap
+    }
+
+    fun alternarVotoIdeia(ideiaId: Long) {
+        val usuarioJaVotou = _uiState.value.ideiasVotadasPeloUsuario.contains(ideiaId)
+
+        viewModelScope.launch {
+            if (usuarioJaVotou) {
+                votoIdeiaRepository.removerVotoIdeia(
+                    usuarioId = SessionMock.USUARIO_ID,
+                    ideiaId = ideiaId
+                )
+                    .onSuccess {
+                        carregarIdeias()
+                    }
+                    .onFailure { error ->
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = error.message ?: "Erro ao remover voto"
+                        )
+                    }
+            } else {
+                votoIdeiaRepository.votarIdeia(
+                    usuarioId = SessionMock.USUARIO_ID,
+                    ideiaId = ideiaId
+                )
+                    .onSuccess {
+                        carregarIdeias()
+                    }
+                    .onFailure { error ->
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = error.message ?: "Erro ao votar na ideia"
+                        )
+                    }
+            }
+        }
     }
 }

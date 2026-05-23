@@ -9,17 +9,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,72 +57,67 @@ fun IdeiasScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text(
-            text = "Ideias",
-            style = MaterialTheme.typography.headlineMedium
-        )
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = onCriarIdeiaClick,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
         ) {
-            Text(text = "Cadastrar nova ideia")
-        }
+            when {
+                uiState.isLoading -> {
+                    LoadingIndicator(message = "Carregando ideias...")
+                }
 
-        when {
-            uiState.isLoading -> {
-                LoadingIndicator(message = "Carregando ideias...")
-            }
+                uiState.errorMessage != null -> {
+                    ErrorMessage(
+                        message = uiState.errorMessage ?: "Erro ao carregar ideias",
+                        onRetry = {
+                            viewModel.carregarIdeias()
+                        }
+                    )
+                }
 
-            uiState.errorMessage != null -> {
-                ErrorMessage(
-                    message = uiState.errorMessage ?: "Erro ao carregar ideias",
-                    onRetry = {
-                        viewModel.carregarIdeias()
-                    }
-                )
-            }
+                uiState.ideias.isEmpty() -> {
+                    EmptyState(message = "Nenhuma ideia encontrada.")
+                }
 
-            uiState.ideias.isEmpty() -> {
-                EmptyState(message = "Nenhuma ideia encontrada.")
-            }
-
-            else -> {
-                IdeiaList(
-                    ideias = uiState.ideias,
-                    quantidadeVotos = uiState.votosPorIdeia,
-                    onVotarClick = { ideiaId ->
-                        viewModel.votarIdeia(ideiaId)
-                    },
-                    onRemoverVotoClick = { ideiaId ->
-                        viewModel.removerVotoIdeia(ideiaId)
-                    },
-                    onAtualizarStatus = { ideiaId, status ->
-                        viewModel.atualizarStatusIdeia(
-                            ideiaId = ideiaId,
-                            status = status
-                        )
-                    }
-                )
+                else -> {
+                    IdeiaList(
+                        ideias = uiState.ideias,
+                        quantidadeVotos = uiState.votosPorIdeia,
+                        ideiasVotadasPeloUsuario = uiState.ideiasVotadasPeloUsuario,
+                        onAlternarVotoClick = { ideiaId ->
+                            viewModel.alternarVotoIdeia(ideiaId)
+                        },
+                        onAtualizarStatus = { ideiaId, status ->
+                            viewModel.atualizarStatusIdeia(
+                                ideiaId = ideiaId,
+                                status = status
+                            )
+                        },
+                        onEditarClick = { ideiaId ->
+                            // TODO: navegar para tela de edição
+                        },
+                        onExcluirClick = { ideiaId ->
+                            // TODO: chamar função de deletar ideia
+                        }
+                    )
+                }
             }
         }
     }
-}
+
+
 
 @Composable
 private fun IdeiaList(
     ideias: List<Ideia>,
     quantidadeVotos: Map<Long, Int>,
+    ideiasVotadasPeloUsuario: Set<Long>,
+    onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatus: (Long, StatusIdeia) -> Unit,
-    onVotarClick: (Long) -> Unit,
-    onRemoverVotoClick: (Long) -> Unit
+    onEditarClick: (Long) -> Unit,
+    onExcluirClick: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -116,9 +128,11 @@ private fun IdeiaList(
             IdeiaCard(
                 ideia = ideia,
                 quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
+                usuarioJaVotou = ideiasVotadasPeloUsuario.contains(ideia.id),
+                onAlternarVotoClick = onAlternarVotoClick,
                 onAtualizarStatus = onAtualizarStatus,
-                onVotarClick = onVotarClick,
-                onRemoverVotoClick = onRemoverVotoClick
+                onEditarClick = onEditarClick,
+                onExcluirClick = onExcluirClick
             )
         }
     }
@@ -128,119 +142,190 @@ private fun IdeiaList(
 private fun IdeiaCard(
     ideia: Ideia,
     quantidadeVotos: Int,
+    usuarioJaVotou: Boolean,
+    onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatus: (Long, StatusIdeia) -> Unit,
-    onVotarClick: (Long) -> Unit,
-    onRemoverVotoClick: (Long) -> Unit
+    onEditarClick: (Long) -> Unit,
+    onExcluirClick: (Long) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = ideia.titulo,
-                style = MaterialTheme.typography.titleMedium
-            )
+            var menuExpanded by remember { mutableStateOf(false) }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = ideia.titulo,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatusTag(text = formatarStatusIdeia(ideia.status))
+
+                    IconButton(
+                        onClick = {
+                            menuExpanded = true
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Mais opções"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = {
+                            menuExpanded = false
+                        }
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text("Editar")
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onEditarClick(ideia.id)
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = {
+                                Text("Excluir")
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onExcluirClick(ideia.id)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = ideia.descricao,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Text(
-                text = "Problema: ${ideia.problema}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Text(
-                text = "Solução proposta: ${ideia.solucaoProposta}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            Text(
-                text = "Categoria: ${ideia.nomeCategoria}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Text(
-                text = "Orientação: ${ideia.tituloOrientacao}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            Text(
-                text = "Autor: ${ideia.nomeUsuario}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            Column(
-                modifier = Modifier.padding(top = 12.dp)
-            ) {
-                StatusTag(text = formatarStatusIdeia(ideia.status))
-            }
-
-            Text(
-                text = "Votos: $quantidadeVotos",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            InfoText(
+                label = "Problema",
+                value = ideia.problema
+            )
+
+            InfoText(
+                label = "Solução proposta",
+                value = ideia.solucaoProposta
+            )
+
+            InfoText(
+                label = "Categoria",
+                value = ideia.nomeCategoria
+            )
+
+            InfoText(
+                label = "Orientação",
+                value = ideia.tituloOrientacao
+            )
+
+            InfoText(
+                label = "Autor",
+                value = ideia.nomeUsuario
+            )
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = {
-                        onVotarClick(ideia.id)
-                    },
-                    modifier = Modifier.weight(1f)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Votar")
+                    IconButton(
+                        onClick = {
+                            onAlternarVotoClick(ideia.id)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp,
+                            contentDescription = if (usuarioJaVotou) "Remover voto" else "Votar",
+                            tint = if (usuarioJaVotou) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+
+                    Text(
+                        text = quantidadeVotos.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
-                OutlinedButton(
-                    onClick = {
-                        onRemoverVotoClick(ideia.id)
-                    },
-                    modifier = Modifier.weight(1f)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "Remover voto")
+                    OutlinedButton(
+                        onClick = {
+                            onAtualizarStatus(ideia.id, StatusIdeia.PRIORIZADA)
+                        }
+                    ) {
+                        Text("Priorizar")
+                    }
+
+                    Button(
+                        onClick = {
+                            onAtualizarStatus(ideia.id, StatusIdeia.APROVADA)
+                        }
+                    ) {
+                        Text("Aprovar")
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        onAtualizarStatus(ideia.id, StatusIdeia.PRIORIZADA)
-                    }
-                ) {
-                    Text("Priorizar")
-                }
-
-                Button(
-                    onClick = {
-                        onAtualizarStatus(ideia.id, StatusIdeia.APROVADA)
-                    }
-                ) {
-                    Text("Aprovar")
-                }
-            }
-
         }
     }
+}
+
+@Composable
+private fun InfoText(
+    label: String,
+    value: String
+) {
+    Text(
+        text = "$label: $value",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 4.dp)
+    )
 }
 
 private fun formatarStatusIdeia(status: String): String {

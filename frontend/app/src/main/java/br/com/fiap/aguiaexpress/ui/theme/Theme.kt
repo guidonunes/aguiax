@@ -9,35 +9,72 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = AguiaRed,
+    onPrimary = AguiaWhite,
+    primaryContainer = AguiaDarkRed,
+    onPrimaryContainer = AguiaWhite,
+
+    secondary = AguiaLightGrey,
+    onSecondary = AguiaBlack,
+    secondaryContainer = AguiaDarkGrey,
+    onSecondaryContainer = AguiaWhite,
+
+    tertiary = AguiaGrey,
+    onTertiary = AguiaWhite,
+
+    background = AguiaBlack,
+    onBackground = AguiaWhite,
+
+    surface = AguiaDarkGrey,
+    onSurface = AguiaWhite,
+
+    surfaceVariant = Color(0xFF3A3A3A),
+    onSurfaceVariant = Color(0xFFE0E0E0),
+
+    outline = Color(0xFF9E9E9E),
+
+    error = Color(0xFFFF5252),
+    onError = AguiaWhite
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = AguiaRed,
+    onPrimary = AguiaWhite,
+    primaryContainer = Color(0xFFFFDAD6),
+    onPrimaryContainer = Color(0xFF410002),
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    secondary = AguiaDarkGrey,
+    onSecondary = AguiaWhite,
+    secondaryContainer = AguiaLightGrey,
+    onSecondaryContainer = AguiaBlack,
+
+    tertiary = AguiaGrey,
+    onTertiary = AguiaWhite,
+
+    background = AguiaBackground,
+    onBackground = AguiaBlack,
+
+    surface = AguiaWhite,
+    onSurface = AguiaBlack,
+
+    surfaceVariant = Color(0xFFF1F1F1),
+    onSurfaceVariant = AguiaDarkGrey,
+
+    outline = Color(0xFFBDBDBD),
+
+    error = AguiaRed,
+    onError = AguiaWhite
 )
 
 @Composable
 fun AguiaExpressTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

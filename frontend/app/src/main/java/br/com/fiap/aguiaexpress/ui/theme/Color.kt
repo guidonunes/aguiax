@@ -2,10 +2,14 @@ package br.com.fiap.aguiaexpress.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Brand colors
+val AguiaRed = Color(0xFFD32F2F)
+val AguiaDarkRed = Color(0xFF9A1B1B)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Neutral colors
+val AguiaBlack = Color(0xFF111111)
+val AguiaDarkGrey = Color(0xFF2B2B2B)
+val AguiaGrey = Color(0xFF757575)
+val AguiaLightGrey = Color(0xFFE5E5E5)
+val AguiaBackground = Color(0xFFFAFAFA)
+val AguiaWhite = Color(0xFFFFFFFF)
