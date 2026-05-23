@@ -3,8 +3,10 @@ package br.com.fiap.aguiaexpress.ui.screens.orientacoes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +27,12 @@ import br.com.fiap.aguiaexpress.ui.components.ErrorMessage
 import br.com.fiap.aguiaexpress.ui.components.LoadingIndicator
 import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
 import br.com.fiap.aguiaexpress.viewmodel.OrientacaoViewModel
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun OrientacoesScreen(
@@ -39,8 +47,19 @@ fun OrientacoesScreen(
     ) {
         Text(
             text = "Orientações Estratégicas",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Consulte as diretrizes que ajudam a guiar ideias e projetos.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         when {
             uiState.isLoading -> {
@@ -61,9 +80,7 @@ fun OrientacoesScreen(
             }
 
             else -> {
-                OrientacaoList(
-                    orientacoes = uiState.orientacoes
-                )
+                OrientacaoList(orientacoes = uiState.orientacoes)
             }
         }
     }
@@ -75,7 +92,7 @@ private fun OrientacaoList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 16.dp),
+        contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(orientacoes) { orientacao ->
@@ -90,6 +107,10 @@ private fun OrientacaoCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -97,28 +118,52 @@ private fun OrientacaoCard(
         ) {
             Text(
                 text = orientacao.titulo,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = orientacao.descricao,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Text(
-                text = "Área: ${orientacao.areaEstrategica}",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            InfoText(
+                label = "Área",
+                value = orientacao.areaEstrategica
             )
 
-            Text(
-                text = "Criado por: ${orientacao.nomeUsuario} (${orientacao.perfilUsuario})",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp)
+            InfoText(
+                label = "Criado por",
+                value = "${orientacao.nomeUsuario} (${orientacao.perfilUsuario})"
             )
         }
     }
+}
+
+@Composable
+private fun InfoText(
+    label: String,
+    value: String
+) {
+    Text(
+        text = buildAnnotatedString {
+            withStyle(
+                style = SpanStyle(fontWeight = FontWeight.Bold)
+            ) {
+                append("$label: ")
+            }
+
+            append(value)
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 4.dp)
+    )
 }
 
 @Preview(showBackground = true)
