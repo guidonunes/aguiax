@@ -1,17 +1,18 @@
 package br.com.fiap.aguiaexpress.model;
 
 public enum NomePerfil {
+
     OPERACIONAL("ROLE_OPERACIONAL"),
     GESTOR("ROLE_GESTOR"),
     LIDER("ROLE_LIDER");
 
-    private final String perfil;
+    private final String role;
 
-    NomePerfil(String perfil) {
-        this.perfil = perfil;
+    NomePerfil(String role) {
+        this.role = role;
     }
 
-    public String getPerfil() {
-        return this.perfil;
+    public String getRole() {
+        return role;
     }
 }

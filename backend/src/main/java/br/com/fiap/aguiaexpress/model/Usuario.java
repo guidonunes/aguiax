@@ -2,8 +2,13 @@ package br.com.fiap.aguiaexpress.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "t_usuarios")
-public class Usuario {
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,8 +33,8 @@ public class Usuario {
     @Column(name = "ds_email", nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(name = "ds_senha", nullable = false, length = 255)
-    private String senha;
+    @Column(name = "ds_senha_hash", nullable = false, length = 255)
+    private String senhaHash;
 
     @Column(name = "ds_cargo", length = 100)
     private String cargo;
@@ -48,4 +53,41 @@ public class Usuario {
 
     @Column(name = "dt_data_atualizacao")
     private LocalDateTime dataAtualizacao;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(
+                new SimpleGrantedAuthority(tipoPerfil.getNomePerfil().getRole())
+        );
+    }
+
+    @Override
+    public String getPassword() {
+        return senhaHash;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return status == null || status == 1;
+    }
 }
