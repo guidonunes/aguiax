@@ -19,6 +19,8 @@ object Routes {
     const val CRIAR_PROJETO = "criar_projeto"
     const val EDITAR_PROJETO = "editar_projeto"
 
+    const val DASHBOARD = "dashboard"
+
     fun editarOrientacaoRoute(orientacaoId: Long): String {
         return "$EDITAR_ORIENTACAO/$orientacaoId"
     }

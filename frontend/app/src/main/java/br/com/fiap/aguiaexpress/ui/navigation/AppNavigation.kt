@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Lightbulb
@@ -38,6 +39,7 @@ import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.CriarOrientacaoScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.EditarOrientacaoScreen
 import br.com.fiap.aguiaexpress.core.session.SessionMock
+import br.com.fiap.aguiaexpress.ui.screens.dashboard.DashboardScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.CriarProjetoScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.EditarProjetoScreen
 
@@ -52,28 +54,49 @@ private data class BottomNavItem(
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    val bottomNavItems = listOf(
-        BottomNavItem(
-            route = Routes.ORIENTACOES,
-            label = "Orientações",
-            icon = Icons.Default.Flag
-        ),
-        BottomNavItem(
-            route = Routes.IDEIAS,
-            label = "Ideias",
-            icon = Icons.Default.Lightbulb
-        ),
-        BottomNavItem(
-            route = Routes.PROJETOS,
-            label = "Projetos",
-            icon = Icons.Default.Work
-        ),
-        BottomNavItem(
-            route = Routes.MEDALHAS,
-            label = "Medalhas",
-            icon = Icons.Default.EmojiEvents
+    val bottomNavItems = buildList {
+        add(
+            BottomNavItem(
+                route = Routes.ORIENTACOES,
+                label = "Orientações",
+                icon = Icons.Default.Flag
+            )
         )
-    )
+
+        add(
+            BottomNavItem(
+                route = Routes.IDEIAS,
+                label = "Ideias",
+                icon = Icons.Default.Lightbulb
+            )
+        )
+
+        add(
+            BottomNavItem(
+                route = Routes.PROJETOS,
+                label = "Projetos",
+                icon = Icons.Default.Work
+            )
+        )
+
+        if (SessionMock.podeAcessarDashboard()) {
+            add(
+                BottomNavItem(
+                    route = Routes.DASHBOARD,
+                    label = "Dashboard",
+                    icon = Icons.Default.Dashboard
+                )
+            )
+        }
+
+        add(
+            BottomNavItem(
+                route = Routes.MEDALHAS,
+                label = "Medalhas",
+                icon = Icons.Default.EmojiEvents
+            )
+        )
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -296,6 +319,14 @@ fun AppNavigation() {
                         navController.popBackStack()
                     }
                 )
+            }
+
+            composable(Routes.DASHBOARD) {
+                if (SessionMock.podeAcessarDashboard()) {
+                    DashboardScreen()
+                } else {
+                    Text(text = "Acesso restrito ao perfil Líder.")
+                }
             }
         }
     }
