@@ -39,6 +39,10 @@ import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.navigation.navArgument
+import br.com.fiap.aguiaexpress.ui.screens.orientacoes.CriarOrientacaoScreen
+import br.com.fiap.aguiaexpress.ui.screens.orientacoes.EditarOrientacaoScreen
+import br.com.fiap.aguiaexpress.core.session.SessionMock
 
 
 private data class BottomNavItem(
@@ -121,18 +125,37 @@ fun AppNavigation() {
             }
         },
         floatingActionButton = {
-            if (currentRoute == Routes.IDEIAS) {
-                FloatingActionButton(
-                    onClick = {
-                        navController.navigate(Routes.CRIAR_IDEIA)
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Cadastrar nova ideia"
-                    )
+            when (currentRoute) {
+                Routes.IDEIAS -> {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(Routes.CRIAR_IDEIA)
+                        },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Cadastrar nova ideia"
+                        )
+                    }
+                }
+
+                Routes.ORIENTACOES -> {
+                    if (SessionMock.isLider()) {
+                        FloatingActionButton(
+                            onClick = {
+                                navController.navigate(Routes.CRIAR_ORIENTACAO)
+                            },
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Cadastrar orientação"
+                            )
+                        }
+                    }
                 }
             }
         },
@@ -148,7 +171,15 @@ fun AppNavigation() {
             }
 
             composable(Routes.ORIENTACOES) {
-                OrientacoesScreen()
+                OrientacoesScreen(
+                    podeGerenciarOrientacoes = SessionMock.isLider(),
+                    onCriarOrientacaoClick = {
+                        navController.navigate(Routes.CRIAR_ORIENTACAO)
+                    },
+                    onEditarOrientacaoClick = { orientacaoId ->
+                        navController.navigate(Routes.editarOrientacaoRoute(orientacaoId))
+                    }
+                )
             }
 
             composable(Routes.IDEIAS) {
@@ -178,6 +209,32 @@ fun AppNavigation() {
                 MedalhasScreen()
             }
 
+            composable(Routes.CRIAR_ORIENTACAO) {
+                CriarOrientacaoScreen(
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = "${Routes.EDITAR_ORIENTACAO}/{orientacaoId}",
+                arguments = listOf(
+                    navArgument("orientacaoId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val orientacaoId = backStackEntry.arguments?.getLong("orientacaoId") ?: return@composable
+
+                EditarOrientacaoScreen(
+                    orientacaoId = orientacaoId,
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable(
                 route = "${Routes.EDITAR_IDEIA}/{ideiaId}",
                 arguments = listOf(
@@ -185,6 +242,7 @@ fun AppNavigation() {
                         type = NavType.LongType
                     }
                 )
+
             ) { backStackEntry ->
                 val ideiaId = backStackEntry.arguments?.getLong("ideiaId") ?: return@composable
 
