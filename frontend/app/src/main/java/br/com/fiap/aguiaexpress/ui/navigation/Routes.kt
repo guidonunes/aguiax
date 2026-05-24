@@ -16,12 +16,19 @@ object Routes {
     const val CRIAR_ORIENTACAO = "criar_orientacao"
     const val EDITAR_ORIENTACAO = "editar_orientacao"
 
+    const val CRIAR_PROJETO = "criar_projeto"
+    const val EDITAR_PROJETO = "editar_projeto"
+
     fun editarOrientacaoRoute(orientacaoId: Long): String {
         return "$EDITAR_ORIENTACAO/$orientacaoId"
     }
 
     fun editarIdeiaRoute(ideiaId: Long): String {
         return "$EDITAR_IDEIA/$ideiaId"
+    }
+
+    fun editarProjetoRoute(projetoId: Long): String {
+        return "$EDITAR_PROJETO/$projetoId"
     }
 }
 

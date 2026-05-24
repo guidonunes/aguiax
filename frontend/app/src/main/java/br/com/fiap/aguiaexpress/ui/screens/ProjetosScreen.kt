@@ -43,12 +43,50 @@ import br.com.fiap.aguiaexpress.ui.components.LoadingIndicator
 import br.com.fiap.aguiaexpress.ui.components.StatusTag
 import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
 import br.com.fiap.aguiaexpress.viewmodel.ProjetoViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+
 
 @Composable
 fun ProjetosScreen(
-    viewModel: ProjetoViewModel = viewModel()
+    viewModel: ProjetoViewModel = viewModel(),
+    podeGerenciarProjetos: Boolean,
+    onEditarProjetoClick: (Long) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    var projetoIdParaExcluir by remember { mutableStateOf<Long?>(null) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.carregarProjetos()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -90,15 +128,64 @@ fun ProjetosScreen(
             }
 
             else -> {
-                ProjetoList(projetos = uiState.projetos)
+                ProjetoList(
+                    projetos = uiState.projetos,
+                    podeGerenciarProjetos = podeGerenciarProjetos,
+                    onEditarClick = { projetoId ->
+                        onEditarProjetoClick(projetoId)
+                    },
+                    onExcluirClick = { projetoId ->
+                        projetoIdParaExcluir = projetoId
+                    }
+                )
             }
         }
+    }
+    if (projetoIdParaExcluir != null) {
+        AlertDialog(
+            onDismissRequest = {
+                projetoIdParaExcluir = null
+            },
+            title = {
+                Text(text = "Excluir projeto")
+            },
+            text = {
+                Text(
+                    text = "Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        projetoIdParaExcluir?.let { projetoId ->
+                            viewModel.deletarProjeto(projetoId)
+                        }
+
+                        projetoIdParaExcluir = null
+                    }
+                ) {
+                    Text(text = "Excluir")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        projetoIdParaExcluir = null
+                    }
+                ) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
     }
 }
 
 @Composable
 private fun ProjetoList(
-    projetos: List<Projeto>
+    projetos: List<Projeto>,
+    podeGerenciarProjetos: Boolean,
+    onEditarClick: (Long) -> Unit,
+    onExcluirClick: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -106,16 +193,25 @@ private fun ProjetoList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(projetos) { projeto ->
-            ProjetoCard(projeto = projeto)
+            ProjetoCard(
+                projeto = projeto,
+                podeGerenciarProjetos = podeGerenciarProjetos,
+                onEditarClick = onEditarClick,
+                onExcluirClick = onExcluirClick
+            )
         }
     }
 }
 
 @Composable
 private fun ProjetoCard(
-    projeto: Projeto
+    projeto: Projeto,
+    podeGerenciarProjetos: Boolean,
+    onEditarClick: (Long) -> Unit,
+    onExcluirClick: (Long) -> Unit
 ) {
     var detalhesExpanded by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -142,7 +238,56 @@ private fun ProjetoCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                StatusTag(text = formatarStatusProjeto(projeto.statusProjeto))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatusTag(text = formatarStatusProjeto(projeto.statusProjeto))
+
+                    if (podeGerenciarProjetos) {
+                        Box {
+                            IconButton(
+                                onClick = {
+                                    menuExpanded = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Mais opções"
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = {
+                                    menuExpanded = false
+                                },
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                tonalElevation = 0.dp,
+                                shadowElevation = 4.dp
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text("Editar")
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onEditarClick(projeto.id)
+                                    }
+                                )
+
+                                DropdownMenuItem(
+                                    text = {
+                                        Text("Excluir")
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onExcluirClick(projeto.id)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -280,6 +425,9 @@ private fun InfoText(
 @Composable
 private fun ProjetosScreenPreview() {
     AguiaExpressTheme() {
-        ProjetosScreen()
+        ProjetosScreen(
+            podeGerenciarProjetos = true,
+            onEditarProjetoClick = {}
+        )
     }
 }

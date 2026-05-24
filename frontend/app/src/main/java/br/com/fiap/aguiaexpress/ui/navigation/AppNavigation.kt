@@ -3,7 +3,6 @@ package br.com.fiap.aguiaexpress.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Lightbulb
@@ -36,13 +35,11 @@ import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.navigation.navArgument
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.CriarOrientacaoScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.EditarOrientacaoScreen
 import br.com.fiap.aguiaexpress.core.session.SessionMock
+import br.com.fiap.aguiaexpress.ui.screens.projetos.CriarProjetoScreen
+import br.com.fiap.aguiaexpress.ui.screens.projetos.EditarProjetoScreen
 
 
 private data class BottomNavItem(
@@ -157,6 +154,22 @@ fun AppNavigation() {
                         }
                     }
                 }
+                Routes.PROJETOS -> {
+                    if (SessionMock.podeGerenciarProjetos()) {
+                        FloatingActionButton(
+                            onClick = {
+                                navController.navigate(Routes.CRIAR_PROJETO)
+                            },
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Cadastrar projeto"
+                            )
+                        }
+                    }
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.End
@@ -202,7 +215,12 @@ fun AppNavigation() {
             }
 
             composable(Routes.PROJETOS) {
-                ProjetosScreen()
+                ProjetosScreen(
+                    podeGerenciarProjetos = SessionMock.podeGerenciarProjetos(),
+                    onEditarProjetoClick = { projetoId ->
+                        navController.navigate(Routes.editarProjetoRoute(projetoId))
+                    }
+                )
             }
 
             composable(Routes.MEDALHAS) {
@@ -248,6 +266,32 @@ fun AppNavigation() {
 
                 EditarIdeiaScreen(
                     ideiaId = ideiaId,
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(Routes.CRIAR_PROJETO) {
+                CriarProjetoScreen(
+                    onVoltarClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = "${Routes.EDITAR_PROJETO}/{projetoId}",
+                arguments = listOf(
+                    navArgument("projetoId") {
+                        type = NavType.LongType
+                    }
+                )
+            ) { backStackEntry ->
+                val projetoId = backStackEntry.arguments?.getLong("projetoId") ?: return@composable
+
+                EditarProjetoScreen(
+                    projetoId = projetoId,
                     onVoltarClick = {
                         navController.popBackStack()
                     }
