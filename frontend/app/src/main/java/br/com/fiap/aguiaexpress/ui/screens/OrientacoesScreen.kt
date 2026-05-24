@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress.ui.screens.orientacoes
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -230,45 +231,47 @@ private fun OrientacaoCard(
                 )
 
                 if (podeGerenciarOrientacoes) {
-                    IconButton(
-                        onClick = {
-                            menuExpanded = true
+                    Box {
+                        IconButton(
+                            onClick = {
+                                menuExpanded = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Mais opções"
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Mais opções"
-                        )
-                    }
 
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = {
-                            menuExpanded = false
-                        },
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 0.dp,
-                        shadowElevation = 4.dp
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text("Editar")
-                            },
-                            onClick = {
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = {
                                 menuExpanded = false
-                                onEditarClick(orientacao.id)
-                            }
-                        )
+                            },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            tonalElevation = 0.dp,
+                            shadowElevation = 4.dp
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text("Editar")
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEditarClick(orientacao.id)
+                                }
+                            )
 
-                        DropdownMenuItem(
-                            text = {
-                                Text("Excluir")
-                            },
-                            onClick = {
-                                menuExpanded = false
-                                onExcluirClick(orientacao.id)
-                            }
-                        )
+                            DropdownMenuItem(
+                                text = {
+                                    Text("Excluir")
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onExcluirClick(orientacao.id)
+                                }
+                            )
+                        }
                     }
                 }
             }
