@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ProjetoController {
     private final ProjetoService projetoService;
 
     @PostMapping
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<MostrarProjetoDTO> criarProjeto(
             @RequestBody @Valid RegistrarProjetoDTO projetoDTO
     ) {
@@ -48,6 +50,7 @@ public class ProjetoController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<MostrarProjetoDTO> atualizarProjeto(
             @PathVariable Long id,
             @RequestBody @Valid RegistrarProjetoDTO projetoDTO
@@ -58,6 +61,7 @@ public class ProjetoController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<Void> deletarProjeto(
             @PathVariable Long id
     ) {
@@ -103,6 +107,7 @@ public class ProjetoController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<MostrarProjetoDTO> atualizarStatusProjeto(
             @PathVariable Long id,
             @RequestBody @Valid AtualizarStatusProjetoDTO statusDTO

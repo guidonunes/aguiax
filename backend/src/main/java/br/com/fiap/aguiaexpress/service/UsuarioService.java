@@ -13,6 +13,7 @@ import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +24,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final TipoPerfilRepository tipoPerfilRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public MostrarUsuarioDTO salvarUsuario(RegistrarUsuarioDTO usuarioDTO) {
         if (usuarioRepository.existsByEmail(usuarioDTO.email())) {
@@ -36,7 +38,7 @@ public class UsuarioService {
 
         usuario.setNome(usuarioDTO.nome());
         usuario.setEmail(usuarioDTO.email());
-        usuario.setSenha(usuarioDTO.senha()); // temporário; depois vamos aplicar hash
+        usuario.setSenhaHash(passwordEncoder.encode(usuarioDTO.senha()));// temporário; depois vamos aplicar hash
         usuario.setCargo(usuarioDTO.cargo());
         usuario.setDepartamento(usuarioDTO.departamento());
         usuario.setTipoPerfil(tipoPerfil);

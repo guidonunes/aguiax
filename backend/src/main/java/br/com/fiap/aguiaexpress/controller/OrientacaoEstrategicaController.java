@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class OrientacaoEstrategicaController {
     private final OrientacaoEstrategicaService orientacaoService;
 
     @PostMapping
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<MostrarOrientacaoDTO> criarOrientacao(
             @RequestBody @Valid RegistrarOrientacaoDTO orientacaoDTO
     ) {
@@ -63,6 +65,7 @@ public class OrientacaoEstrategicaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<MostrarOrientacaoDTO> atualizarOrientacao(
             @PathVariable Long id,
             @RequestBody @Valid RegistrarOrientacaoDTO orientacaoDTO
@@ -74,6 +77,7 @@ public class OrientacaoEstrategicaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<Void> deletarOrientacao(
             @PathVariable Long id,
             @RequestParam Long usuarioId

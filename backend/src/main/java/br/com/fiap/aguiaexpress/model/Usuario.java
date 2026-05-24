@@ -33,7 +33,7 @@ public class Usuario implements UserDetails {
     @Column(name = "ds_email", nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(name = "ds_senha_hash", nullable = false, length = 255)
+    @Column(name = "ds_senha", nullable = false, length = 255)
     private String senhaHash;
 
     @Column(name = "ds_cargo", length = 100)

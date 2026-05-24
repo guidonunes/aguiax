@@ -5,6 +5,7 @@ import br.com.fiap.aguiaexpress.service.VotoIdeiaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class VotoIdeiaController {
     private final VotoIdeiaService votoIdeiaService;
 
     @PostMapping("/usuario/{usuarioId}/ideia/{ideiaId}")
+    @PreAuthorize("hasAnyRole('OPERACIONAL', 'GESTOR', 'LIDER')")
     public ResponseEntity<MostrarVotoIdeiaDTO> votarIdeia(
             @PathVariable Long usuarioId,
             @PathVariable Long ideiaId
@@ -63,6 +65,7 @@ public class VotoIdeiaController {
     }
 
     @DeleteMapping("/usuario/{usuarioId}/ideia/{ideiaId}")
+    @PreAuthorize("hasAnyRole('OPERACIONAL', 'GESTOR', 'LIDER')")
     public ResponseEntity<Void> removerVoto(
             @PathVariable Long usuarioId,
             @PathVariable Long ideiaId
