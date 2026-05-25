@@ -14,6 +14,8 @@ import br.com.fiap.aguiaexpress.data.dto.EditarProjetoRequestDto
 import br.com.fiap.aguiaexpress.domain.model.Ideia
 import br.com.fiap.aguiaexpress.data.repository.IdeiaRepository
 
+private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
+
 data class ProjetoUiState(
     val isLoading: Boolean = false,
     val projetos: List<Projeto> = emptyList(),
@@ -234,6 +236,14 @@ class ProjetoViewModel : ViewModel() {
             return
         }
 
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _criarProjetoUiState.value = state.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             _criarProjetoUiState.value = state.copy(
                 isSaving = true,
@@ -243,7 +253,7 @@ class ProjetoViewModel : ViewModel() {
 
             val request = CriarProjetoRequestDto(
                 ideiaId = ideiaId,
-                usuarioId = SessionManager.usuarioId?:0,
+                usuarioId = usuarioIdLogado,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 objetivo = state.objetivo,
@@ -349,6 +359,14 @@ class ProjetoViewModel : ViewModel() {
             return
         }
 
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _editarProjetoUiState.value = state.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             _editarProjetoUiState.value = state.copy(
                 isSaving = true,
@@ -358,7 +376,7 @@ class ProjetoViewModel : ViewModel() {
 
             val request = EditarProjetoRequestDto(
                 ideiaId = ideiaId,
-                usuarioId = SessionManager.usuarioId?:0,
+                usuarioId = usuarioIdLogado,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 objetivo = state.objetivo,

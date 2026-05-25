@@ -42,6 +42,7 @@ import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.ui.screens.dashboard.DashboardScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.CriarProjetoScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.EditarProjetoScreen
+import br.com.fiap.aguiaexpress.ui.screens.auth.LoginScreen
 
 
 private data class BottomNavItem(
@@ -201,9 +202,23 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.IDEIAS,
+            startDestination = Routes.LOGIN,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable(Routes.LOGIN) {
+                LoginScreen(
+                    onLoginSuccess = { perfil ->
+                        val startRoute = getStartRouteByPerfil(perfil)
+
+                        navController.navigate(startRoute) {
+                            popUpTo(Routes.LOGIN) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                )
+            }
+
             composable(Routes.CATEGORIAS) {
                 CategoriasScreen()
             }
@@ -336,7 +351,14 @@ fun AppNavigation() {
     }
 }
 
-
+private fun getStartRouteByPerfil(perfil: String?): String {
+    return when (perfil) {
+        "OPERACIONAL" -> Routes.IDEIAS
+        "GESTOR" -> Routes.PROJETOS
+        "LIDER" -> Routes.DASHBOARD
+        else -> Routes.ORIENTACOES
+    }
+}
 
 @Preview(showBackground = false)
 @Composable

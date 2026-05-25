@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
+
 data class BadgeUiState(
     val isLoading: Boolean = false,
     val badgesAtivas: List<Badge> = emptyList(),
@@ -43,10 +45,19 @@ class BadgeViewModel : ViewModel() {
                 errorMessage = null
             )
 
+            val usuarioIdLogado = SessionManager.usuarioId
+            if (usuarioIdLogado == null) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = ERRO_USUARIO_NAO_LOGADO
+                )
+                return@launch
+            }
+
             val badgesResult = badgeRepository.listarBadgesAtivas()
 
             val usuarioBadgesResult = usuarioBadgeRepository.listarBadgesPorUsuario(
-                usuarioId = SessionManager.usuarioId?:0
+                usuarioId = usuarioIdLogado
             )
 
             val badgesAtivas = badgesResult.getOrElse {

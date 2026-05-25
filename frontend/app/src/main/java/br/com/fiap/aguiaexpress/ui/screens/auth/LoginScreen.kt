@@ -60,14 +60,15 @@ fun LoginScreen(
     ) {
         Image(
             painter = painterResource(id = R.drawable.aguiax_logo),
+
             contentDescription = "Logo Águia Express",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp),
+                .height(240.dp),
             contentScale = ContentScale.Fit
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -81,7 +82,7 @@ fun LoginScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Login",
+                    text = "Iniciar sessão",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )

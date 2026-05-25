@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.ui.navigation
 import br.com.fiap.aguiaexpress.ui.navigation.Routes.EDITAR_IDEIA
 
 object Routes {
+    const val LOGIN = "login"
     const val HOME = "home"
 
     const val CATEGORIAS = "categorias"
