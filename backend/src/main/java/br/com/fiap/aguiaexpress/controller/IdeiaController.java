@@ -114,6 +114,7 @@ public class IdeiaController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<MostrarIdeiaDTO> atualizarStatusIdeia(
             @PathVariable Long id,
             @RequestBody @Valid AtualizarStatusIdeiaDTO statusDTO
