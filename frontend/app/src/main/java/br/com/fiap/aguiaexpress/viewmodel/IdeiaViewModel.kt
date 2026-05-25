@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
+
 data class IdeiaUiState(
     val isLoading: Boolean = false,
     val ideias: List<Ideia> = emptyList(),
@@ -91,12 +93,21 @@ class IdeiaViewModel : ViewModel() {
                 errorMessage = null
             )
 
+            val usuarioIdLogado = SessionManager.usuarioId
+            if (usuarioIdLogado == null) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = ERRO_USUARIO_NAO_LOGADO
+                )
+                return@launch
+            }
+
             repository.listarIdeias()
                 .onSuccess { ideias ->
                     val votosPorIdeia = buscarQuantidadeVotosPorIdeia(ideias)
 
                     val votosUsuario = votoIdeiaRepository
-                        .listarVotosPorUsuario(SessionManager.usuarioId?:0L)
+                        .listarVotosPorUsuario(usuarioIdLogado)
                         .getOrElse { emptyList() }
 
                     val ideiasVotadasPeloUsuario = votosUsuario
@@ -188,6 +199,14 @@ class IdeiaViewModel : ViewModel() {
             return
         }
 
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _criarIdeiaUiState.value = state.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             _criarIdeiaUiState.value = state.copy(
                 isSaving = true,
@@ -196,7 +215,7 @@ class IdeiaViewModel : ViewModel() {
             )
 
             val request = CriarIdeiaRequestDto(
-                usuarioId = SessionManager.usuarioId?:0L,
+                usuarioId = usuarioIdLogado,
                 categoriaId = state.categoriaId,
                 orientacaoId = state.orientacaoId,
                 titulo = state.titulo,
@@ -271,9 +290,17 @@ class IdeiaViewModel : ViewModel() {
     }
 
     fun votarIdeia(ideiaId: Long) {
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             votoIdeiaRepository.votarIdeia(
-                usuarioId = SessionManager.usuarioId?:0L,
+                usuarioId = usuarioIdLogado,
                 ideiaId = ideiaId
             )
                 .onSuccess {
@@ -288,9 +315,17 @@ class IdeiaViewModel : ViewModel() {
     }
 
     fun removerVotoIdeia(ideiaId: Long) {
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             votoIdeiaRepository.removerVotoIdeia(
-                usuarioId = SessionManager.usuarioId?:0L,
+                usuarioId = usuarioIdLogado,
                 ideiaId = ideiaId
             )
                 .onSuccess {
@@ -324,11 +359,19 @@ class IdeiaViewModel : ViewModel() {
 
     fun alternarVotoIdeia(ideiaId: Long) {
         val usuarioJaVotou = _uiState.value.ideiasVotadasPeloUsuario.contains(ideiaId)
+        val usuarioIdLogado = SessionManager.usuarioId
+
+        if (usuarioIdLogado == null) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
 
         viewModelScope.launch {
             if (usuarioJaVotou) {
                 votoIdeiaRepository.removerVotoIdeia(
-                    usuarioId = SessionManager.usuarioId?:0L,
+                    usuarioId = usuarioIdLogado,
                     ideiaId = ideiaId
                 )
                     .onSuccess {
@@ -341,7 +384,7 @@ class IdeiaViewModel : ViewModel() {
                     }
             } else {
                 votoIdeiaRepository.votarIdeia(
-                    usuarioId = SessionManager.usuarioId?:0L,
+                    usuarioId = usuarioIdLogado,
                     ideiaId = ideiaId
                 )
                     .onSuccess {
@@ -429,6 +472,14 @@ class IdeiaViewModel : ViewModel() {
             return
         }
 
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _editarIdeiaUiState.value = state.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             _editarIdeiaUiState.value = state.copy(
                 isSaving = true,
@@ -437,7 +488,7 @@ class IdeiaViewModel : ViewModel() {
             )
 
             val request = CriarIdeiaRequestDto(
-                usuarioId = SessionManager.usuarioId?:0L,
+                usuarioId = usuarioIdLogado,
                 categoriaId = state.categoriaId,
                 orientacaoId = state.orientacaoId,
                 titulo = state.titulo,

@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
+
 data class OrientacaoUiState(
     val isLoading: Boolean = false,
     val orientacoes: List<Orientacao> = emptyList(),
@@ -107,6 +109,14 @@ class OrientacaoViewModel : ViewModel() {
             return
         }
 
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _criarOrientacaoUiState.value = state.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             _criarOrientacaoUiState.value = state.copy(
                 isSaving = true,
@@ -115,7 +125,7 @@ class OrientacaoViewModel : ViewModel() {
             )
 
             val request = CriarOrientacaoRequestDto(
-                usuarioId = SessionManager.usuarioId?:0L,
+                usuarioId = usuarioIdLogado,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 areaEstrategica = state.areaEstrategica
@@ -192,6 +202,14 @@ class OrientacaoViewModel : ViewModel() {
             return
         }
 
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _editarOrientacaoUiState.value = state.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             _editarOrientacaoUiState.value = state.copy(
                 isSaving = true,
@@ -200,7 +218,7 @@ class OrientacaoViewModel : ViewModel() {
             )
 
             val request = EditarOrientacaoRequestDto(
-                usuarioId = SessionManager.usuarioId?:0L,
+                usuarioId = usuarioIdLogado,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 areaEstrategica = state.areaEstrategica
@@ -229,10 +247,18 @@ class OrientacaoViewModel : ViewModel() {
     }
 
     fun deletarOrientacao(orientacaoId: Long) {
+        val usuarioIdLogado = SessionManager.usuarioId
+        if (usuarioIdLogado == null) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = ERRO_USUARIO_NAO_LOGADO
+            )
+            return
+        }
+
         viewModelScope.launch {
             repository.deletarOrientacao(
                 orientacaoId = orientacaoId,
-                usuarioId = SessionManager.usuarioId?:0L
+                usuarioId = usuarioIdLogado
             )
                 .onSuccess {
                     carregarOrientacoes()
