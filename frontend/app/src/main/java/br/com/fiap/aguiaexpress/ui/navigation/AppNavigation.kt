@@ -38,7 +38,7 @@ import androidx.navigation.navArgument
 import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.CriarOrientacaoScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.EditarOrientacaoScreen
-import br.com.fiap.aguiaexpress.core.session.SessionMock
+import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.ui.screens.dashboard.DashboardScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.CriarProjetoScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.EditarProjetoScreen
@@ -79,7 +79,7 @@ fun AppNavigation() {
             )
         )
 
-        if (SessionMock.podeAcessarDashboard()) {
+        if (SessionManager.podeAcessarDashboard()) {
             add(
                 BottomNavItem(
                     route = Routes.DASHBOARD,
@@ -147,22 +147,24 @@ fun AppNavigation() {
         floatingActionButton = {
             when (currentRoute) {
                 Routes.IDEIAS -> {
-                    FloatingActionButton(
-                        onClick = {
-                            navController.navigate(Routes.CRIAR_IDEIA)
-                        },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Cadastrar nova ideia"
-                        )
+                    if (SessionManager.podeCadastrarIdeia()) {
+                        FloatingActionButton(
+                            onClick = {
+                                navController.navigate(Routes.CRIAR_IDEIA)
+                            },
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Cadastrar nova ideia"
+                            )
+                        }
                     }
                 }
 
                 Routes.ORIENTACOES -> {
-                    if (SessionMock.isLider()) {
+                    if (SessionManager.podeGerenciarOrientacoes()) {
                         FloatingActionButton(
                             onClick = {
                                 navController.navigate(Routes.CRIAR_ORIENTACAO)
@@ -178,7 +180,7 @@ fun AppNavigation() {
                     }
                 }
                 Routes.PROJETOS -> {
-                    if (SessionMock.podeGerenciarProjetos()) {
+                    if (SessionManager.podeGerenciarProjetos()) {
                         FloatingActionButton(
                             onClick = {
                                 navController.navigate(Routes.CRIAR_PROJETO)
@@ -208,7 +210,7 @@ fun AppNavigation() {
 
             composable(Routes.ORIENTACOES) {
                 OrientacoesScreen(
-                    podeGerenciarOrientacoes = SessionMock.isLider(),
+                    podeGerenciarOrientacoes = SessionManager.podeGerenciarOrientacoes(),
                     onCriarOrientacaoClick = {
                         navController.navigate(Routes.CRIAR_ORIENTACAO)
                     },
@@ -220,6 +222,8 @@ fun AppNavigation() {
 
             composable(Routes.IDEIAS) {
                 IdeiasScreen(
+                    podeVotarEmIdeia = SessionManager.podeVotarEmIdeia(),
+                    podeGerenciarIdeias = SessionManager.podeGerenciarIdeias(),
                     onCriarIdeiaClick = {
                         navController.navigate(Routes.CRIAR_IDEIA)
                     },
@@ -239,7 +243,7 @@ fun AppNavigation() {
 
             composable(Routes.PROJETOS) {
                 ProjetosScreen(
-                    podeGerenciarProjetos = SessionMock.podeGerenciarProjetos(),
+                    podeGerenciarProjetos = SessionManager.podeGerenciarProjetos(),
                     onEditarProjetoClick = { projetoId ->
                         navController.navigate(Routes.editarProjetoRoute(projetoId))
                     }
@@ -322,7 +326,7 @@ fun AppNavigation() {
             }
 
             composable(Routes.DASHBOARD) {
-                if (SessionMock.podeAcessarDashboard()) {
+                if (SessionManager.podeAcessarDashboard()) {
                     DashboardScreen()
                 } else {
                     Text(text = "Acesso restrito ao perfil Líder.")

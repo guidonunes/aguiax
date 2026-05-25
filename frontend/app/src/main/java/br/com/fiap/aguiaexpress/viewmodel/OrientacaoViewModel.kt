@@ -2,7 +2,7 @@ package br.com.fiap.aguiaexpress.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.fiap.aguiaexpress.core.session.SessionMock
+import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.data.dto.CriarOrientacaoRequestDto
 import br.com.fiap.aguiaexpress.data.dto.EditarOrientacaoRequestDto
 import br.com.fiap.aguiaexpress.data.remote.RetrofitClient
@@ -115,7 +115,7 @@ class OrientacaoViewModel : ViewModel() {
             )
 
             val request = CriarOrientacaoRequestDto(
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0L,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 areaEstrategica = state.areaEstrategica
@@ -200,7 +200,7 @@ class OrientacaoViewModel : ViewModel() {
             )
 
             val request = EditarOrientacaoRequestDto(
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0L,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 areaEstrategica = state.areaEstrategica
@@ -232,7 +232,7 @@ class OrientacaoViewModel : ViewModel() {
         viewModelScope.launch {
             repository.deletarOrientacao(
                 orientacaoId = orientacaoId,
-                usuarioId = SessionMock.USUARIO_ID
+                usuarioId = SessionManager.usuarioId?:0L
             )
                 .onSuccess {
                     carregarOrientacoes()

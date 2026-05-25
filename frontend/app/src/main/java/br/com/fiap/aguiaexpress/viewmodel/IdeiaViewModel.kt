@@ -2,7 +2,7 @@ package br.com.fiap.aguiaexpress.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.fiap.aguiaexpress.core.session.SessionMock
+import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.data.dto.CriarIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.remote.RetrofitClient
 import br.com.fiap.aguiaexpress.data.repository.CategoriaRepository
@@ -96,7 +96,7 @@ class IdeiaViewModel : ViewModel() {
                     val votosPorIdeia = buscarQuantidadeVotosPorIdeia(ideias)
 
                     val votosUsuario = votoIdeiaRepository
-                        .listarVotosPorUsuario(SessionMock.USUARIO_ID)
+                        .listarVotosPorUsuario(SessionManager.usuarioId?:0L)
                         .getOrElse { emptyList() }
 
                     val ideiasVotadasPeloUsuario = votosUsuario
@@ -196,7 +196,7 @@ class IdeiaViewModel : ViewModel() {
             )
 
             val request = CriarIdeiaRequestDto(
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0L,
                 categoriaId = state.categoriaId,
                 orientacaoId = state.orientacaoId,
                 titulo = state.titulo,
@@ -273,7 +273,7 @@ class IdeiaViewModel : ViewModel() {
     fun votarIdeia(ideiaId: Long) {
         viewModelScope.launch {
             votoIdeiaRepository.votarIdeia(
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0L,
                 ideiaId = ideiaId
             )
                 .onSuccess {
@@ -290,7 +290,7 @@ class IdeiaViewModel : ViewModel() {
     fun removerVotoIdeia(ideiaId: Long) {
         viewModelScope.launch {
             votoIdeiaRepository.removerVotoIdeia(
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0L,
                 ideiaId = ideiaId
             )
                 .onSuccess {
@@ -328,7 +328,7 @@ class IdeiaViewModel : ViewModel() {
         viewModelScope.launch {
             if (usuarioJaVotou) {
                 votoIdeiaRepository.removerVotoIdeia(
-                    usuarioId = SessionMock.USUARIO_ID,
+                    usuarioId = SessionManager.usuarioId?:0L,
                     ideiaId = ideiaId
                 )
                     .onSuccess {
@@ -341,7 +341,7 @@ class IdeiaViewModel : ViewModel() {
                     }
             } else {
                 votoIdeiaRepository.votarIdeia(
-                    usuarioId = SessionMock.USUARIO_ID,
+                    usuarioId = SessionManager.usuarioId?:0L,
                     ideiaId = ideiaId
                 )
                     .onSuccess {
@@ -437,7 +437,7 @@ class IdeiaViewModel : ViewModel() {
             )
 
             val request = CriarIdeiaRequestDto(
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0L,
                 categoriaId = state.categoriaId,
                 orientacaoId = state.orientacaoId,
                 titulo = state.titulo,

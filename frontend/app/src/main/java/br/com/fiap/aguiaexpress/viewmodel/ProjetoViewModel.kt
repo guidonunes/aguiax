@@ -8,7 +8,7 @@ import br.com.fiap.aguiaexpress.domain.model.Projeto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import br.com.fiap.aguiaexpress.core.session.SessionMock
+import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.data.dto.CriarProjetoRequestDto
 import br.com.fiap.aguiaexpress.data.dto.EditarProjetoRequestDto
 import br.com.fiap.aguiaexpress.domain.model.Ideia
@@ -243,7 +243,7 @@ class ProjetoViewModel : ViewModel() {
 
             val request = CriarProjetoRequestDto(
                 ideiaId = ideiaId,
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 objetivo = state.objetivo,
@@ -358,7 +358,7 @@ class ProjetoViewModel : ViewModel() {
 
             val request = EditarProjetoRequestDto(
                 ideiaId = ideiaId,
-                usuarioId = SessionMock.USUARIO_ID,
+                usuarioId = SessionManager.usuarioId?:0,
                 titulo = state.titulo,
                 descricao = state.descricao,
                 objetivo = state.objetivo,
