@@ -2,7 +2,7 @@ package br.com.fiap.aguiaexpress.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.fiap.aguiaexpress.core.session.SessionMock
+import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.data.remote.RetrofitClient
 import br.com.fiap.aguiaexpress.data.repository.BadgeRepository
 import br.com.fiap.aguiaexpress.data.repository.UsuarioBadgeRepository
@@ -46,7 +46,7 @@ class BadgeViewModel : ViewModel() {
             val badgesResult = badgeRepository.listarBadgesAtivas()
 
             val usuarioBadgesResult = usuarioBadgeRepository.listarBadgesPorUsuario(
-                usuarioId = SessionMock.USUARIO_ID
+                usuarioId = SessionManager.usuarioId?:0
             )
 
             val badgesAtivas = badgesResult.getOrElse {

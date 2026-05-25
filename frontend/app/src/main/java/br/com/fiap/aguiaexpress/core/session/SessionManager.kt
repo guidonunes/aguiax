@@ -55,15 +55,39 @@ object SessionManager {
         return perfil == "LIDER"
     }
 
-    fun podeGerenciarOrientacoes(): Boolean {
-        return isLider()
+    fun podeCadastrarIdeia(): Boolean {
+        return isOperacional()
+    }
+
+    fun podeVotarEmIdeia(): Boolean {
+        return isOperacional()
+    }
+
+    fun podeGerenciarIdeias(): Boolean {
+        return isGestor()
     }
 
     fun podeGerenciarProjetos(): Boolean {
         return isGestor()
     }
 
+    fun podeGerenciarOrientacoes(): Boolean {
+        return isLider()
+    }
+
     fun podeAcessarDashboard(): Boolean {
         return isLider()
+    }
+
+    fun podeConsultarOrientacoes(): Boolean {
+        return estaLogado()
+    }
+
+    fun podeConsultarProjetos(): Boolean {
+        return estaLogado()
+    }
+
+    fun podeConsultarMedalhas(): Boolean {
+        return estaLogado()
     }
 }

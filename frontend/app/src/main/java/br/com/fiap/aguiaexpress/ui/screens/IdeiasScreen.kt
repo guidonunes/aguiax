@@ -64,6 +64,8 @@ import androidx.compose.ui.text.withStyle
 
 @Composable
 fun IdeiasScreen(
+    podeVotarEmIdeia: Boolean,
+    podeGerenciarIdeias: Boolean,
     onCriarIdeiaClick: () -> Unit,
     onEditarClick: (Long) -> Unit,
     viewModel: IdeiaViewModel = viewModel()
@@ -131,6 +133,8 @@ fun IdeiasScreen(
                         ideias = uiState.ideias,
                         quantidadeVotos = uiState.votosPorIdeia,
                         ideiasVotadasPeloUsuario = uiState.ideiasVotadasPeloUsuario,
+                        podeVotarEmIdeia = podeVotarEmIdeia,
+                        podeGerenciarIdeias = podeGerenciarIdeias,
                         onAlternarVotoClick = { ideiaId ->
                             viewModel.alternarVotoIdeia(ideiaId)
                         },
@@ -193,6 +197,8 @@ private fun IdeiaList(
     ideias: List<Ideia>,
     quantidadeVotos: Map<Long, Int>,
     ideiasVotadasPeloUsuario: Set<Long>,
+    podeVotarEmIdeia: Boolean,
+    podeGerenciarIdeias: Boolean,
     onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatus: (Long, StatusIdeia) -> Unit,
     onEditarClick: (Long) -> Unit,
@@ -208,6 +214,8 @@ private fun IdeiaList(
                 ideia = ideia,
                 quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
                 usuarioJaVotou = ideiasVotadasPeloUsuario.contains(ideia.id),
+                podeVotarEmIdeia = podeVotarEmIdeia,
+                podeGerenciarIdeias = podeGerenciarIdeias,
                 onAlternarVotoClick = onAlternarVotoClick,
                 onAtualizarStatus = onAtualizarStatus,
                 onEditarClick = onEditarClick,
@@ -222,6 +230,8 @@ private fun IdeiaCard(
     ideia: Ideia,
     quantidadeVotos: Int,
     usuarioJaVotou: Boolean,
+    podeVotarEmIdeia: Boolean,
+    podeGerenciarIdeias: Boolean,
     onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatus: (Long, StatusIdeia) -> Unit,
     onEditarClick: (Long) -> Unit,
@@ -263,45 +273,47 @@ private fun IdeiaCard(
                 ) {
                     StatusTag(text = formatarStatusIdeia(ideia.status))
 
-                    IconButton(
-                        onClick = {
-                            menuExpanded = true
+                    if (podeGerenciarIdeias) {
+                        IconButton(
+                            onClick = {
+                                menuExpanded = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Mais opções"
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Mais opções"
-                        )
-                    }
 
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = {
-                            menuExpanded = false
-                        },
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 0.dp,
-                        shadowElevation = 4.dp
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Text("Editar")
-                            },
-                            onClick = {
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = {
                                 menuExpanded = false
-                                onEditarClick(ideia.id)
-                            }
-                        )
+                            },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            tonalElevation = 0.dp,
+                            shadowElevation = 4.dp
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text("Editar")
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEditarClick(ideia.id)
+                                }
+                            )
 
-                        DropdownMenuItem(
-                            text = {
-                                Text("Excluir")
-                            },
-                            onClick = {
-                                menuExpanded = false
-                                onExcluirClick(ideia.id)
-                            }
-                        )
+                            DropdownMenuItem(
+                                text = {
+                                    Text("Excluir")
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onExcluirClick(ideia.id)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -382,21 +394,32 @@ private fun IdeiaCard(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = {
-                            onAlternarVotoClick(ideia.id)
+                    if (podeVotarEmIdeia) {
+                        IconButton(
+                            onClick = {
+                                onAlternarVotoClick(ideia.id)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ThumbUp,
+                                contentDescription = if (usuarioJaVotou) "Remover voto" else "Votar",
+                                tint = if (usuarioJaVotou) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.size(26.dp)
+                            )
                         }
-                    ) {
+                    } else {
                         Icon(
                             imageVector = Icons.Default.ThumbUp,
-                            contentDescription = if (usuarioJaVotou) "Remover voto" else "Votar",
-                            tint = if (usuarioJaVotou) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
+                            contentDescription = "Votos",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(26.dp)
                         )
+
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     Text(
@@ -406,24 +429,26 @@ private fun IdeiaCard(
                     )
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            onAtualizarStatus(ideia.id, StatusIdeia.PRIORIZADA)
-                        }
+                if (podeGerenciarIdeias) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Priorizar")
-                    }
+                        OutlinedButton(
+                            onClick = {
+                                onAtualizarStatus(ideia.id, StatusIdeia.PRIORIZADA)
+                            }
+                        ) {
+                            Text("Priorizar")
+                        }
 
-                    Button(
-                        onClick = {
-                            onAtualizarStatus(ideia.id, StatusIdeia.APROVADA)
+                        Button(
+                            onClick = {
+                                onAtualizarStatus(ideia.id, StatusIdeia.APROVADA)
+                            }
+                        ) {
+                            Text("Aprovar")
                         }
-                    ) {
-                        Text("Aprovar")
                     }
                 }
             }
@@ -469,6 +494,8 @@ private fun formatarStatusIdeia(status: String): String {
 private fun IdeiasScreenPreview() {
     AguiaExpressTheme {
         IdeiasScreen(
+            podeVotarEmIdeia = true,
+            podeGerenciarIdeias = true,
             onCriarIdeiaClick = {},
             onEditarClick = {}
 
