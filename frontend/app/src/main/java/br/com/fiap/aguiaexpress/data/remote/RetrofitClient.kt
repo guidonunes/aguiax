@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.data.remote
 
+import br.com.fiap.aguiaexpress.data.remote.api.AuthApi
 import br.com.fiap.aguiaexpress.data.remote.api.BadgeApi
 import br.com.fiap.aguiaexpress.data.remote.api.CategoriaApi
 import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
@@ -40,4 +41,8 @@ object RetrofitClient {
     val usuarioBadgeApi: UsuarioBadgeApi = retrofit.create(UsuarioBadgeApi::class.java)
 
     val projetoApi: ProjetoApi = retrofit.create(ProjetoApi::class.java)
+
+    val authApi: AuthApi by lazy {
+        retrofit.create(AuthApi::class.java)
+    }
 }
