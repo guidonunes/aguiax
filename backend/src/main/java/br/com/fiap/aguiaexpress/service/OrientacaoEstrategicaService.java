@@ -22,9 +22,10 @@ public class OrientacaoEstrategicaService {
 
     private final OrientacaoEstrategicaRepository orientacaoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public MostrarOrientacaoDTO criarOrientacao(RegistrarOrientacaoDTO orientacaoDTO) {
-        Usuario usuario = buscarUsuarioPorId(orientacaoDTO.usuarioId());
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
         validarUsuarioLider(usuario);
 
@@ -77,7 +78,7 @@ public class OrientacaoEstrategicaService {
     public MostrarOrientacaoDTO atualizarOrientacao(Long id, RegistrarOrientacaoDTO orientacaoDTO) {
         OrientacaoEstrategica orientacao = buscarEntidadePorId(id);
 
-        Usuario usuario = buscarUsuarioPorId(orientacaoDTO.usuarioId());
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
         validarUsuarioLider(usuario);
 
@@ -97,10 +98,10 @@ public class OrientacaoEstrategicaService {
         return new MostrarOrientacaoDTO(orientacaoAtualizada);
     }
 
-    public void deletarOrientacao(Long id, Long usuarioId) {
+    public void deletarOrientacao(Long id) {
         OrientacaoEstrategica orientacao = buscarEntidadePorId(id);
 
-        Usuario usuario = buscarUsuarioPorId(usuarioId);
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
         validarUsuarioLider(usuario);
 
@@ -112,10 +113,7 @@ public class OrientacaoEstrategicaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Orientação estratégica não encontrada."));
     }
 
-    private Usuario buscarUsuarioPorId(Long usuarioId) {
-        return usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
-    }
+
 
     private void validarUsuarioLider(Usuario usuario) {
         if (!usuario.getTipoPerfil().getNomePerfil().equals(NomePerfil.LIDER)) {

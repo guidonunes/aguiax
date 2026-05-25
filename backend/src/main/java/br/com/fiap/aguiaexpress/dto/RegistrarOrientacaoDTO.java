@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Size;
 
 public record RegistrarOrientacaoDTO(
 
-        @NotNull(message = "O ID do usuário autor é obrigatório.")
-        Long usuarioId,
-
         @NotBlank(message = "O título da orientação é obrigatório.")
         @Size(max = 150, message = "O título deve ter no máximo 150 caracteres.")
         String titulo,

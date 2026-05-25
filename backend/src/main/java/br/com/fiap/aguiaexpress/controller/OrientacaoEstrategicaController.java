@@ -79,10 +79,9 @@ public class OrientacaoEstrategicaController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<Void> deletarOrientacao(
-            @PathVariable Long id,
-            @RequestParam Long usuarioId
+            @PathVariable Long id
     ) {
-        orientacaoService.deletarOrientacao(id, usuarioId);
+        orientacaoService.deletarOrientacao(id);
 
         return ResponseEntity.noContent().build();
     }
