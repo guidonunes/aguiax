@@ -23,10 +23,10 @@ public class VotoIdeiaService {
     private final UsuarioRepository usuarioRepository;
     private final IdeiaService ideiaService;
     private final IdeiaRepository ideiaRepository;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
-    public MostrarVotoIdeiaDTO votarIdeia(Long usuarioId, Long ideiaId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+    public MostrarVotoIdeiaDTO votarIdeia(Long ideiaId) {
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
         Ideia ideia = ideiaService.buscarEntidadePorId(ideiaId);
 
@@ -80,9 +80,8 @@ public class VotoIdeiaService {
                 .toList();
     }
 
-    public void removerVoto(Long usuarioId, Long ideiaId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+    public void removerVoto(Long ideiaId) {
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
         Ideia ideia = ideiaService.buscarEntidadePorId(ideiaId);
 

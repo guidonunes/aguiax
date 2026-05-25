@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Size;
 
 public record RegistrarIdeiaDTO(
 
-        @NotNull(message = "O ID do usuário autor é obrigatório.")
-        Long usuarioId,
-
         @NotNull(message = "O ID da categoria é obrigatório.")
         Long categoriaId,
 

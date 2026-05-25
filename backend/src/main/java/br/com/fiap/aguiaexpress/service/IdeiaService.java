@@ -23,14 +23,14 @@ public class IdeiaService {
     private final CategoriaService categoriaService;
     private final StatusIdeiaService statusIdeiaService;
     private final OrientacaoEstrategicaService orientacaoService;
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
 
     public MostrarIdeiaDTO criarIdeia(RegistrarIdeiaDTO ideiaDTO) {
         if (ideiaRepository.existsByTitulo(ideiaDTO.titulo())) {
             throw new DuplicateResourceException("Já existe uma ideia cadastrada com esse título.");
         }
 
-        Usuario usuario = usuarioRepository.findById(ideiaDTO.usuarioId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
         Categoria categoria = categoriaService.buscarEntidadePorId(ideiaDTO.categoriaId());
 
@@ -84,8 +84,7 @@ public class IdeiaService {
             throw new DuplicateResourceException("Já existe uma ideia cadastrada com esse título.");
         }
 
-        Usuario usuario = usuarioRepository.findById(ideiaDTO.usuarioId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
         Categoria categoria = categoriaService.buscarEntidadePorId(ideiaDTO.categoriaId());
 

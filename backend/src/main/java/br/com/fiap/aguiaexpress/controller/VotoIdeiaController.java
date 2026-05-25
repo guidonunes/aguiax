@@ -17,17 +17,26 @@ public class VotoIdeiaController {
 
     private final VotoIdeiaService votoIdeiaService;
 
-    @PostMapping("/usuario/{usuarioId}/ideia/{ideiaId}")
+    @PostMapping("/ideia/{ideiaId}")
     @PreAuthorize("hasAnyRole('OPERACIONAL', 'GESTOR', 'LIDER')")
     public ResponseEntity<MostrarVotoIdeiaDTO> votarIdeia(
-            @PathVariable Long usuarioId,
             @PathVariable Long ideiaId
     ) {
-        MostrarVotoIdeiaDTO voto = votoIdeiaService.votarIdeia(usuarioId, ideiaId);
+        MostrarVotoIdeiaDTO voto = votoIdeiaService.votarIdeia(ideiaId);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(voto);
+    }
+
+    @DeleteMapping("/ideia/{ideiaId}")
+    @PreAuthorize("hasAnyRole('OPERACIONAL', 'GESTOR', 'LIDER')")
+    public ResponseEntity<Void> removerVoto(
+            @PathVariable Long ideiaId
+    ) {
+        votoIdeiaService.removerVoto(ideiaId);
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
@@ -62,16 +71,5 @@ public class VotoIdeiaController {
         List<MostrarVotoIdeiaDTO> votos = votoIdeiaService.listarVotosPorUsuario(usuarioId);
 
         return ResponseEntity.ok(votos);
-    }
-
-    @DeleteMapping("/usuario/{usuarioId}/ideia/{ideiaId}")
-    @PreAuthorize("hasAnyRole('OPERACIONAL', 'GESTOR', 'LIDER')")
-    public ResponseEntity<Void> removerVoto(
-            @PathVariable Long usuarioId,
-            @PathVariable Long ideiaId
-    ) {
-        votoIdeiaService.removerVoto(usuarioId, ideiaId);
-
-        return ResponseEntity.noContent().build();
     }
 }
