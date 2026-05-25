@@ -105,7 +105,10 @@ public class OrientacaoEstrategicaService {
 
         validarUsuarioLider(usuario);
 
-        orientacaoRepository.delete(orientacao);
+        orientacao.setStatus(0);
+        orientacao.setDataAtualizacao(LocalDateTime.now());
+
+        orientacaoRepository.save(orientacao);
     }
 
     public OrientacaoEstrategica buscarEntidadePorId(Long id) {
