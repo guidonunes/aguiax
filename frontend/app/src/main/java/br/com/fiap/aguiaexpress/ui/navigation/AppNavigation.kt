@@ -1,5 +1,10 @@
 package br.com.fiap.aguiaexpress.ui.navigation
 
+import androidx.benchmark.traceprocessor.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,11 +22,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -43,6 +51,10 @@ import br.com.fiap.aguiaexpress.ui.screens.dashboard.DashboardScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.CriarProjetoScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.EditarProjetoScreen
 import br.com.fiap.aguiaexpress.ui.screens.auth.LoginScreen
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.IconButton
 
 
 private data class BottomNavItem(
@@ -105,6 +117,21 @@ fun AppNavigation() {
     val shouldShowBottomBar = currentRoute in bottomNavItems.map { it.route }
 
     Scaffold(
+        topBar = {
+            if (shouldShowBottomBar) {
+                AppTopBar(
+                    onLogoutClick = {
+                        SessionManager.limparSessao()
+
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(0) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                )
+            }
+        },
         bottomBar = {
             if (shouldShowBottomBar) {
                 NavigationBar(
@@ -237,12 +264,13 @@ fun AppNavigation() {
 
             composable(Routes.IDEIAS) {
                 IdeiasScreen(
+                    podeEditarExcluirIdeia = SessionManager.podeEditarExcluirIdeia(),
+                    podeAtualizarStatusIdeia = SessionManager.podeAtualizarStatusIdeia(),
                     podeVotarEmIdeia = SessionManager.podeVotarEmIdeia(),
-                    podeGerenciarIdeias = SessionManager.podeGerenciarIdeias(),
                     onCriarIdeiaClick = {
                         navController.navigate(Routes.CRIAR_IDEIA)
                     },
-                    onEditarClick = { ideiaId ->
+                    onEditarIdeiaClick = { ideiaId ->
                         navController.navigate(Routes.editarIdeiaRoute(ideiaId))
                     }
                 )
@@ -357,6 +385,50 @@ private fun getStartRouteByPerfil(perfil: String?): String {
         "GESTOR" -> Routes.PROJETOS
         "LIDER" -> Routes.DASHBOARD
         else -> Routes.ORIENTACOES
+    }
+}
+
+@Composable
+private fun AppTopBar(
+    onLogoutClick: () -> Unit
+) {
+    val nomeUsuario = SessionManager.nome ?: "usuário"
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = 24.dp,
+                end = 24.dp,
+                top = 28.dp,
+                bottom = 12.dp
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Bem-vindo,",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = nomeUsuario,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        IconButton(
+            onClick = onLogoutClick
+        ) {
+            Icon(
+                imageVector = Icons.Default.Logout,
+                contentDescription = "Sair",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 

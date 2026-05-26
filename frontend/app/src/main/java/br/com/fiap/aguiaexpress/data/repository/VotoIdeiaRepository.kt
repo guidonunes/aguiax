@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.data.repository
 
+import br.com.fiap.aguiaexpress.data.dto.VotoIdeiaDto
 import br.com.fiap.aguiaexpress.data.dto.toDomain
 import br.com.fiap.aguiaexpress.data.remote.api.VotoIdeiaApi
 import br.com.fiap.aguiaexpress.domain.model.VotoIdeia
@@ -9,12 +10,10 @@ class VotoIdeiaRepository(
 ) {
 
     suspend fun votarIdeia(
-        usuarioId: Long,
         ideiaId: Long
     ): Result<VotoIdeia> {
         return try {
             val voto = votoIdeiaApi.votarIdeia(
-                usuarioId = usuarioId,
                 ideiaId = ideiaId
             ).toDomain()
 
@@ -25,12 +24,10 @@ class VotoIdeiaRepository(
     }
 
     suspend fun removerVotoIdeia(
-        usuarioId: Long,
         ideiaId: Long
     ): Result<Unit> {
         return try {
-            votoIdeiaApi.removerVotoIdeia(
-                usuarioId = usuarioId,
+            votoIdeiaApi.removerVoto(
                 ideiaId = ideiaId
             )
 
