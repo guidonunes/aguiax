@@ -300,7 +300,6 @@ class IdeiaViewModel : ViewModel() {
 
         viewModelScope.launch {
             votoIdeiaRepository.votarIdeia(
-                usuarioId = usuarioIdLogado,
                 ideiaId = ideiaId
             )
                 .onSuccess {
@@ -325,7 +324,6 @@ class IdeiaViewModel : ViewModel() {
 
         viewModelScope.launch {
             votoIdeiaRepository.removerVotoIdeia(
-                usuarioId = usuarioIdLogado,
                 ideiaId = ideiaId
             )
                 .onSuccess {
@@ -358,6 +356,7 @@ class IdeiaViewModel : ViewModel() {
     }
 
     fun alternarVotoIdeia(ideiaId: Long) {
+
         val usuarioJaVotou = _uiState.value.ideiasVotadasPeloUsuario.contains(ideiaId)
         val usuarioIdLogado = SessionManager.usuarioId
 
@@ -371,7 +370,6 @@ class IdeiaViewModel : ViewModel() {
         viewModelScope.launch {
             if (usuarioJaVotou) {
                 votoIdeiaRepository.removerVotoIdeia(
-                    usuarioId = usuarioIdLogado,
                     ideiaId = ideiaId
                 )
                     .onSuccess {
@@ -384,7 +382,6 @@ class IdeiaViewModel : ViewModel() {
                     }
             } else {
                 votoIdeiaRepository.votarIdeia(
-                    usuarioId = usuarioIdLogado,
                     ideiaId = ideiaId
                 )
                     .onSuccess {

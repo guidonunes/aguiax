@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -64,10 +65,11 @@ import androidx.compose.ui.text.withStyle
 
 @Composable
 fun IdeiasScreen(
+    podeEditarExcluirIdeia: Boolean,
+    podeAtualizarStatusIdeia: Boolean,
     podeVotarEmIdeia: Boolean,
-    podeGerenciarIdeias: Boolean,
     onCriarIdeiaClick: () -> Unit,
-    onEditarClick: (Long) -> Unit,
+    onEditarIdeiaClick: (Long) -> Unit,
     viewModel: IdeiaViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -132,22 +134,18 @@ fun IdeiasScreen(
                     IdeiaList(
                         ideias = uiState.ideias,
                         quantidadeVotos = uiState.votosPorIdeia,
-                        ideiasVotadasPeloUsuario = uiState.ideiasVotadasPeloUsuario,
+                        votosUsuario = uiState.ideiasVotadasPeloUsuario,
                         podeVotarEmIdeia = podeVotarEmIdeia,
-                        podeGerenciarIdeias = podeGerenciarIdeias,
+                        podeEditarExcluirIdeia = podeEditarExcluirIdeia,
+                        podeAtualizarStatusIdeia = podeAtualizarStatusIdeia,
                         onAlternarVotoClick = { ideiaId ->
                             viewModel.alternarVotoIdeia(ideiaId)
                         },
-                        onAtualizarStatus = { ideiaId, status ->
-                            viewModel.atualizarStatusIdeia(
-                                ideiaId = ideiaId,
-                                status = status
-                            )
+                        onAtualizarStatusClick = { ideiaId, status ->
+                            viewModel.atualizarStatusIdeia(ideiaId, status)
                         },
-                        onEditarClick = { ideiaId ->
-                            onEditarClick(ideiaId)
-                        },
-                        onExcluirClick = { ideiaId ->
+                        onEditarIdeiaClick = onEditarIdeiaClick,
+                        onExcluirIdeiaClick = { ideiaId ->
                             ideiaIdParaExcluir = ideiaId
                         }
                     )
@@ -196,13 +194,14 @@ fun IdeiasScreen(
 private fun IdeiaList(
     ideias: List<Ideia>,
     quantidadeVotos: Map<Long, Int>,
-    ideiasVotadasPeloUsuario: Set<Long>,
+    votosUsuario: Set<Long>,
     podeVotarEmIdeia: Boolean,
-    podeGerenciarIdeias: Boolean,
+    podeEditarExcluirIdeia: Boolean,
+    podeAtualizarStatusIdeia: Boolean,
     onAlternarVotoClick: (Long) -> Unit,
-    onAtualizarStatus: (Long, StatusIdeia) -> Unit,
-    onEditarClick: (Long) -> Unit,
-    onExcluirClick: (Long) -> Unit
+    onAtualizarStatusClick: (Long, StatusIdeia) -> Unit,
+    onEditarIdeiaClick: (Long) -> Unit,
+    onExcluirIdeiaClick: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -213,13 +212,14 @@ private fun IdeiaList(
             IdeiaCard(
                 ideia = ideia,
                 quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
-                usuarioJaVotou = ideiasVotadasPeloUsuario.contains(ideia.id),
+                usuarioJaVotou = votosUsuario.contains(ideia.id),
                 podeVotarEmIdeia = podeVotarEmIdeia,
-                podeGerenciarIdeias = podeGerenciarIdeias,
+                podeEditarExcluirIdeia = podeEditarExcluirIdeia,
+                podeAtualizarStatusIdeia = podeAtualizarStatusIdeia,
                 onAlternarVotoClick = onAlternarVotoClick,
-                onAtualizarStatus = onAtualizarStatus,
-                onEditarClick = onEditarClick,
-                onExcluirClick = onExcluirClick
+                onAtualizarStatus = onAtualizarStatusClick,
+                onEditarClick = onEditarIdeiaClick,
+                onExcluirClick = onExcluirIdeiaClick
             )
         }
     }
@@ -231,7 +231,8 @@ private fun IdeiaCard(
     quantidadeVotos: Int,
     usuarioJaVotou: Boolean,
     podeVotarEmIdeia: Boolean,
-    podeGerenciarIdeias: Boolean,
+    podeEditarExcluirIdeia: Boolean,
+    podeAtualizarStatusIdeia: Boolean,
     onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatus: (Long, StatusIdeia) -> Unit,
     onEditarClick: (Long) -> Unit,
@@ -273,46 +274,48 @@ private fun IdeiaCard(
                 ) {
                     StatusTag(text = formatarStatusIdeia(ideia.status))
 
-                    if (podeGerenciarIdeias) {
-                        IconButton(
-                            onClick = {
-                                menuExpanded = true
+                    if (podeEditarExcluirIdeia) {
+                        Box {
+                            IconButton(
+                                onClick = {
+                                    menuExpanded = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Mais opções"
+                                )
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Mais opções"
-                            )
-                        }
 
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = {
-                                menuExpanded = false
-                            },
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            tonalElevation = 0.dp,
-                            shadowElevation = 4.dp
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text("Editar")
-                                },
-                                onClick = {
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = {
                                     menuExpanded = false
-                                    onEditarClick(ideia.id)
-                                }
-                            )
+                                },
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                tonalElevation = 0.dp,
+                                shadowElevation = 4.dp
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text("Editar")
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onEditarClick(ideia.id)
+                                    }
+                                )
 
-                            DropdownMenuItem(
-                                text = {
-                                    Text("Excluir")
-                                },
-                                onClick = {
-                                    menuExpanded = false
-                                    onExcluirClick(ideia.id)
-                                }
-                            )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text("Excluir")
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onExcluirClick(ideia.id)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -402,7 +405,11 @@ private fun IdeiaCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ThumbUp,
-                                contentDescription = if (usuarioJaVotou) "Remover voto" else "Votar",
+                                contentDescription = if (usuarioJaVotou) {
+                                    "Remover voto"
+                                } else {
+                                    "Votar"
+                                },
                                 tint = if (usuarioJaVotou) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
@@ -416,10 +423,8 @@ private fun IdeiaCard(
                             imageVector = Icons.Default.ThumbUp,
                             contentDescription = "Votos",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(26.dp)
+                            modifier = Modifier.size(24.dp)
                         )
-
-                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     Text(
@@ -429,7 +434,7 @@ private fun IdeiaCard(
                     )
                 }
 
-                if (podeGerenciarIdeias) {
+                if (podeAtualizarStatusIdeia) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -489,16 +494,4 @@ private fun formatarStatusIdeia(status: String): String {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun IdeiasScreenPreview() {
-    AguiaExpressTheme {
-        IdeiasScreen(
-            podeVotarEmIdeia = true,
-            podeGerenciarIdeias = true,
-            onCriarIdeiaClick = {},
-            onEditarClick = {}
 
-        )
-    }
-}

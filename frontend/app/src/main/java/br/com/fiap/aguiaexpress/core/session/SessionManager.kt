@@ -60,10 +60,14 @@ object SessionManager {
     }
 
     fun podeVotarEmIdeia(): Boolean {
+        return estaLogado()
+    }
+
+    fun podeEditarExcluirIdeia(): Boolean {
         return isOperacional()
     }
 
-    fun podeGerenciarIdeias(): Boolean {
+    fun podeAtualizarStatusIdeia(): Boolean {
         return isGestor()
     }
 

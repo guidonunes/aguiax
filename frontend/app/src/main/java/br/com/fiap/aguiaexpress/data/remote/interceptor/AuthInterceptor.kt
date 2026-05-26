@@ -11,6 +11,9 @@ class AuthInterceptor : Interceptor {
 
         val token = SessionManager.token
 
+        println("URL REQUEST: ${originalRequest.url}")
+        println("TOKEN NO INTERCEPTOR: $token")
+
         val newRequest = if (!token.isNullOrBlank()) {
             originalRequest.newBuilder()
                 .addHeader("Authorization", "Bearer $token")
@@ -18,6 +21,7 @@ class AuthInterceptor : Interceptor {
         } else {
             originalRequest
         }
+        println("AUTH HEADER: ${newRequest.header("Authorization")}")
 
         return chain.proceed(newRequest)
     }
