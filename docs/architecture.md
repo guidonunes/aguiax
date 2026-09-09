@@ -1088,7 +1088,17 @@ ORIENTATION_UPDATED
 
 Audit events are supporting evidence, not domain truth.
 
-If audit storage fails, the failure strategy should be decided explicitly rather than accidentally coupling all business operations to MongoDB availability.
+### 16.1 Audit failure policy
+
+Audit persistence is synchronous and best-effort. `AuditService` validates required
+event fields before attempting persistence, but catches Spring `DataAccessException`
+failures from MongoDB, records an `ERROR` log containing only event/resource
+identifiers and the exception type, and does not fail an otherwise successful
+relational business operation. Programming and validation errors are not swallowed.
+
+Domain services must request the audit write only after their relational operation
+succeeds. This does not provide a distributed transaction between MySQL and
+MongoDB; the audit document remains supporting evidence rather than business truth.
 
 ---
 
@@ -1521,7 +1531,7 @@ Expected external configuration includes:
 ```text
 MySQL
   DB_URL
-  DB_USERNAME
+  DB_USER
   DB_PASSWORD
 
 MongoDB

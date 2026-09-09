@@ -18,6 +18,8 @@ O **AguiaExpress** é uma aplicação mobile nativa para Android, desenvolvida c
 - Spring Web
 - Spring Data JPA
 - MySQL Database
+- Spring Data MongoDB
+- MongoDB
 - Flyway
 - Lombok
 - Maven
@@ -49,6 +51,53 @@ A política da Task 1.1 e sua aplicação nas Tasks 1.2–1.5 estão documentada
 cadastro público cria apenas `OPERACIONAL`; contas privilegiadas usam a rota
 leader-only `POST /usuarios/admin`. O interceptor Android não registra JWTs nem o
 cabeçalho Authorization.
+
+## Configuração local dos bancos
+
+O MySQL continua sendo a fonte de verdade dos dados de negócio. O MongoDB é um
+banco complementar destinado aos eventos de auditoria e ao histórico de avaliações
+de IA; ele não replica as entidades relacionais.
+
+1. Crie a configuração local do backend a partir do modelo e substitua somente os
+   valores locais necessários:
+
+   ```bash
+   cd backend
+   cp .env.example .env
+   ```
+
+2. Para uma instalação nativa do MongoDB no Linux, inicie e valide o serviço:
+
+   ```bash
+   sudo systemctl start mongod
+   mongosh "mongodb://localhost:27017/admin" --quiet --eval 'db.runCommand({ping: 1}).ok'
+   ```
+
+   O segundo comando deve retornar `1`. As variáveis padrão para esse serviço são
+   `MONGODB_URI=mongodb://localhost:27017` e
+   `MONGODB_DATABASE=aguiaexpress`.
+
+3. Com MySQL e MongoDB ativos, execute o backend a partir de `backend/`:
+
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
+O banco de produção `aguiaexpress` pode não aparecer no MongoDB Compass
+imediatamente. A Task 2.2 valida escrita e leitura em um banco de teste temporário
+e exclusivo para cada execução, removendo-o ao terminar. O MongoDB materializará
+`aguiaexpress` após a primeira gravação funcional, prevista para o modelo de
+auditoria quando ele for conectado às operações de negócio na Task 3.2.
+
+Para executar apenas a prova de persistência da Task 2.2:
+
+```bash
+./mvnw -Dtest=MongoPersistenceIntegrationTest test
+```
+
+Por padrão, o teste usa `mongodb://localhost:27017`. Outro servidor de teste pode
+ser informado com `-Dmongodb.test.uri=mongodb://host:27017`. Nunca direcione esse
+teste para um banco de produção.
 
 ## Bootstrap controlado do primeiro líder
 

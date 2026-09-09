@@ -330,6 +330,24 @@ Update `.env.example` if the repository uses one.
 
 Spring Boot starts successfully with both MySQL and MongoDB configured.
 
+### Task 2.1 record — 2026-09-09
+
+Implemented by the developer and corrected/verified by Codex. The backend now
+includes Spring Data MongoDB and reads `MONGODB_URI` and `MONGODB_DATABASE` from
+the same environment/`.env` bridge used by the existing MySQL and JWT settings.
+The committed `.env.example` contains development placeholders only, and `.env`
+remains ignored by Git.
+
+Codex normalized the configuration example, aligned the documented MySQL variable
+name with the active `DB_USER` property, and added native MongoDB startup and
+Compass guidance to the README. `mongosh` returned a successful ping, and
+`./mvnw spring-boot:run` connected to MySQL, validated all 11 Flyway migrations,
+connected to MongoDB, and started Tomcat successfully. The application was then
+stopped gracefully. The Task 2.1 exit criterion is satisfied; MongoDB write/read
+proof remains intentionally scoped to Task 2.2. The full backend suite ran 38 tests:
+37 passed and the existing `AguiaexpressApplicationTests.contextLoads` test retained
+its previously documented `${DB_URL}` setup error.
+
 ---
 
 ## Task 2.2 — Add MongoDB integration test
@@ -341,6 +359,22 @@ Use Testcontainers if practical.
 ### Exit criterion
 
 The test suite proves a Mongo document can be written and read.
+
+### Task 2.2 record — 2026-09-09
+
+Implemented and verified by Codex. A focused `@DataMongoTest` uses `MongoTemplate`
+to save and retrieve a test-only document with a unique ID in the dedicated
+`aguiaexpress_task_2_2_<unique-id>` database. The test asserts the persisted fields
+and drops its isolated database after execution, so concurrent runs do not share
+state and the test does not introduce a throwaway production model or modify the
+relational domain.
+
+The local native MongoDB service is used because Docker is not currently available
+to the developer account; `mongodb.test.uri` allows an isolated alternative test
+server to be supplied. Running
+`./mvnw -Dtest=MongoPersistenceIntegrationTest test` completed with one test,
+zero failures, zero errors, and `BUILD SUCCESS`. The Task 2.2 exit criterion and
+Phase 2 are complete.
 
 ---
 
@@ -369,6 +403,23 @@ Create:
 ### Exit criterion
 
 Audit events can be persisted independently from relational domain data.
+
+### Task 3.1 record — 2026-09-09
+
+Implemented and verified by Codex. The new feature-focused `audit` package contains
+an immutable `AuditEvent` MongoDB document, typed event and resource enums,
+`AuditEventRepository`, and `AuditService`. Events receive a client-generated UUID,
+UTC `Instant`, actor and resource identifiers, and a defensive metadata copy. The
+document maps exclusively to `audit_events` and has no JPA relationship.
+
+The architecture now records a synchronous best-effort failure policy: required
+fields fail validation before persistence, while MongoDB `DataAccessException`
+failures are logged without exposing metadata or failing an otherwise successful
+relational operation. Four unit tests cover construction, metadata handling,
+validation, and the failure policy. One isolated `@DataMongoTest` proves repository
+write/read behavior independently from MySQL. The focused run completed five tests
+with zero failures and zero errors. The Task 3.1 exit criterion is satisfied;
+business-operation hooks remain Task 3.2.
 
 ---
 
