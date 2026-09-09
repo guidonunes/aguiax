@@ -2,6 +2,7 @@ package br.com.fiap.aguiaexpress.advice;
 
 import br.com.fiap.aguiaexpress.dto.ErroRespostaDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
+import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,4 +66,22 @@ public class ApplicationExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(erro);
     }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ErroRespostaDTO> handleInvalidRequest(
+            InvalidRequestException exception,
+            HttpServletRequest request
+    ) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.badRequest().body(erro);
+    }
+
 }
