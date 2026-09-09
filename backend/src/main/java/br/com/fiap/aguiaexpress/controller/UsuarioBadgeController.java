@@ -5,6 +5,7 @@ import br.com.fiap.aguiaexpress.service.UsuarioBadgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class UsuarioBadgeController {
     private final UsuarioBadgeService usuarioBadgeService;
 
     @PostMapping("/usuario/{usuarioId}/badge/{badgeId}")
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<MostrarUsuarioBadgeDTO> concederBadge(
             @PathVariable Long usuarioId,
             @PathVariable Long badgeId
@@ -30,6 +32,7 @@ public class UsuarioBadgeController {
     }
 
     @PostMapping("/usuario/{usuarioId}/nome/{nomeBadge}")
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<MostrarUsuarioBadgeDTO> concederBadgePorNome(
             @PathVariable Long usuarioId,
             @PathVariable String nomeBadge
@@ -43,6 +46,7 @@ public class UsuarioBadgeController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('GESTOR', 'LIDER')")
     public ResponseEntity<List<MostrarUsuarioBadgeDTO>> listarUsuarioBadges() {
         List<MostrarUsuarioBadgeDTO> usuarioBadges =
                 usuarioBadgeService.listarUsuarioBadges();
@@ -71,6 +75,7 @@ public class UsuarioBadgeController {
     }
 
     @GetMapping("/badge/{badgeId}")
+    @PreAuthorize("hasAnyRole('GESTOR', 'LIDER')")
     public ResponseEntity<List<MostrarUsuarioBadgeDTO>> listarUsuariosPorBadge(
             @PathVariable Long badgeId
     ) {
@@ -81,6 +86,7 @@ public class UsuarioBadgeController {
     }
 
     @DeleteMapping("/usuario/{usuarioId}/badge/{badgeId}")
+    @PreAuthorize("hasRole('GESTOR')")
     public ResponseEntity<Void> removerBadgeDoUsuario(
             @PathVariable Long usuarioId,
             @PathVariable Long badgeId

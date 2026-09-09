@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,19 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+
+    @PostMapping("/admin")
+    @PreAuthorize("hasRole('LIDER')")
+    public ResponseEntity<MostrarUsuarioDTO> criarUsuarioAdmin(
+            @RequestBody @Valid RegistrarUsuarioDTO usuarioDTO
+    ) {
+        MostrarUsuarioDTO usuarioCriado =
+                usuarioService.salvarUsuarioAdmin(usuarioDTO);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(usuarioCriado);
+    }
 
     @PostMapping
     public ResponseEntity<MostrarUsuarioDTO> salvarUsuario(
@@ -32,10 +46,11 @@ public class UsuarioController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<List<MostrarUsuarioDTO>> listarTodosUsuarios() {
-        List<MostrarUsuarioDTO> usuarios = usuarioService.listarTodosUsuarios();
-
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(
+                usuarioService.listarTodosUsuarios()
+        );
     }
 
     @GetMapping("/{id}")
@@ -58,6 +73,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<Void> deletarUsuarioPorId(
             @PathVariable Long id
     ) {

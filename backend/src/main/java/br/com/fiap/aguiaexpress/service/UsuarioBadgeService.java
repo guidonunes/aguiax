@@ -3,7 +3,9 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.dto.MostrarUsuarioBadgeDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
+import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
 import br.com.fiap.aguiaexpress.model.Badge;
+import br.com.fiap.aguiaexpress.model.NomePerfil;
 import br.com.fiap.aguiaexpress.model.Usuario;
 import br.com.fiap.aguiaexpress.model.UsuarioBadge;
 import br.com.fiap.aguiaexpress.repository.UsuarioBadgeRepository;
@@ -13,11 +15,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioBadgeService {
 
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final UsuarioBadgeRepository usuarioBadgeRepository;
     private final UsuarioRepository usuarioRepository;
     private final BadgeService badgeService;
@@ -70,11 +74,15 @@ public class UsuarioBadgeService {
     public MostrarUsuarioBadgeDTO buscarUsuarioBadgePorId(Long id) {
         UsuarioBadge usuarioBadge = buscarEntidadePorId(id);
 
+        validarAcessoAsBadges(usuarioBadge.getUsuario());
+
         return new MostrarUsuarioBadgeDTO(usuarioBadge);
     }
 
     public List<MostrarUsuarioBadgeDTO> listarBadgesPorUsuario(Long usuarioId) {
         Usuario usuario = buscarUsuarioPorId(usuarioId);
+
+        validarAcessoAsBadges(usuario);
 
         return usuarioBadgeRepository.findByUsuario(usuario)
                 .stream()
@@ -109,5 +117,29 @@ public class UsuarioBadgeService {
     private Usuario buscarUsuarioPorId(Long usuarioId) {
         return usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+    }
+
+    private void validarAcessoAsBadges(Usuario usuarioAlvo) {
+        Usuario usuarioAutenticado =
+                usuarioAutenticadoService.getUsuarioAutenticado();
+
+        NomePerfil perfil = usuarioAutenticado
+                .getTipoPerfil()
+                .getNomePerfil();
+
+        boolean podeConsultarTodos =
+                perfil == NomePerfil.GESTOR
+                        || perfil == NomePerfil.LIDER;
+
+        boolean proprioUsuario = Objects.equals(
+                usuarioAutenticado.getId(),
+                usuarioAlvo.getId()
+        );
+
+        if (!podeConsultarTodos && !proprioUsuario) {
+            throw new UnauthorizedActionException(
+                    "Você só pode consultar suas próprias badges."
+            );
+        }
     }
 }

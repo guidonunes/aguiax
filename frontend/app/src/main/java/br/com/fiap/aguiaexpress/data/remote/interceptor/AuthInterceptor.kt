@@ -8,21 +8,16 @@ class AuthInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-
         val token = SessionManager.token
 
-        println("URL REQUEST: ${originalRequest.url}")
-        println("TOKEN NO INTERCEPTOR: $token")
-
-        val newRequest = if (!token.isNullOrBlank()) {
-            originalRequest.newBuilder()
-                .addHeader("Authorization", "Bearer $token")
-                .build()
-        } else {
+        val request = if (token.isNullOrBlank()) {
             originalRequest
+        } else {
+            originalRequest.newBuilder()
+                .header("Authorization", "Bearer $token")
+                .build()
         }
-        println("AUTH HEADER: ${newRequest.header("Authorization")}")
 
-        return chain.proceed(newRequest)
+        return chain.proceed(request)
     }
 }

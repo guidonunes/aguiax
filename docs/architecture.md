@@ -600,23 +600,24 @@ creates no account, even if the caller happens to be an authenticated leader.
 The service must select the operational profile itself after validation; it must
 not trust a caller-selected privileged profile.
 
-Task 1.4 will introduce a separate `POST /usuarios/admin` route restricted to
+Task 1.4 introduced a separate `POST /usuarios/admin` route restricted to
 `LIDER` for provisioning accounts with any of the three existing profiles. Reuse
 account validation and BCrypt hashing, but keep public and privileged authorization
 paths explicit. Ordinary profile updates never promote users. The first leader
 must be provisioned by a trusted deployment operator through a controlled local
 setup using an externally supplied password and BCrypt hash, not an unauthenticated
-HTTP bootstrap route or committed default credentials. Task 1.4 must document the
-reproducible bootstrap procedure; already-existing valid leader accounts can be used.
+HTTP bootstrap route or committed default credentials. The reproducible procedure
+is documented in the README; already-existing valid leader accounts can be used.
 
-This resolves the previously undocumented provisioning decision. The current
-`SecurityConfig` still permits public registration and `UsuarioService` still uses
-the requested profile: the privilege-escalation bug remains open until Task 1.4.
+This resolves the previously undocumented provisioning decision. `SecurityConfig`
+permits only the exact public registration route, and `UsuarioService` validates and
+selects `OPERACIONAL` rather than trusting privileged input. The separate admin
+service path may use the requested existing profile after the leader role check.
 
 ## 9.2 Complete current controller inventory
 
-All **62 explicitly mapped operations across 12 controllers** were inspected on
-2026-09-08. Paths below are the existing Portuguese routes; do not rename them to
+All **63 explicitly mapped operations across 12 controllers** were inspected through
+2026-09-09. Paths below are the existing Portuguese routes; do not rename them to
 match illustrative `/api/...` examples elsewhere. Query filters do not change policy.
 Framework-generated HEAD/OPTIONS handling is not counted as a separate business
 operation and must not provide a bypass to these policies.
@@ -642,16 +643,17 @@ mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/agui
 | Controller | Endpoint | Target policy | Current state | Verification / enforcement task |
 |---|---|---|---|---|
 | AuthController | `POST /auth/login` | Public | Implemented | Valid/invalid credentials; 11.1 |
-| UsuarioController | `POST /usuarios` | Public, creates OPERACIONAL only | Partial | Privileged profile gets 400, no insert; 1.4 |
-| UsuarioController | `GET /usuarios` | LIDER | Partial | Role; 1.4 |
-| UsuarioController | `GET /usuarios/{id}` | Self or LIDER | Partial | Owner, leader access; 1.4 |
-| UsuarioController | `PUT /usuarios/{id}` | Self or LIDER | Partial | Owner, preserve privileged fields; 1.4 |
-| UsuarioController | `DELETE /usuarios/{id}` | LIDER | Partial | Role, relational constraints; 1.4 |
-| CategoriaController | `POST /categorias` | LIDER | Partial | Role; 1.4 |
+| UsuarioController | `POST /usuarios` | Public, creates OPERACIONAL only | Implemented | 400/no insert for privileged input verified; 1.4 |
+| UsuarioController | `POST /usuarios/admin` | LIDER; provision any existing role | Implemented | Authentication/role and delegation verified; 1.4 |
+| UsuarioController | `GET /usuarios` | LIDER | Implemented | Role verified; 1.4 |
+| UsuarioController | `GET /usuarios/{id}` | Self or LIDER | Implemented | Self, leader, and cross-user denial verified; 1.4 |
+| UsuarioController | `PUT /usuarios/{id}` | Self or LIDER | Implemented | Authorization ordering and protected fields verified; 1.4 |
+| UsuarioController | `DELETE /usuarios/{id}` | LIDER | Implemented | Role verified; relational constraints unchanged; 1.4 |
+| CategoriaController | `POST /categorias` | LIDER | Implemented | Role verified; 1.4 |
 | CategoriaController | `GET /categorias` | Authenticated | Implemented | Auth; 1.4 |
 | CategoriaController | `GET /categorias/{id}` | Authenticated | Implemented | Auth; 1.4 |
-| CategoriaController | `PUT /categorias/{id}` | LIDER | Partial | Role; 1.4 |
-| CategoriaController | `DELETE /categorias/{id}` | LIDER | Partial | Role; 1.4 |
+| CategoriaController | `PUT /categorias/{id}` | LIDER | Implemented | Role verified; 1.4 |
+| CategoriaController | `DELETE /categorias/{id}` | LIDER | Implemented | Role verified; 1.4 |
 | OrientacaoEstrategicaController | `POST /orientacoes` | LIDER | Implemented | Role; 1.2 |
 | OrientacaoEstrategicaController | `GET /orientacoes` | Authenticated | Implemented | Auth; 1.2 |
 | OrientacaoEstrategicaController | `GET /orientacoes/ativas` | Authenticated | Implemented | Auth; 1.2 |
@@ -690,13 +692,13 @@ mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/agui
 | BadgeController | `GET /badges/ativas` | Authenticated | Implemented | Auth; 1.4 |
 | BadgeController | `GET /badges/{id}` | Authenticated | Implemented | Auth; 1.4 |
 | BadgeController | `GET /badges/nome/{nomeBadge}` | Authenticated | Implemented | Auth; 1.4 |
-| UsuarioBadgeController | `POST /usuario-badges/usuario/{usuarioId}/badge/{badgeId}` | GESTOR | Partial | Role; 1.4 |
-| UsuarioBadgeController | `POST /usuario-badges/usuario/{usuarioId}/nome/{nomeBadge}` | GESTOR | Partial | Role, no grant-by-name bypass; 1.4 |
-| UsuarioBadgeController | `GET /usuario-badges` | GESTOR/LIDER | Partial | Role; 1.4 |
-| UsuarioBadgeController | `GET /usuario-badges/{id}` | Self or GESTOR/LIDER | Partial | Owner uses award recipient, not award ID; 1.4 |
-| UsuarioBadgeController | `GET /usuario-badges/usuario/{usuarioId}` | Self or GESTOR/LIDER | Partial | Owner, Android own-badges flow; 1.4 |
-| UsuarioBadgeController | `GET /usuario-badges/badge/{badgeId}` | GESTOR/LIDER | Partial | Role; 1.4 |
-| UsuarioBadgeController | `DELETE /usuario-badges/usuario/{usuarioId}/badge/{badgeId}` | GESTOR | Partial | Role; 1.4 |
+| UsuarioBadgeController | `POST /usuario-badges/usuario/{usuarioId}/badge/{badgeId}` | GESTOR | Implemented | Role verified; 1.4 |
+| UsuarioBadgeController | `POST /usuario-badges/usuario/{usuarioId}/nome/{nomeBadge}` | GESTOR | Implemented | Role and no grant-by-name bypass verified; 1.4 |
+| UsuarioBadgeController | `GET /usuario-badges` | GESTOR/LIDER | Implemented | Role verified; 1.4 |
+| UsuarioBadgeController | `GET /usuario-badges/{id}` | Self or GESTOR/LIDER | Implemented | Ownership uses award recipient, not award ID; 1.4 |
+| UsuarioBadgeController | `GET /usuario-badges/usuario/{usuarioId}` | Self or GESTOR/LIDER | Implemented | Self/cross-user/role override verified; 1.4 |
+| UsuarioBadgeController | `GET /usuario-badges/badge/{badgeId}` | GESTOR/LIDER | Implemented | Role verified; 1.4 |
+| UsuarioBadgeController | `DELETE /usuario-badges/usuario/{usuarioId}/badge/{badgeId}` | GESTOR | Implemented | Role verified; 1.4 |
 | StatusIdeiaController | `GET /status-ideias` | Authenticated | Implemented | Auth; 1.4 |
 | StatusIdeiaController | `GET /status-ideias/{id}` | Authenticated | Implemented | Auth; 1.4 |
 | StatusProjetoController | `GET /status-projetos` | Authenticated | Implemented | Auth; 1.4 |
@@ -711,7 +713,6 @@ rows when their owning roadmap tasks introduce the controllers.
 
 | Operation / endpoint | Target policy | Current state | Owning task |
 |---|---|---|---|
-| `POST /usuarios/admin` | LIDER; provision any existing role | Missing | 1.4 |
 | Manager review scores/prioritization endpoint | GESTOR | Missing | 4.1 |
 | `GET /api/dashboard/summary` including `orientationId` filter | LIDER | Missing | 6.2–6.5 |
 | `GET /api/dashboard/projects/{projectId}` if needed | LIDER | Missing | 6.4–6.5 |
@@ -1627,9 +1628,9 @@ The current codebase contains several known gaps that Sprint 2 should address.
 
 ## Security
 
-- idea ownership is not consistently enforced;
-- some administrative APIs are authenticated without sufficient role restrictions;
-- Android currently exposes sensitive authorization information in logging.
+Phase 1 resolved the previously recorded ownership, administrative-authorization,
+and Android credential-logging gaps. New feature endpoints must continue following
+the authorization matrix and the logging restrictions in section 20.2.
 
 ## Idea prioritization
 

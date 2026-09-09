@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class CategoriaController {
     private final CategoriaService categoriaService;
 
     @PostMapping
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<MostrarCategoriaDTO> criarCategoria(
             @RequestBody @Valid RegistrarCategoriaDTO categoriaDTO
     ) {
@@ -47,6 +49,7 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<MostrarCategoriaDTO> atualizarCategoria(
             @PathVariable Long id,
             @RequestBody @Valid AtualizarCategoriaDTO categoriaDTO
@@ -57,6 +60,7 @@ public class CategoriaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('LIDER')")
     public ResponseEntity<Void> deletarCategoria(
             @PathVariable Long id
     ) {

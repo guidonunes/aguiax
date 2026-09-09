@@ -152,9 +152,9 @@ uses a separate leader-only route and a controlled first-leader bootstrap proced
 
 The Task 1.1 documentation exit criterion is satisfied. Verification compares the
 inventory against controller mappings and checks document consistency; no runtime
-authorization change is delivered by this task. Tasks 1.2 and 1.3 were subsequently
-implemented; Tasks 1.4–1.5 remain open, including the public registration
-vulnerability. The pre-existing backend test configuration failure remains recorded
+authorization change is delivered by this task. Tasks 1.2–1.5 were subsequently
+implemented and verified, completing Phase 1. The pre-existing backend test
+configuration failure remains recorded
 in the Task 0.2 baseline. This record does not claim that Phase 1 passes.
 
 ---
@@ -259,6 +259,26 @@ Implement the decisions in [architecture sections 9.1–9.4](architecture.md#91-
 
 No sensitive administrative operation is protected only by "authenticated user".
 
+### Task 1.4 record — 2026-09-09
+
+Implemented by the developer and corrected/verified by Codex. User listing/deletion,
+category mutations, privileged provisioning, badge mutations, and global badge-award
+reads now use the roles defined in the authorization matrix. User detail/update and
+individual badge-award reads enforce resource ownership in their services, with
+`LIDER` or `GESTOR`/`LIDER` overrides as applicable.
+
+Codex fixed the incomplete public-registration/admin-provisioning service flow,
+added the missing user-update ownership check, replaced an uncontrolled duplicate
+email error, and protected the global badge-award listing. Public registration now
+rejects `GESTOR`/`LIDER` before persistence, while `POST /usuarios/admin` is
+leader-only. The first-leader procedure is documented in the README.
+
+Twenty-three new Task 1.4 tests pass (eleven MVC authorization/catalog tests,
+eight user-service tests, and four badge-ownership tests). The combined focused
+Phase 1 suite passes 37 tests. The full backend context test still has the separate
+`${DB_URL}` baseline defect, so this record does not claim the complete Maven suite
+is green. The Task 1.4 exit criterion is satisfied.
+
 ---
 
 ## Task 1.5 — Remove sensitive client logging
@@ -270,6 +290,20 @@ Review backend logs for similar leakage.
 ### Exit criterion
 
 JWTs, passwords and secrets are not emitted into normal logs.
+
+### Task 1.5 record — 2026-09-09
+
+Implemented by the developer and reviewed/verified by Codex. `AuthInterceptor`
+no longer prints request URLs, the session token, or the complete Authorization
+header. It still adds `Bearer <token>` to authenticated requests and now replaces
+an existing Authorization value instead of creating duplicate headers.
+
+Codex replaced the unused OkHttp logging-interceptor dependency with the same-version
+OkHttp core dependency and added three interceptor regression tests. They verify
+unauthenticated requests, authenticated header attachment without token output, and
+replacement of stale Authorization headers. `testDebugUnitTest` and `assembleDebug`
+pass, and an active-source scan found no application-owned console/Android/HTTP
+logging path that exposes credentials. The exit criterion and Phase 1 are complete.
 
 ---
 
