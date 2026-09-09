@@ -267,6 +267,7 @@ fun AppNavigation() {
                     podeEditarExcluirIdeia = SessionManager.podeEditarExcluirIdeia(),
                     podeAtualizarStatusIdeia = SessionManager.podeAtualizarStatusIdeia(),
                     podeVotarEmIdeia = SessionManager.podeVotarEmIdeia(),
+                    usuarioIdLogado = SessionManager.usuarioId,
                     onCriarIdeiaClick = {
                         navController.navigate(Routes.CRIAR_IDEIA)
                     },

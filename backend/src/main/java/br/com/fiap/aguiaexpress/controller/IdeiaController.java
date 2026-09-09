@@ -22,7 +22,7 @@ public class IdeiaController {
     private final IdeiaService ideiaService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('OPERACIONAL', 'GESTOR', 'LIDER')")
+    @PreAuthorize("hasRole('OPERACIONAL')")
     public ResponseEntity<MostrarIdeiaDTO> criarIdeia(
             @RequestBody @Valid RegistrarIdeiaDTO ideiaDTO
     ) {
@@ -50,6 +50,7 @@ public class IdeiaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('OPERACIONAL')")
     public ResponseEntity<MostrarIdeiaDTO> atualizarIdeia(
             @PathVariable Long id,
             @RequestBody @Valid RegistrarIdeiaDTO ideiaDTO
@@ -60,6 +61,7 @@ public class IdeiaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('OPERACIONAL')")
     public ResponseEntity<Void> deletarIdeia(
             @PathVariable Long id
     ) {

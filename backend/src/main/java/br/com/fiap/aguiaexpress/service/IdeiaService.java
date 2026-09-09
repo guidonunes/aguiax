@@ -5,6 +5,7 @@ import br.com.fiap.aguiaexpress.dto.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.RegistrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
+import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
 import br.com.fiap.aguiaexpress.model.*;
 import br.com.fiap.aguiaexpress.repository.IdeiaRepository;
 import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -78,20 +80,20 @@ public class IdeiaService {
 
     public MostrarIdeiaDTO atualizarIdeia(Long id, RegistrarIdeiaDTO ideiaDTO) {
         Ideia ideia = buscarEntidadePorId(id);
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
+
+        validarProprietario(ideia, usuario);
 
         if (!ideia.getTitulo().equals(ideiaDTO.titulo())
                 && ideiaRepository.existsByTitulo(ideiaDTO.titulo())) {
             throw new DuplicateResourceException("Já existe uma ideia cadastrada com esse título.");
         }
 
-        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
-
         Categoria categoria = categoriaService.buscarEntidadePorId(ideiaDTO.categoriaId());
 
         OrientacaoEstrategica orientacao =
                 orientacaoService.buscarEntidadePorId(ideiaDTO.orientacaoId());
 
-        ideia.setUsuario(usuario);
         ideia.setCategoria(categoria);
         ideia.setOrientacaoEstrategica(orientacao);
 
@@ -109,6 +111,9 @@ public class IdeiaService {
 
     public void deletarIdeia(Long id) {
         Ideia ideia = buscarEntidadePorId(id);
+        Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
+
+        validarProprietario(ideia, usuario);
 
         ideiaRepository.delete(ideia);
     }
@@ -174,5 +179,16 @@ public class IdeiaService {
         Ideia ideiaAtualizada = ideiaRepository.save(ideia);
 
         return new MostrarIdeiaDTO(ideiaAtualizada);
+    }
+
+    private void validarProprietario(Ideia ideia, Usuario usuarioAutenticado) {
+        Long proprietarioId = ideia.getUsuario().getId();
+        Long usuarioAutenticadoId = usuarioAutenticado.getId();
+
+        if (!Objects.equals(proprietarioId, usuarioAutenticadoId)) {
+            throw new UnauthorizedActionException(
+                    "Você só pode editar ou excluir suas próprias ideias."
+            );
+        }
     }
 }

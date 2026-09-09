@@ -68,6 +68,7 @@ fun IdeiasScreen(
     podeEditarExcluirIdeia: Boolean,
     podeAtualizarStatusIdeia: Boolean,
     podeVotarEmIdeia: Boolean,
+    usuarioIdLogado: Long?,
     onCriarIdeiaClick: () -> Unit,
     onEditarIdeiaClick: (Long) -> Unit,
     viewModel: IdeiaViewModel = viewModel()
@@ -137,6 +138,7 @@ fun IdeiasScreen(
                         votosUsuario = uiState.ideiasVotadasPeloUsuario,
                         podeVotarEmIdeia = podeVotarEmIdeia,
                         podeEditarExcluirIdeia = podeEditarExcluirIdeia,
+                        usuarioIdLogado = usuarioIdLogado,
                         podeAtualizarStatusIdeia = podeAtualizarStatusIdeia,
                         onAlternarVotoClick = { ideiaId ->
                             viewModel.alternarVotoIdeia(ideiaId)
@@ -197,6 +199,7 @@ private fun IdeiaList(
     votosUsuario: Set<Long>,
     podeVotarEmIdeia: Boolean,
     podeEditarExcluirIdeia: Boolean,
+    usuarioIdLogado: Long?,
     podeAtualizarStatusIdeia: Boolean,
     onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatusClick: (Long, StatusIdeia) -> Unit,
@@ -214,7 +217,10 @@ private fun IdeiaList(
                 quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
                 usuarioJaVotou = votosUsuario.contains(ideia.id),
                 podeVotarEmIdeia = podeVotarEmIdeia,
-                podeEditarExcluirIdeia = podeEditarExcluirIdeia,
+                podeEditarExcluirIdeia =
+                    podeEditarExcluirIdeia &&
+                            usuarioIdLogado != null &&
+                            ideia.usuarioId == usuarioIdLogado,
                 podeAtualizarStatusIdeia = podeAtualizarStatusIdeia,
                 onAlternarVotoClick = onAlternarVotoClick,
                 onAtualizarStatus = onAtualizarStatusClick,

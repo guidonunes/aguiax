@@ -1,0 +1,1593 @@
+{
+  "info": {
+    "_postman_id": "e91c96b9-aaef-4c80-aa05-20bca43237fc",
+    "name": "aguiaexpress",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "35091369"
+  },
+  "item": [
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Listar todos os usuários",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiYW5hLm1hcnRpbnNAYWd1aWFleHByZXNzLmNvbSIsInVzZXJJZCI6Mywibm9tZSI6IkFuYSBNYXJ0aW5zIiwicGVyZmlsIjoiT1BFUkFDSU9OQUwiLCJyb2xlIjoiUk9MRV9PUEVSQUNJT05BTCIsImV4cCI6MTc3OTY2OTY4M30.Wvy4AZ8Xs8sOwlGpbOSCQUFGONZOZ_t_7xXWLvWe28E",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/usuarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastrar usuário",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ana Martins\",\n  \"email\": \"ana.martins@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"OPERACIONAL\",\n  \"cargo\": \"Operadora de Atendimento\",\n  \"departamento\": \"Atendimento\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/usuarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuário por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/usuarios/99",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios",
+                "99"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar usuário por id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/usuarios/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar usuário",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ana Martins Silva\",\n  \"email\": \"ana.martins@aguiaexpress.com\",\n  \"cargo\": \"Operadora Sênior de Atendimento\",\n  \"departamento\": \"Atendimento ao Cliente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/usuarios/4",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "Listar categoria por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/categorias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "categorias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas categorias",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/categorias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "categorias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar nova categoria",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nomeCategoria\": \"LOGISTICA\",\n  \"descricao\": \"Ideias relacionadas à otimização de rotas, entregas e processos logísticos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/categorias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "categorias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar categoria",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nomeCategoria\": \"LOGISTICA_OPERACIONAL\",\n  \"descricao\": \"Ideias relacionadas à otimização de rotas, entregas, frota e processos logísticos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/categorias/8",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "categorias",
+                "8"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deleta categorias por id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/categorias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "categorias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "StatusIdeia",
+      "item": [
+        {
+          "name": "Listar todos status de ideias",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/status-ideias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "status-ideias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar status de ideias por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mariana Souza\",\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\",\n  \"nomePerfil\": \"LIDER\",\n  \"cargo\": \"Diretora de Estratégia\",\n  \"departamento\": \"Estratégia\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/status-ideias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "status-ideias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orientacoes Estrategicas",
+      "item": [
+        {
+          "name": "Criar nova orientação",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODI0MTF9.JH8zemz7PmhHILqP5aYVAGu1liZE5Hc5RtTIxZfT0HQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Expansão da cultura de inovação com IA\",\n  \"descricao\": \"Estimular ideias que melhorem processos internos, reduzam custos e aumentem o engajamento dos colaboradores.\",\n  \"areaEstrategica\": \"Inovação\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/orientacoes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "orientacoes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as orientacoes",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiY2FybG9zLm1lbmRlc0BhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoyLCJub21lIjoiQ2FybG9zIE1lbmRlcyIsInBlcmZpbCI6IkdFU1RPUiIsInJvbGUiOiJST0xFX0dFU1RPUiIsImV4cCI6MTc3OTY4MTg5NX0.F9fr6VGCB21ctqB_vqIbUzTetCs9lfZ-2cJeiXIqSpQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 3,\n  \"titulo\": \"Redução de custos operacionais\",\n  \"descricao\": \"Priorizar ideias que reduzam desperdícios, otimizem rotas, melhorem o uso da frota e diminuam custos operacionais.\",\n  \"areaEstrategica\": \"Operações\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/orientacoes",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "orientacoes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar orientaçoes ativas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiYW5hLm1hcnRpbnNAYWd1aWFleHByZXNzLmNvbSIsInVzZXJJZCI6Mywibm9tZSI6IkFuYSBNYXJ0aW5zIiwicGVyZmlsIjoiT1BFUkFDSU9OQUwiLCJyb2xlIjoiUk9MRV9PUEVSQUNJT05BTCIsImV4cCI6MTc3OTY4MDUwNX0.3nchlhdCfTLivtNXxbBJ_DNY2PE8dVsc0HxB-BmQwmw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/orientacoes/ativas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "orientacoes",
+                "ativas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar orientacoes por Id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODMwNzF9.nndERFTGuxDm_zGN8t840530kyqCX8omuiuAw--He9U",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 3,\n  \"titulo\": \"Redução de custos operacionais\",\n  \"descricao\": \"Priorizar ideias que reduzam desperdícios, otimizem rotas, melhorem o uso da frota e diminuam custos operacionais.\",\n  \"areaEstrategica\": \"Operações\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/orientacoes/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "orientacoes",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar orientacoes por area estrategica",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/orientacoes/area?areaEstrategica=Tecnologia",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "orientacoes",
+                "area"
+              ],
+              "query": [
+                {
+                  "key": "areaEstrategica",
+                  "value": "Tecnologia"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar orientação",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODI0MTF9.JH8zemz7PmhHILqP5aYVAGu1liZE5Hc5RtTIxZfT0HQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Redução inteligente de custos operacionais sem IA\",\n  \"descricao\": \"Priorizar ideias que reduzam desperdícios, otimizem rotas, melhorem uso de recursos e gerem economia mensurável para a operação.\",\n  \"areaEstrategica\": \"Operações\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/orientacoes/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "orientacoes",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar orientacao",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODM4MTd9.GBncUhszh6UL00aDpuYvkZ0tTanBgQftmSq7cfTGwfw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/orientacoes/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "orientacoes",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ideias",
+      "item": [
+        {
+          "name": "Cadastrar ideia nova",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiYW5hLm1hcnRpbnNAYWd1aWFleHByZXNzLmNvbSIsInVzZXJJZCI6Mywibm9tZSI6IkFuYSBNYXJ0aW5zIiwicGVyZmlsIjoiT1BFUkFDSU9OQUwiLCJyb2xlIjoiUk9MRV9PUEVSQUNJT05BTCIsImV4cCI6MTc3OTY4MDUwNX0.3nchlhdCfTLivtNXxbBJ_DNY2PE8dVsc0HxB-BmQwmw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoriaId\": 2,\n  \"orientacaoId\": 1,\n  \"titulo\": \"Teste de ideia para virar projeto com IA\",\n  \"descricao\": \"Ideia criada apenas para testar a criação de projeto com autenticação.\",\n  \"problema\": \"Precisamos validar o fluxo de projeto.\",\n  \"solucaoProposta\": \"Criar uma ideia nova e depois convertê-la em projeto.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/ideias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "ideias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as ideias",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODM4MTd9.GBncUhszh6UL00aDpuYvkZ0tTanBgQftmSq7cfTGwfw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores com IA\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/ideias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "ideias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar ideias por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/ideias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "ideias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar ideia",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores com IA\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/ideias/3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "ideias",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar ideia",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiYW5hLm1hcnRpbnNAYWd1aWFleHByZXNzLmNvbSIsInVzZXJJZCI6Mywibm9tZSI6IkFuYSBNYXJ0aW5zIiwicGVyZmlsIjoiT1BFUkFDSU9OQUwiLCJyb2xlIjoiUk9MRV9PUEVSQUNJT05BTCIsImV4cCI6MTc3OTY4MDUwNX0.3nchlhdCfTLivtNXxbBJ_DNY2PE8dVsc0HxB-BmQwmw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores com IA\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/ideias/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "ideias",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar status de uma ideia",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiY2FybG9zLm1lbmRlc0BhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoyLCJub21lIjoiQ2FybG9zIE1lbmRlcyIsInBlcmZpbCI6IkdFU1RPUiIsInJvbGUiOiJST0xFX0dFU1RPUiIsImV4cCI6MTc3OTY4MTg5NX0.F9fr6VGCB21ctqB_vqIbUzTetCs9lfZ-2cJeiXIqSpQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APROVADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/ideias/1/status",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "ideias",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Status Projetos",
+      "item": [
+        {
+          "name": "Mostrar status de todos os projetos",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/status-projetos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "status-projetos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mostrar status dos projetos por Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/status-projetos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "status-projetos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Projetos",
+      "item": [
+        {
+          "name": "Cadastrar novo projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiY2FybG9zLm1lbmRlc0BhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoyLCJub21lIjoiQ2FybG9zIE1lbmRlcyIsInBlcmZpbCI6IkdFU1RPUiIsInJvbGUiOiJST0xFX0dFU1RPUiIsImV4cCI6MTc3OTY4MTg5NX0.F9fr6VGCB21ctqB_vqIbUzTetCs9lfZ-2cJeiXIqSpQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ideiaId\": 2,\n  \"usuarioId\": 2,\n  \"titulo\": \"Projeto teste com JWT com Figma\",\n  \"descricao\": \"Projeto criado para validar permissão de gestor.\",\n  \"objetivo\": \"Confirmar que apenas gestor consegue criar projeto.\",\n  \"investimento\": 10000.00,\n  \"roi\": 12.50,\n  \"retornoFinanceiro\": 25000.00,\n  \"reducaoCustos\": 5000.00,\n  \"ganhoProdutividade\": 10.00,\n  \"dataInicio\": \"2026-06-01\",\n  \"dataPrevisaoFim\": \"2026-08-30\",\n  \"dataConclusao\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/projetos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "projetos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos os projetos",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODM4MTd9.GBncUhszh6UL00aDpuYvkZ0tTanBgQftmSq7cfTGwfw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ideiaId\": 1,\n  \"usuarioId\": 2,\n  \"titulo\": \"Projeto de otimização de rotas\",\n  \"descricao\": \"Projeto para implementar melhorias no planejamento de rotas operacionais.\",\n  \"objetivo\": \"Reduzir custos, atrasos e consumo de combustível nas operações.\",\n  \"investimento\": 15000.00,\n  \"roi\": 12.50,\n  \"retornoFinanceiro\": 30000.00,\n  \"reducaoCustos\": 8000.00,\n  \"ganhoProdutividade\": 15.00,\n  \"dataInicio\": \"2026-06-01\",\n  \"dataPrevisaoFim\": \"2026-08-30\",\n  \"dataConclusao\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/projetos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "projetos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar projetos por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ideiaId\": 1,\n  \"usuarioId\": 2,\n  \"titulo\": \"Projeto de otimização de rotas\",\n  \"descricao\": \"Projeto para implementar melhorias no planejamento de rotas operacionais.\",\n  \"objetivo\": \"Reduzir custos, atrasos e consumo de combustível nas operações.\",\n  \"investimento\": 15000.00,\n  \"roi\": 12.50,\n  \"retornoFinanceiro\": 30000.00,\n  \"reducaoCustos\": 8000.00,\n  \"ganhoProdutividade\": 15.00,\n  \"dataInicio\": \"2026-06-01\",\n  \"dataPrevisaoFim\": \"2026-08-30\",\n  \"dataConclusao\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/projetos/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "projetos",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODM4MTd9.GBncUhszh6UL00aDpuYvkZ0tTanBgQftmSq7cfTGwfw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ideiaId\": 1,\n  \"usuarioId\": 2,\n  \"titulo\": \"Projeto teste gestor JWT atualizado\",\n  \"descricao\": \"Projeto atualizado pelo gestor.\",\n  \"objetivo\": \"Validar edição de projeto pelo perfil gestor.\",\n  \"investimento\": 12000.00,\n  \"roi\": 15.00,\n  \"retornoFinanceiro\": 30000.00,\n  \"reducaoCustos\": 7000.00,\n  \"ganhoProdutividade\": 12.00,\n  \"dataInicio\": \"2026-06-01\",\n  \"dataPrevisaoFim\": \"2026-09-15\",\n  \"dataConclusao\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/projetos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "projetos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiY2FybG9zLm1lbmRlc0BhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoyLCJub21lIjoiQ2FybG9zIE1lbmRlcyIsInBlcmZpbCI6IkdFU1RPUiIsInJvbGUiOiJST0xFX0dFU1RPUiIsImV4cCI6MTc3OTY4MTg5NX0.F9fr6VGCB21ctqB_vqIbUzTetCs9lfZ-2cJeiXIqSpQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ideiaId\": 1,\n  \"usuarioId\": 2,\n  \"titulo\": \"Projeto de otimização de rotas com IA\",\n  \"descricao\": \"Projeto para implementar melhorias no planejamento de rotas operacionais.\",\n  \"objetivo\": \"Reduzir custos, atrasos e consumo de combustível nas operações.\",\n  \"investimento\": 15000.00,\n  \"roi\": 12.50,\n  \"retornoFinanceiro\": 30000.00,\n  \"reducaoCustos\": 8000.00,\n  \"ganhoProdutividade\": 15.00,\n  \"dataInicio\": \"2026-06-01\",\n  \"dataPrevisaoFim\": \"2026-08-30\",\n  \"dataConclusao\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/projetos/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "projetos",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar status do projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODM4MTd9.GBncUhszh6UL00aDpuYvkZ0tTanBgQftmSq7cfTGwfw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_ANDAMENTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/projetos/1/status",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "projetos",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Badges",
+      "item": [
+        {
+          "name": "Listar todas as badges",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoibWFyaWFuYS5zb3V6YUBhZ3VpYWV4cHJlc3MuY29tIiwidXNlcklkIjoxLCJub21lIjoiTWFyaWFuYSBTb3V6YSIsInBlcmZpbCI6IkxJREVSIiwicm9sZSI6IlJPTEVfTElERVIiLCJleHAiOjE3Nzk2ODM4MTd9.GBncUhszh6UL00aDpuYvkZ0tTanBgQftmSq7cfTGwfw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores com IA\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/badges",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "badges"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as badges ativas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/badges/ativas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "badges",
+                "ativas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar badges por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/badges/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "badges",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar badges por nome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/badges/nome/PRIMEIRA_IDEIA",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "badges",
+                "nome",
+                "PRIMEIRA_IDEIA"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuario Badge",
+      "item": [
+        {
+          "name": "Conceder badge por id",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/usuario-badges/usuario/4/badge/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuario-badges",
+                "usuario",
+                "4",
+                "badge",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conceder badge por nome",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuario-badges/usuario/2/nome/PRIMEIRA_IDEIA",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuario-badges",
+                "usuario",
+                "2",
+                "nome",
+                "PRIMEIRA_IDEIA"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as conquistas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuario-badges",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuario-badges"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar conquistas por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuario-badges/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuario-badges",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar badge de um usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiYW5hLm1hcnRpbnNAYWd1aWFleHByZXNzLmNvbSIsInVzZXJJZCI6Mywibm9tZSI6IkFuYSBNYXJ0aW5zIiwicGVyZmlsIjoiT1BFUkFDSU9OQUwiLCJyb2xlIjoiUk9MRV9PUEVSQUNJT05BTCIsImV4cCI6MTc3OTY4MDUwNX0.3nchlhdCfTLivtNXxbBJ_DNY2PE8dVsc0HxB-BmQwmw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuario-badges/usuario/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuario-badges",
+                "usuario",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuarios que possuem uma badge",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuario-badges/badge/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuario-badges",
+                "badge",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar badge de um usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuario-badges/usuario/4/badge/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuario-badges",
+                "usuario",
+                "4",
+                "badge",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Votar Ideia",
+      "item": [
+        {
+          "name": "Votar em uma ideia",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiYW5hLm1hcnRpbnNAYWd1aWFleHByZXNzLmNvbSIsInVzZXJJZCI6Mywibm9tZSI6IkFuYSBNYXJ0aW5zIiwicGVyZmlsIjoiT1BFUkFDSU9OQUwiLCJyb2xlIjoiUk9MRV9PUEVSQUNJT05BTCIsImV4cCI6MTc3OTY4MDUwNX0.3nchlhdCfTLivtNXxbBJ_DNY2PE8dVsc0HxB-BmQwmw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/votos-ideias/ideia/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "votos-ideias",
+                "ideia",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar votos por ideia",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/ideias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "ideias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos os votos - historico",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/votos-ideias",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "votos-ideias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar votos por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": 2,\n  \"categoriaId\": 4,\n  \"orientacaoId\": 2,\n  \"titulo\": \"Painel de indicadores para gestores\",\n  \"descricao\": \"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\n  \"problema\": \"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\n  \"solucaoProposta\": \"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/votos-ideias/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "votos-ideias",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar votos de uma ideia",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/votos-ideias/ideia/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "votos-ideias",
+                "ideia",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar votos de um usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/votos-ideias/usuario/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "votos-ideias",
+                "usuario",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remover voto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZ3VpYWV4cHJlc3MtYXBpIiwic3ViIjoiYW5hLm1hcnRpbnNAYWd1aWFleHByZXNzLmNvbSIsInVzZXJJZCI6Mywibm9tZSI6IkFuYSBNYXJ0aW5zIiwicGVyZmlsIjoiT1BFUkFDSU9OQUwiLCJyb2xlIjoiUk9MRV9PUEVSQUNJT05BTCIsImV4cCI6MTc3OTY4MDUwNX0.3nchlhdCfTLivtNXxbBJ_DNY2PE8dVsc0HxB-BmQwmw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/votos-ideias/ideia/2",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "votos-ideias",
+                "ideia",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Logar usuário",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mariana.souza@aguiaexpress.com\",\n  \"senha\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
