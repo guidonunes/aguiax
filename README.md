@@ -85,9 +85,10 @@ de IA; ele não replica as entidades relacionais.
 
 O banco de produção `aguiaexpress` pode não aparecer no MongoDB Compass
 imediatamente. A Task 2.2 valida escrita e leitura em um banco de teste temporário
-e exclusivo para cada execução, removendo-o ao terminar. O MongoDB materializará
-`aguiaexpress` após a primeira gravação funcional, prevista para o modelo de
-auditoria quando ele for conectado às operações de negócio na Task 3.2.
+e exclusivo para cada execução, removendo-o ao terminar. Com as Tasks 3.1–3.2, o
+MongoDB materializa `aguiaexpress` e a coleção `audit_events` após a primeira ação
+auditada bem-sucedida, como login, criação de ideia, projeto ou orientação. Apenas
+iniciar o backend não cria necessariamente o banco ou a coleção.
 
 Para executar apenas a prova de persistência da Task 2.2:
 

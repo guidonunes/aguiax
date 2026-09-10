@@ -1,5 +1,8 @@
 package br.com.fiap.aguiaexpress.service;
 
+import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
+import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
+import br.com.fiap.aguiaexpress.audit.service.AuditService;
 import br.com.fiap.aguiaexpress.dto.AtualizarStatusIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.RegistrarIdeiaDTO;
@@ -14,12 +17,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class IdeiaService {
 
+    private final AuditService auditService;
     private final IdeiaRepository ideiaRepository;
     private final UsuarioRepository usuarioRepository;
     private final CategoriaService categoriaService;
@@ -64,6 +69,18 @@ public class IdeiaService {
 
         Ideia ideiaSalva = ideiaRepository.save(ideia);
 
+        auditService.registrarEvento(
+                AuditEventType.IDEA_CREATED,
+                usuario.getId(),
+                AuditResourceType.IDEA,
+                ideiaSalva.getId().toString(),
+                Map.of(
+                        "status", ideiaSalva.getStatusIdeia().getStatus().name(),
+                        "categoryId", categoria.getId(),
+                        "orientationId", orientacao.getId()
+                )
+        );
+
         return new MostrarIdeiaDTO(ideiaSalva);
     }
 
@@ -106,6 +123,17 @@ public class IdeiaService {
 
         Ideia ideiaAtualizada = ideiaRepository.save(ideia);
 
+        auditService.registrarEvento(
+                AuditEventType.IDEA_UPDATED,
+                usuario.getId(),
+                AuditResourceType.IDEA,
+                ideiaAtualizada.getId().toString(),
+                Map.of(
+                        "categoryId", categoria.getId(),
+                        "orientationId", orientacao.getId()
+                )
+        );
+
         return new MostrarIdeiaDTO(ideiaAtualizada);
     }
 
@@ -115,7 +143,17 @@ public class IdeiaService {
 
         validarProprietario(ideia, usuario);
 
+        NomeStatusIdeia previousStatus = ideia.getStatusIdeia().getStatus();
+
         ideiaRepository.delete(ideia);
+
+        auditService.registrarEvento(
+                AuditEventType.IDEA_DELETED,
+                usuario.getId(),
+                AuditResourceType.IDEA,
+                ideia.getId().toString(),
+                Map.of("previousStatus", previousStatus.name())
+        );
     }
 
     public List<MostrarIdeiaDTO> listarIdeiasPorUsuario(Long usuarioId) {
@@ -168,15 +206,32 @@ public class IdeiaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ideia não encontrada."));
     }
 
-    public MostrarIdeiaDTO atualizarStatusIdeia(Long id, AtualizarStatusIdeiaDTO statusDTO) {
+    public MostrarIdeiaDTO atualizarStatusIdeia(
+            Long id,
+            AtualizarStatusIdeiaDTO statusDTO
+    ) {
         Ideia ideia = buscarEntidadePorId(id);
+        Usuario actor = usuarioAutenticadoService.getUsuarioAutenticado();
 
-        StatusIdeia novoStatus = statusIdeiaService.buscarEntidadePorStatus(statusDTO.status());
+        NomeStatusIdeia previousStatus = ideia.getStatusIdeia().getStatus();
+        StatusIdeia novoStatus =
+                statusIdeiaService.buscarEntidadePorStatus(statusDTO.status());
 
         ideia.setStatusIdeia(novoStatus);
         ideia.setDataAtualizacao(LocalDateTime.now());
 
         Ideia ideiaAtualizada = ideiaRepository.save(ideia);
+
+        auditService.registrarEvento(
+                eventTypeForIdeaStatus(statusDTO.status()),
+                actor.getId(),
+                AuditResourceType.IDEA,
+                ideiaAtualizada.getId().toString(),
+                Map.of(
+                        "previousStatus", previousStatus.name(),
+                        "newStatus", statusDTO.status().name()
+                )
+        );
 
         return new MostrarIdeiaDTO(ideiaAtualizada);
     }
@@ -190,5 +245,14 @@ public class IdeiaService {
                     "Você só pode editar ou excluir suas próprias ideias."
             );
         }
+    }
+
+    private AuditEventType eventTypeForIdeaStatus(NomeStatusIdeia status) {
+        return switch (status) {
+            case PRIORIZADA -> AuditEventType.IDEA_PRIORITIZED;
+            case APROVADA -> AuditEventType.IDEA_APPROVED;
+            case REJEITADA -> AuditEventType.IDEA_REJECTED;
+            default -> AuditEventType.IDEA_UPDATED;
+        };
     }
 }

@@ -718,7 +718,7 @@ rows when their owning roadmap tasks introduce the controllers.
 | `GET /api/dashboard/projects/{projectId}` if needed | LIDER | Missing | 6.4–6.5 |
 | `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Missing | 8.1 |
 | AI history read endpoint, if exposed | GESTOR only; internal scoring service may read persisted results | Missing | 8.2 |
-| Audit events | Internal service writes only; no client read/write API in Sprint 2 | Missing | 3.1–3.2 |
+| Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain operations; AI hooks deferred | 3.1–3.2, 8.1 |
 | `GET /actuator/health` | Public, overall status only; no component details | Missing | 10.1 |
 | `GET /actuator/info`, `GET /actuator/metrics`, `GET /actuator/metrics/{name}` | LIDER, sanitized metadata/metrics only | Missing | 10.1 |
 
@@ -1099,6 +1099,29 @@ relational business operation. Programming and validation errors are not swallow
 Domain services must request the audit write only after their relational operation
 succeeds. This does not provide a distributed transaction between MySQL and
 MongoDB; the audit document remains supporting evidence rather than business truth.
+
+### 16.2 Audit trigger ownership
+
+The authenticated caller is always the audit actor. Domain ownership or assignment
+is separate metadata; for example, a manager creating a project remains the actor
+even when another manager is assigned as the project's responsible user.
+
+Current trigger mapping:
+
+| Workflow result | Audit event |
+|---|---|
+| Successful login | `USER_LOGIN` |
+| Idea created, updated, or deleted | `IDEA_CREATED`, `IDEA_UPDATED`, `IDEA_DELETED` |
+| Idea prioritized, approved, or rejected | `IDEA_PRIORITIZED`, `IDEA_APPROVED`, `IDEA_REJECTED` |
+| Project created or edited | `PROJECT_CREATED`, `PROJECT_UPDATED` |
+| Project status changed to completed | `PROJECT_COMPLETED` |
+| Orientation created, edited, or deactivated | `ORIENTATION_CREATED`, `ORIENTATION_UPDATED` |
+
+Rejected authentication and rejected authorization attempts do not create these
+success events. The future AI orchestration service owns
+`AI_EVALUATION_REQUESTED`, `AI_EVALUATION_COMPLETED`, and
+`AI_EVALUATION_FAILED`; their hooks are added with Task 8.1 because no AI request
+workflow exists during Phase 3.
 
 ---
 

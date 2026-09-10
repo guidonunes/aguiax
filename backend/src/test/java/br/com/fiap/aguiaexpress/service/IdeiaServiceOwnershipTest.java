@@ -1,5 +1,8 @@
 package br.com.fiap.aguiaexpress.service;
 
+import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
+import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
+import br.com.fiap.aguiaexpress.audit.service.AuditService;
 import br.com.fiap.aguiaexpress.dto.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.RegistrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
@@ -14,6 +17,7 @@ import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +36,7 @@ class IdeiaServiceOwnershipTest {
     private CategoriaService categoriaService;
     private OrientacaoEstrategicaService orientacaoService;
     private UsuarioAutenticadoService usuarioAutenticadoService;
+    private AuditService auditService;
     private IdeiaService ideiaService;
 
     @BeforeEach
@@ -42,8 +47,10 @@ class IdeiaServiceOwnershipTest {
         StatusIdeiaService statusIdeiaService = mock(StatusIdeiaService.class);
         orientacaoService = mock(OrientacaoEstrategicaService.class);
         usuarioAutenticadoService = mock(UsuarioAutenticadoService.class);
+        auditService = mock(AuditService.class);
 
         ideiaService = new IdeiaService(
+                auditService,
                 ideiaRepository,
                 usuarioRepository,
                 categoriaService,
@@ -81,6 +88,13 @@ class IdeiaServiceOwnershipTest {
         assertSame(newCategory, ideia.getCategoria());
         assertSame(newOrientation, ideia.getOrientacaoEstrategica());
         verify(ideiaRepository).save(ideia);
+        verify(auditService).registrarEvento(
+                AuditEventType.IDEA_UPDATED,
+                1L,
+                AuditResourceType.IDEA,
+                "42",
+                Map.of("categoryId", 20L, "orientationId", 30L)
+        );
     }
 
     @Test
@@ -101,6 +115,7 @@ class IdeiaServiceOwnershipTest {
         assertSame(owner, ideia.getUsuario());
         verify(ideiaRepository, never()).save(any());
         verifyNoInteractions(categoriaService, orientacaoService);
+        verifyNoInteractions(auditService);
     }
 
     @Test
@@ -116,6 +131,13 @@ class IdeiaServiceOwnershipTest {
         ideiaService.deletarIdeia(42L);
 
         verify(ideiaRepository).delete(ideia);
+        verify(auditService).registrarEvento(
+                AuditEventType.IDEA_DELETED,
+                1L,
+                AuditResourceType.IDEA,
+                "42",
+                Map.of("previousStatus", "NOVA")
+        );
     }
 
     @Test
@@ -133,6 +155,7 @@ class IdeiaServiceOwnershipTest {
         );
 
         verify(ideiaRepository, never()).delete(any());
+        verifyNoInteractions(auditService);
     }
 
     @Test
@@ -154,6 +177,7 @@ class IdeiaServiceOwnershipTest {
         verify(ideiaRepository, never()).existsByTitulo(any());
         verifyNoInteractions(categoriaService, orientacaoService);
         verify(ideiaRepository, never()).save(any());
+        verifyNoInteractions(auditService);
     }
 
     private RegistrarIdeiaDTO updateRequest() {

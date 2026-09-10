@@ -1,5 +1,8 @@
 package br.com.fiap.aguiaexpress.service;
 
+import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
+import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
+import br.com.fiap.aguiaexpress.audit.service.AuditService;
 import br.com.fiap.aguiaexpress.dto.AtualizarStatusProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.MostrarProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.RegistrarProjetoDTO;
@@ -16,11 +19,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class ProjetoService {
 
+    private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final AuditService auditService;
     private final ProjetoRepository projetoRepository;
     private final UsuarioRepository usuarioRepository;
     private final IdeiaService ideiaService;
@@ -33,6 +39,7 @@ public class ProjetoService {
             throw new DuplicateResourceException("Essa ideia já foi convertida em projeto.");
         }
 
+        Usuario actor = usuarioAutenticadoService.getUsuarioAutenticado();
         Usuario usuario = usuarioRepository.findById(projetoDTO.usuarioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário responsável não encontrado."));
 
@@ -66,6 +73,18 @@ public class ProjetoService {
 
         Projeto projetoSalvo = projetoRepository.save(projeto);
 
+        auditService.registrarEvento(
+                AuditEventType.PROJECT_CREATED,
+                actor.getId(),
+                AuditResourceType.PROJECT,
+                projetoSalvo.getId().toString(),
+                Map.of(
+                        "ideaId", ideia.getId(),
+                        "responsibleUserId", usuario.getId(),
+                        "status", statusInicial.getStatus().name()
+                )
+        );
+
         return new MostrarProjetoDTO(projetoSalvo);
     }
 
@@ -82,6 +101,9 @@ public class ProjetoService {
 
     public MostrarProjetoDTO atualizarProjeto(Long id, RegistrarProjetoDTO projetoDTO) {
         Projeto projeto = buscarEntidadePorId(id);
+        Usuario actor = usuarioAutenticadoService.getUsuarioAutenticado();
+        Long previousIdeaId = projeto.getIdeia().getId();
+        Long previousResponsibleUserId = projeto.getUsuario().getId();
 
         Ideia ideia = ideiaService.buscarEntidadePorId(projetoDTO.ideiaId());
 
@@ -115,6 +137,19 @@ public class ProjetoService {
         projeto.setDataAtualizacao(LocalDateTime.now());
 
         Projeto projetoAtualizado = projetoRepository.save(projeto);
+
+        auditService.registrarEvento(
+                AuditEventType.PROJECT_UPDATED,
+                actor.getId(),
+                AuditResourceType.PROJECT,
+                projetoAtualizado.getId().toString(),
+                Map.of(
+                        "previousIdeaId", previousIdeaId,
+                        "newIdeaId", ideia.getId(),
+                        "previousResponsibleUserId", previousResponsibleUserId,
+                        "newResponsibleUserId", usuario.getId()
+                )
+        );
 
         return new MostrarProjetoDTO(projetoAtualizado);
     }
@@ -175,14 +210,22 @@ public class ProjetoService {
         return valor != null ? valor : BigDecimal.ZERO;
     }
 
-    public MostrarProjetoDTO atualizarStatusProjeto(Long id, AtualizarStatusProjetoDTO statusDTO) {
+    public MostrarProjetoDTO atualizarStatusProjeto(
+            Long id,
+            AtualizarStatusProjetoDTO statusDTO
+    ) {
         Projeto projeto = buscarEntidadePorId(id);
+        Usuario actor = usuarioAutenticadoService.getUsuarioAutenticado();
 
-        StatusProjeto novoStatus = statusProjetoService.buscarEntidadePorStatus(statusDTO.status());
+        NomeStatusProjeto previousStatus =
+                projeto.getStatusProjeto().getStatus();
+
+        StatusProjeto novoStatus =
+                statusProjetoService.buscarEntidadePorStatus(statusDTO.status());
 
         projeto.setStatusProjeto(novoStatus);
 
-        if (statusDTO.status().equals(NomeStatusProjeto.CONCLUIDO)
+        if (statusDTO.status() == NomeStatusProjeto.CONCLUIDO
                 && projeto.getDataConclusao() == null) {
             projeto.setDataConclusao(LocalDate.now());
         }
@@ -190,6 +233,22 @@ public class ProjetoService {
         projeto.setDataAtualizacao(LocalDateTime.now());
 
         Projeto projetoAtualizado = projetoRepository.save(projeto);
+
+        AuditEventType eventType =
+                statusDTO.status() == NomeStatusProjeto.CONCLUIDO
+                        ? AuditEventType.PROJECT_COMPLETED
+                        : AuditEventType.PROJECT_UPDATED;
+
+        auditService.registrarEvento(
+                eventType,
+                actor.getId(),
+                AuditResourceType.PROJECT,
+                projetoAtualizado.getId().toString(),
+                Map.of(
+                        "previousStatus", previousStatus.name(),
+                        "newStatus", statusDTO.status().name()
+                )
+        );
 
         return new MostrarProjetoDTO(projetoAtualizado);
     }

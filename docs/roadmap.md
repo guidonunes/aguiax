@@ -443,6 +443,33 @@ Do not make audit persistence the system of record.
 
 Critical Sprint 2 actions leave a traceable audit document.
 
+### Task 3.2 record — 2026-09-10
+
+Implemented for every critical workflow that currently exists. Successful login,
+idea creation/update/deletion and status decisions, project creation/update/status
+completion, and strategic-orientation creation/update/deactivation now request an
+audit event after the corresponding relational repository operation succeeds. The
+authenticated caller is recorded as the actor; a project's assigned responsible
+user is retained only as resource metadata.
+
+Codex completed the missing login, project-update, orientation-update, and
+orientation-deactivation hooks and retained the developer's idea, project-create,
+project-complete, and orientation-create work. Focused unit tests verify event
+selection, actor/resource identity, metadata, ordering after relational persistence,
+no audit request after failed relational writes, and no event for rejected login or
+forbidden idea mutations. Together with the Task 3.1 MongoDB repository test, the
+focused run completed 25 tests with zero failures and zero errors. The complete
+backend run completed 59 tests: 58 passed, while the pre-existing
+`AguiaexpressApplicationTests.contextLoads` retained its documented unresolved
+`${DB_URL}` setup error because `@SpringBootTest` does not execute the `.env`
+bootstrap in `main`.
+
+The AI evaluation workflow does not exist until Phases 7–8, so its requested,
+completed, and failed event types are defined but cannot yet be connected. Task 8.1
+must add those three calls and Task 11.6 must retain their end-to-end verification.
+This deferral does not block Phase 4, but final Sprint-wide acceptance of Task 3.2
+remains partial until the AI workflow is implemented.
+
 ---
 
 # Phase 4 — Correct idea and project workflows
