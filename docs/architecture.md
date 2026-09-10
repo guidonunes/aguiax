@@ -679,7 +679,7 @@ mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/agui
 | VotoIdeiaController | `GET /votos-ideias/{id}` | Authenticated | Implemented | Auth; 11.2 |
 | VotoIdeiaController | `GET /votos-ideias/ideia/{ideiaId}` | Authenticated | Implemented | Auth; 11.2 |
 | VotoIdeiaController | `GET /votos-ideias/usuario/{usuarioId}` | Authenticated | Implemented | Auth; 11.2 |
-| ProjetoController | `POST /projetos` | GESTOR | Implemented | Role; 1.2; conversion invariants in 4.3 |
+| ProjetoController | `POST /projetos` | GESTOR | Implemented | Role, approved-idea eligibility, uniqueness, and transactional conversion verified; 1.2 and 4.3 |
 | ProjetoController | `GET /projetos` | Authenticated | Implemented | Auth; 1.2 |
 | ProjetoController | `GET /projetos/{id}` | Authenticated | Implemented | Auth; 1.2 |
 | ProjetoController | `PUT /projetos/{id}` | GESTOR | Implemented | Role, any manager; 1.2 |
@@ -939,7 +939,17 @@ Idea → CONVERTIDA_EM_PROJETO
 Audit event recorded
 ```
 
-The relational changes should occur in one transaction.
+The relational changes occur in one Spring-managed transaction in
+`ProjetoService.criarProjeto`. `IdeiaService` owns validation and application of
+the `APROVADA -> CONVERTIDA_EM_PROJETO` transition. The project is initially saved
+as `PLANEJADO`, the idea status and update timestamp are changed, and the JPA
+persistence context is flushed before the success audit is requested. Runtime
+persistence failures therefore roll back both MySQL changes and do not emit a
+successful `PROJECT_CREATED` event.
+
+Uniqueness is enforced twice: the service rejects an already-linked idea with a
+controlled conflict, while `t_projetos.id_ideia` retains its database unique
+constraint for concurrent or bypass attempts.
 
 Project status lifecycle:
 
@@ -1133,7 +1143,7 @@ Current trigger mapping:
 | Successful login | `USER_LOGIN` |
 | Idea created, updated, or deleted | `IDEA_CREATED`, `IDEA_UPDATED`, `IDEA_DELETED` |
 | Idea prioritized, approved, or rejected | `IDEA_PRIORITIZED`, `IDEA_APPROVED`, `IDEA_REJECTED` |
-| Project created or edited | `PROJECT_CREATED`, `PROJECT_UPDATED` |
+| Project created or edited | `PROJECT_CREATED`, `PROJECT_UPDATED`; creation records the idea's conversion statuses |
 | Project status changed to completed | `PROJECT_COMPLETED` |
 | Orientation created, edited, or deactivated | `ORIENTATION_CREATED`, `ORIENTATION_UPDATED` |
 
@@ -1693,21 +1703,28 @@ the authorization matrix and the logging restrictions in section 20.2.
 
 ## Project conversion
 
-- project creation does not fully enforce approved-idea eligibility;
-- project creation does not yet guarantee the intended transition to `CONVERTIDA_EM_PROJETO`.
+- project creation enforces approved-idea eligibility and one project per idea;
+- project insertion and the transition to `CONVERTIDA_EM_PROJETO` share one MySQL transaction;
+- Android should still limit its project-creation picker to eligible ideas.
 
 ## Android/backend contract
 
-- idea status naming is inconsistent between backend and Android (`statusIdeia` vs `status`).
+- Task 5.1 established backend `statusIdeia` as the canonical idea-response field;
+- Android maps `statusIdeia` to its domain `status` value and rejects a missing
+  field instead of silently substituting `NOVA`.
 
 ## Dashboard
 
 - dashboard aggregation currently belongs too heavily to Android;
-- "projects in progress" has an incorrect semantic/counting behavior.
+- Task 5.2 corrected the current Android card to count only `EM_ANDAMENTO`;
+- Phase 6 must still make the backend status aggregation authoritative.
 
 ## Badges
 
-- earned badges may still appear in the available catalog.
+- Task 5.3 makes the Android earned and available sections disjoint by badge ID;
+- progress uses earned active badges over the complete active catalog;
+- inactive historical awards remain visible as achievements without affecting
+  active-catalog progress.
 
 ## Testing
 

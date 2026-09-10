@@ -11,7 +11,7 @@ data class IdeiaDto(
     val descricao: String,
     val problema: String,
     val solucaoProposta: String,
-    val status: String? = null,
+    val statusIdeia: String? = null,
     val nomeUsuario: String? = null,
     val nomeCategoria: String? = null,
     val tituloOrientacao: String? = null,
@@ -20,13 +20,17 @@ data class IdeiaDto(
 )
 
 fun IdeiaDto.toDomain(): Ideia {
+    val mappedStatus = requireNotNull(statusIdeia) {
+        "A resposta da ideia não contém o campo obrigatório statusIdeia."
+    }
+
     return Ideia(
         id = id ?: 0L,
         titulo = titulo,
         descricao = descricao,
         problema = problema,
         solucaoProposta = solucaoProposta,
-        status = status ?: "NOVA",
+        status = mappedStatus,
         usuarioId = usuarioId,
         categoriaId = categoriaId,
         orientacaoId = orientacaoId,

@@ -585,6 +585,34 @@ Use a transaction for relational changes.
 
 Idea-to-project conversion is a consistent business transaction.
 
+### Task 4.3 record — 2026-09-10
+
+Implemented and verified by Codex. `ProjetoService.criarProjeto` now declares a
+Spring `@Transactional` boundary for the two MySQL changes. Creation first resolves
+the idea, preserves the existing service and database uniqueness checks, and uses
+the Task 4.2 transition policy to accept only `APROVADA ->
+CONVERTIDA_EM_PROJETO`. It then creates the `PLANEJADO` project, updates the idea
+status and timestamp through `IdeiaService`, and flushes the relational persistence
+context before requesting the success audit event.
+
+The existing Flyway unique constraint on `t_projetos.id_ideia` and the matching JPA
+one-to-one mapping already enforce one project per idea, so no migration was
+required. The `PROJECT_CREATED` audit metadata now includes the previous and new
+idea statuses in addition to the idea, responsible user, and initial project
+status. If project insertion, idea update, or relational flush fails, the runtime
+exception rolls back the MySQL transaction and no success audit is requested.
+MongoDB audit persistence remains best-effort and outside the relational transaction
+as defined in the architecture.
+
+Eleven new conversion tests cover successful creation/status conversion, all five
+ineligible idea states, duplicate conversion, project-save failure, idea-save
+failure, flush failure, transaction declaration, operation ordering, and audit
+metadata. Together with the existing project-audit and Task 4.2 tests, the focused
+run completed 31 tests with zero failures and zero errors. The complete backend run
+completed 96 tests: 95 passed, while the pre-existing
+`AguiaexpressApplicationTests.contextLoads` retained its documented unresolved
+`${DB_URL}` test-configuration error. The Task 4.3 exit criterion is satisfied.
+
 ---
 
 # Phase 5 — Fix known integration defects
@@ -611,6 +639,23 @@ Update Android only if required by the chosen contract.
 
 All idea statuses render correctly in Android with no fallback to `NOVA` caused by field mismatch.
 
+### Task 5.1 record — 2026-09-10
+
+Implemented and verified by Codex. The existing backend response field
+`statusIdeia` remains the canonical public contract, avoiding a breaking backend
+rename. Android's `IdeiaDto` now reads that exact field and maps it to the domain
+model's `status` property. The previous silent `status ?: "NOVA"` substitution was
+removed. Because Gson can represent an absent response field as null, the mapping
+boundary now rejects a missing `statusIdeia` explicitly instead of displaying
+incorrect domain state.
+
+Two Android contract tests deserialize and map all six lifecycle values (`NOVA`,
+`EM_ANALISE`, `PRIORIZADA`, `APROVADA`, `REJEITADA`, and
+`CONVERTIDA_EM_PROJETO`) and verify that a response without `statusIdeia` fails
+without fallback. The complete Android unit run passed 6 of 6 tests, and
+`assembleDebug` completed successfully. No backend or database change was required.
+The Task 5.1 exit criterion is satisfied.
+
 ---
 
 ## Task 5.2 — Fix dashboard "projects in progress" bug
@@ -621,6 +666,21 @@ Ensure "projects in progress" counts only the intended status, not all projects.
 
 Displayed value matches backend/domain status semantics.
 
+### Task 5.2 record — 2026-09-10
+
+Implemented and verified by Codex. `DashboardUiState` now keeps
+`projetosEmAndamento` separate from `totalProjetos`. The current Android summary
+counts only projects whose domain status is exactly `EM_ANDAMENTO`, and
+`DashboardScreen` passes that dedicated value to the card labelled "Projetos em
+andamento". Other project statuses no longer inflate the displayed metric.
+
+Three focused unit tests cover mixed statuses, zero projects in progress, and a
+collection in which every project is in progress. The complete Android unit suite
+passed 9 of 9 tests, and `assembleDebug` completed successfully. This is the
+required tactical defect correction; Phase 6 still owns moving authoritative
+dashboard aggregation and financial calculations to the backend. The Task 5.2
+exit criterion is satisfied.
+
 ---
 
 ## Task 5.3 — Fix earned/available badge overlap
@@ -630,6 +690,23 @@ If retained for Sprint 2 delivery, ensure badges already earned are not incorrec
 ### Exit criterion
 
 Earned and available badge sections are logically consistent.
+
+### Task 5.3 record — 2026-09-10
+
+Implemented and verified by Codex. The retained Android badge screen now compares
+the active catalog's `Badge.id` values with the authenticated user's earned
+`UsuarioBadge.badgeId` values. `BadgeViewModel` exposes only unearned active badges
+as `badgesDisponiveis`, so an earned badge cannot also appear in the available
+section.
+
+Progress values are stored separately from the remaining list: the denominator is
+the complete active catalog and the numerator is the number of distinct active
+badge IDs earned by the user. Historical awards for inactive badges remain visible
+under "Minhas conquistas" but do not inflate active-catalog progress. Four new unit
+tests cover partial overlap, all badges earned, no badges earned, and an inactive
+historical award. The complete Android unit suite passed 13 of 13 tests, and
+`assembleDebug` completed successfully. No backend or database change was required.
+The Task 5.3 exit criterion is satisfied, completing Phase 5.
 
 ---
 

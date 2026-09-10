@@ -14,6 +14,7 @@ import br.com.fiap.aguiaexpress.repository.ProjetoRepository;
 import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,12 +33,15 @@ public class ProjetoService {
     private final IdeiaService ideiaService;
     private final StatusProjetoService statusProjetoService;
 
+    @Transactional
     public MostrarProjetoDTO criarProjeto(RegistrarProjetoDTO projetoDTO) {
         Ideia ideia = ideiaService.buscarEntidadePorId(projetoDTO.ideiaId());
 
         if (projetoRepository.existsByIdeia(ideia)) {
             throw new DuplicateResourceException("Essa ideia já foi convertida em projeto.");
         }
+
+        ideiaService.validarConversaoEmProjeto(ideia);
 
         Usuario actor = usuarioAutenticadoService.getUsuarioAutenticado();
         Usuario usuario = usuarioRepository.findById(projetoDTO.usuarioId())
@@ -73,6 +77,9 @@ public class ProjetoService {
 
         Projeto projetoSalvo = projetoRepository.save(projeto);
 
+        ideiaService.converterEmProjeto(ideia);
+        projetoRepository.flush();
+
         auditService.registrarEvento(
                 AuditEventType.PROJECT_CREATED,
                 actor.getId(),
@@ -81,7 +88,9 @@ public class ProjetoService {
                 Map.of(
                         "ideaId", ideia.getId(),
                         "responsibleUserId", usuario.getId(),
-                        "status", statusInicial.getStatus().name()
+                        "status", statusInicial.getStatus().name(),
+                        "previousIdeaStatus", NomeStatusIdeia.APROVADA.name(),
+                        "newIdeaStatus", NomeStatusIdeia.CONVERTIDA_EM_PROJETO.name()
                 )
         );
 

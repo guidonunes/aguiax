@@ -79,8 +79,8 @@ fun MedalhasScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         AchievementSummaryCard(
-            conquistadas = uiState.usuarioBadges.size,
-            disponiveis = uiState.badgesAtivas.size
+            conquistadas = uiState.totalBadgesAtivasConquistadas,
+            totalAtivas = uiState.totalBadgesAtivas
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -99,14 +99,14 @@ fun MedalhasScreen(
                 )
             }
 
-            uiState.badgesAtivas.isEmpty() && uiState.usuarioBadges.isEmpty() -> {
+            uiState.badgesDisponiveis.isEmpty() && uiState.usuarioBadges.isEmpty() -> {
                 EmptyState(message = "Nenhuma medalha encontrada.")
             }
 
             else -> {
                 MedalhasContent(
                     usuarioBadges = uiState.usuarioBadges,
-                    badgesAtivas = uiState.badgesAtivas
+                    badgesDisponiveis = uiState.badgesDisponiveis
                 )
             }
         }
@@ -116,7 +116,7 @@ fun MedalhasScreen(
 @Composable
 private fun MedalhasContent(
     usuarioBadges: List<UsuarioBadge>,
-    badgesAtivas: List<Badge>
+    badgesDisponiveis: List<Badge>
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -156,7 +156,7 @@ private fun MedalhasContent(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        if (badgesAtivas.isEmpty()) {
+        if (badgesDisponiveis.isEmpty()) {
             item {
                 Text(
                     text = "Nenhuma medalha disponível.",
@@ -164,7 +164,7 @@ private fun MedalhasContent(
                 )
             }
         } else {
-            items(badgesAtivas) { badge ->
+            items(badgesDisponiveis) { badge ->
                 BadgeCard(badge = badge)
             }
         }
@@ -205,7 +205,7 @@ private fun BadgeCard(
 @Composable
 private fun AchievementSummaryCard(
     conquistadas: Int,
-    disponiveis: Int
+    totalAtivas: Int
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -227,7 +227,7 @@ private fun AchievementSummaryCard(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Você conquistou $conquistadas de $disponiveis medalhas disponíveis.",
+                text = "Você conquistou $conquistadas de $totalAtivas medalhas ativas.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )

@@ -16,9 +16,17 @@ private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
 
 data class BadgeUiState(
     val isLoading: Boolean = false,
-    val badgesAtivas: List<Badge> = emptyList(),
+    val badgesDisponiveis: List<Badge> = emptyList(),
     val usuarioBadges: List<UsuarioBadge> = emptyList(),
+    val totalBadgesAtivas: Int = 0,
+    val totalBadgesAtivasConquistadas: Int = 0,
     val errorMessage: String? = null
+)
+
+internal data class ResumoCatalogoBadges(
+    val badgesDisponiveis: List<Badge>,
+    val totalBadgesAtivas: Int,
+    val totalBadgesAtivasConquistadas: Int
 )
 
 class BadgeViewModel : ViewModel() {
@@ -68,6 +76,11 @@ class BadgeViewModel : ViewModel() {
                 emptyList()
             }
 
+            val resumoCatalogo = calcularResumoCatalogoBadges(
+                badgesAtivas = badgesAtivas,
+                usuarioBadges = usuarioBadges
+            )
+
             val errorMessage = when {
                 badgesResult.isFailure -> "Erro ao carregar medalhas disponíveis"
                 usuarioBadgesResult.isFailure -> "Erro ao carregar medalhas do usuário"
@@ -76,10 +89,38 @@ class BadgeViewModel : ViewModel() {
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                badgesAtivas = badgesAtivas,
+                badgesDisponiveis = resumoCatalogo.badgesDisponiveis,
                 usuarioBadges = usuarioBadges,
+                totalBadgesAtivas = resumoCatalogo.totalBadgesAtivas,
+                totalBadgesAtivasConquistadas =
+                    resumoCatalogo.totalBadgesAtivasConquistadas,
                 errorMessage = errorMessage
             )
         }
     }
+}
+
+internal fun calcularResumoCatalogoBadges(
+    badgesAtivas: List<Badge>,
+    usuarioBadges: List<UsuarioBadge>
+): ResumoCatalogoBadges {
+    val badgeIdsConquistadas = usuarioBadges
+        .mapTo(mutableSetOf()) { usuarioBadge ->
+            usuarioBadge.badgeId
+        }
+
+    val badgesDisponiveis = badgesAtivas.filterNot { badge ->
+        badge.id in badgeIdsConquistadas
+    }
+
+    val totalBadgesAtivasConquistadas = badgesAtivas
+        .map { badge -> badge.id }
+        .toSet()
+        .count { badgeId -> badgeId in badgeIdsConquistadas }
+
+    return ResumoCatalogoBadges(
+        badgesDisponiveis = badgesDisponiveis,
+        totalBadgesAtivas = badgesAtivas.size,
+        totalBadgesAtivasConquistadas = totalBadgesAtivasConquistadas
+    )
 }

@@ -7,8 +7,10 @@ import br.com.fiap.aguiaexpress.dto.AtualizarStatusProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.RegistrarProjetoDTO;
 import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.NomePerfil;
+import br.com.fiap.aguiaexpress.model.NomeStatusIdeia;
 import br.com.fiap.aguiaexpress.model.NomeStatusProjeto;
 import br.com.fiap.aguiaexpress.model.Projeto;
+import br.com.fiap.aguiaexpress.model.StatusIdeia;
 import br.com.fiap.aguiaexpress.model.StatusProjeto;
 import br.com.fiap.aguiaexpress.model.TipoPerfil;
 import br.com.fiap.aguiaexpress.model.Usuario;
@@ -79,8 +81,10 @@ class ProjetoServiceAuditTest {
 
         projetoService.criarProjeto(projectRequest(42L, 7L));
 
-        InOrder order = inOrder(projetoRepository, auditService);
+        InOrder order = inOrder(projetoRepository, ideiaService, auditService);
         order.verify(projetoRepository).save(any(Projeto.class));
+        order.verify(ideiaService).converterEmProjeto(ideia);
+        order.verify(projetoRepository).flush();
         order.verify(auditService).registrarEvento(
                 AuditEventType.PROJECT_CREATED,
                 17L,
@@ -89,7 +93,9 @@ class ProjetoServiceAuditTest {
                 Map.of(
                         "ideaId", 42L,
                         "responsibleUserId", 7L,
-                        "status", "PLANEJADO"
+                        "status", "PLANEJADO",
+                        "previousIdeaStatus", "APROVADA",
+                        "newIdeaStatus", "CONVERTIDA_EM_PROJETO"
                 )
         );
     }
@@ -210,6 +216,11 @@ class ProjetoServiceAuditTest {
         Ideia ideia = new Ideia();
         ideia.setId(id);
         ideia.setTitulo("Ideia");
+        ideia.setStatusIdeia(new StatusIdeia(
+                4L,
+                NomeStatusIdeia.APROVADA,
+                "Aprovada"
+        ));
         return ideia;
     }
 

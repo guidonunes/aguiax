@@ -14,6 +14,7 @@ data class DashboardUiState(
     val projetos: List<Projeto> = emptyList(),
 
     val totalProjetos: Int = 0,
+    val projetosEmAndamento: Int = 0,
     val projetosPorStatus: Map<String, Int> = emptyMap(),
 
     val investimentoTotal: Double = 0.0,
@@ -105,6 +106,7 @@ class DashboardViewModel : ViewModel() {
             isLoading = false,
             projetos = projetos,
             totalProjetos = totalProjetos,
+            projetosEmAndamento = contarProjetosEmAndamento(projetos),
             projetosPorStatus = projetosPorStatus,
             investimentoTotal = investimentoTotal,
             retornoFinanceiroTotal = retornoFinanceiroTotal,
@@ -114,5 +116,11 @@ class DashboardViewModel : ViewModel() {
             ganhoProdutividadeMedio = ganhoProdutividadeMedio,
             errorMessage = null
         )
+    }
+}
+
+internal fun contarProjetosEmAndamento(projetos: List<Projeto>): Int {
+    return projetos.count { projeto ->
+        projeto.statusProjeto == "EM_ANDAMENTO"
     }
 }

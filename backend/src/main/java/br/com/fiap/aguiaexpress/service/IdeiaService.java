@@ -269,6 +269,33 @@ public class IdeiaService {
         return new MostrarIdeiaDTO(ideiaAtualizada);
     }
 
+    void validarConversaoEmProjeto(Ideia ideia) {
+        if (ideia == null
+                || ideia.getStatusIdeia() == null
+                || ideia.getStatusIdeia().getStatus() == null) {
+            throw new InvalidRequestException(
+                    "A ideia deve possuir um status válido para ser convertida."
+            );
+        }
+
+        validarTransicao(
+                ideia.getStatusIdeia().getStatus(),
+                NomeStatusIdeia.CONVERTIDA_EM_PROJETO
+        );
+    }
+
+    void converterEmProjeto(Ideia ideia) {
+        validarConversaoEmProjeto(ideia);
+
+        StatusIdeia convertedStatus = statusIdeiaService.buscarEntidadePorStatus(
+                NomeStatusIdeia.CONVERTIDA_EM_PROJETO
+        );
+
+        ideia.setStatusIdeia(convertedStatus);
+        ideia.setDataAtualizacao(LocalDateTime.now());
+        ideiaRepository.save(ideia);
+    }
+
     public MostrarIdeiaDTO atualizarAvaliacaoIdeia(
             Long id,
             AtualizarAvaliacaoIdeiaDTO avaliacaoDTO

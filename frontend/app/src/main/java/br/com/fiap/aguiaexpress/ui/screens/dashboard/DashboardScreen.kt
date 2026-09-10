@@ -79,7 +79,7 @@ fun DashboardScreen(
 
             else -> {
                 DashboardMetricsSection(
-                    totalProjetos = uiState.totalProjetos,
+                    projetosEmAndamento = uiState.projetosEmAndamento,
                     investimentoTotal = uiState.investimentoTotal,
                     retornoFinanceiroTotal = uiState.retornoFinanceiroTotal,
                     reducaoCustosTotal = uiState.reducaoCustosTotal,
@@ -111,7 +111,7 @@ fun DashboardScreen(
 
 @Composable
 private fun DashboardMetricsSection(
-    totalProjetos: Int,
+    projetosEmAndamento: Int,
     investimentoTotal: Double,
     retornoFinanceiroTotal: Double,
     reducaoCustosTotal: Double,
@@ -127,7 +127,7 @@ private fun DashboardMetricsSection(
         ) {
             DashboardMetricCard(
                 title = "Projetos em andamento",
-                value = totalProjetos.toString(),
+                value = projetosEmAndamento.toString(),
                 modifier = Modifier.weight(1f)
             )
 
