@@ -1,5 +1,7 @@
 package br.com.fiap.aguiaexpress.controller;
 
+import br.com.fiap.aguiaexpress.advice.ApplicationExceptionHandler;
+import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
 import br.com.fiap.aguiaexpress.service.IdeiaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +27,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest
 @ContextConfiguration(classes = {
         IdeiaController.class,
+        ApplicationExceptionHandler.class,
         IdeiaControllerSecurityTest.TestSecurityConfiguration.class
 })
 class IdeiaControllerSecurityTest {
@@ -147,6 +151,71 @@ class IdeiaControllerSecurityTest {
                 .andExpect(status().isOk());
 
         verify(ideiaService).atualizarStatusIdeia(any(), any());
+    }
+
+    @Test
+    void invalidIdeaStatusTransitionReceivesControlled400() throws Exception {
+        when(ideiaService.atualizarStatusIdeia(any(), any()))
+                .thenThrow(new InvalidRequestException(
+                        "Transição de status não permitida: NOVA -> APROVADA."
+                ));
+
+        mockMvc.perform(patch("/ideias/{id}/status", 42L)
+                        .with(user("gestor").roles("GESTOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status": "APROVADA"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value(
+                        "Transição de status não permitida: NOVA -> APROVADA."
+                ))
+                .andExpect(jsonPath("$.path").value("/ideias/42/status"));
+
+        verify(ideiaService).atualizarStatusIdeia(any(), any());
+    }
+
+    @Test
+    void onlyManagerCanReviewIdea() throws Exception {
+        String reviewJson = """
+                {"impacto": 8, "viabilidade": 7}
+                """;
+
+        mockMvc.perform(patch("/ideias/{id}/avaliacao", 42L)
+                        .with(user("operacional").roles("OPERACIONAL"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewJson))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(patch("/ideias/{id}/avaliacao", 42L)
+                        .with(user("lider").roles("LIDER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewJson))
+                .andExpect(status().isForbidden());
+
+        when(ideiaService.atualizarAvaliacaoIdeia(any(), any())).thenReturn(null);
+
+        mockMvc.perform(patch("/ideias/{id}/avaliacao", 42L)
+                        .with(user("gestor").roles("GESTOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewJson))
+                .andExpect(status().isOk());
+
+        verify(ideiaService).atualizarAvaliacaoIdeia(any(), any());
+    }
+
+    @Test
+    void invalidManagerReviewReceives400WithoutCallingService() throws Exception {
+        mockMvc.perform(patch("/ideias/{id}/avaliacao", 42L)
+                        .with(user("gestor").roles("GESTOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"impacto": 11, "viabilidade": 7}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(ideiaService);
     }
 
     @TestConfiguration(proxyBeanMethods = false)

@@ -489,6 +489,28 @@ Decide the numeric range explicitly, e.g. `0..10`.
 
 A manager can persist impact and viability scores through the backend API.
 
+### Task 4.1 record — 2026-09-10
+
+Implemented and verified by Codex. `GESTOR` can call
+`PATCH /ideias/{id}/avaliacao` with integer `impacto` and `viabilidade` values in
+the explicit inclusive range `0..10`. Jakarta Validation rejects invalid HTTP
+payloads, while the service repeats the business-range check so non-controller
+callers cannot bypass the invariant. A successful review updates both existing
+MySQL fields and the idea timestamp, returns `MostrarIdeiaDTO`, and records an
+`IDEA_UPDATED` audit event after relational persistence with previous/new scores.
+
+No Flyway migration was required because `nr_impacto` and `nr_viabilidade` already
+exist. The method deliberately leaves `prioridade` unchanged because the final
+deterministic calculation belongs to Task 8.3. Five service tests cover both valid
+boundaries, null/out-of-range rejection, audit ordering, failed-save behavior, and
+priority preservation. Controller tests cover `GESTOR` success, `OPERACIONAL` and
+`LIDER` denial, and invalid-payload `400`; the authorization inventory also covers
+the new endpoint. The focused run completed 23 tests with zero failures and zero
+errors. The complete backend run completed 68 tests: 67 passed, and the pre-existing
+`AguiaexpressApplicationTests.contextLoads` retained its documented unresolved
+`${DB_URL}` test-configuration error. The Task 4.1 exit criterion is satisfied;
+Android review controls remain Task 9.1.
+
 ---
 
 ## Task 4.2 — Define allowed idea status transitions
@@ -512,6 +534,30 @@ Adjust only if current business rules require a different flow.
 ### Exit criterion
 
 Invalid transitions are rejected with a controlled domain/API error.
+
+### Task 4.2 record — 2026-09-10
+
+Implemented and verified by Codex. `IdeiaService` now owns an explicit immutable
+transition map. The manager-facing `PATCH /ideias/{id}/status` route accepts only
+`NOVA -> EM_ANALISE`, `EM_ANALISE -> PRIORIZADA/APROVADA/REJEITADA`, and
+`PRIORIZADA -> APROVADA/REJEITADA`. Repeating the current status, moving backward,
+or moving from a terminal state is rejected before status lookup, authentication
+lookup, MySQL mutation, or audit recording.
+
+`APROVADA -> CONVERTIDA_EM_PROJETO` remains part of the domain lifecycle, but the
+public status route deliberately rejects direct conversion. Task 4.3 must perform
+that transition only while creating the corresponding project transactionally.
+Invalid requests use `InvalidRequestException`, which the existing global advice
+maps to a structured `400 Bad Request` response.
+
+Sixteen new service test cases cover every manager-allowed transition,
+representative invalid and repeated transitions, terminal states, missing input,
+direct-conversion rejection, persistence, and audit metadata. A controller test
+verifies the structured `400` contract. The focused run completed 35 tests with
+zero failures and zero errors. The complete backend run completed 85 tests: 84
+passed, while the pre-existing `AguiaexpressApplicationTests.contextLoads` retained
+its documented unresolved `${DB_URL}` test-configuration error. The Task 4.2 exit
+criterion is satisfied; Task 4.3 remains responsible for transactional conversion.
 
 ---
 

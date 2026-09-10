@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress.controller;
 
 import br.com.fiap.aguiaexpress.config.security.SecurityConfig;
+import br.com.fiap.aguiaexpress.dto.AtualizarAvaliacaoIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.AtualizarStatusIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.AtualizarStatusProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.RegistrarIdeiaDTO;
@@ -51,6 +52,12 @@ class ControllerAuthorizationPolicyTest {
                         IdeiaController.class,
                         "atualizarStatusIdeia",
                         new Class<?>[]{Long.class, AtualizarStatusIdeiaDTO.class},
+                        "hasRole('GESTOR')"
+                ),
+                new ExpectedPolicy(
+                        IdeiaController.class,
+                        "atualizarAvaliacaoIdeia",
+                        new Class<?>[]{Long.class, AtualizarAvaliacaoIdeiaDTO.class},
                         "hasRole('GESTOR')"
                 ),
                 new ExpectedPolicy(

@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.controller;
 
+import br.com.fiap.aguiaexpress.dto.AtualizarAvaliacaoIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.AtualizarStatusIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.RegistrarIdeiaDTO;
@@ -122,6 +123,18 @@ public class IdeiaController {
             @RequestBody @Valid AtualizarStatusIdeiaDTO statusDTO
     ) {
         MostrarIdeiaDTO ideiaAtualizada = ideiaService.atualizarStatusIdeia(id, statusDTO);
+
+        return ResponseEntity.ok(ideiaAtualizada);
+    }
+
+    @PatchMapping("/{id}/avaliacao")
+    @PreAuthorize("hasRole('GESTOR')")
+    public ResponseEntity<MostrarIdeiaDTO> atualizarAvaliacaoIdeia(
+            @PathVariable Long id,
+            @RequestBody @Valid AtualizarAvaliacaoIdeiaDTO avaliacaoDTO
+    ) {
+        MostrarIdeiaDTO ideiaAtualizada =
+                ideiaService.atualizarAvaliacaoIdeia(id, avaliacaoDTO);
 
         return ResponseEntity.ok(ideiaAtualizada);
     }

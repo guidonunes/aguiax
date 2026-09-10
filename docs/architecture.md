@@ -671,7 +671,8 @@ mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/agui
 | IdeiaController | `GET /ideias/status/{status}` | Authenticated | Implemented | Auth; 1.2 |
 | IdeiaController | `GET /ideias/orientacao/{orientacaoId}` | Authenticated | Implemented | Auth; 1.2 |
 | IdeiaController | `GET /ideias/buscar` | Authenticated | Implemented | Auth; 1.2 |
-| IdeiaController | `PATCH /ideias/{id}/status` | GESTOR | Implemented | Role; 1.2; transition rules still missing in 4.2 |
+| IdeiaController | `PATCH /ideias/{id}/status` | GESTOR | Implemented | Role and explicit state-transition policy verified; 1.2 and 4.2 |
+| IdeiaController | `PATCH /ideias/{id}/avaliacao` | GESTOR | Implemented | Role, `0..10` validation, persistence, and audit verified; 4.1 |
 | VotoIdeiaController | `POST /votos-ideias/ideia/{ideiaId}` | Authenticated, own vote only | Implemented | Auth, actor from principal, duplicate vote; 11.2 |
 | VotoIdeiaController | `DELETE /votos-ideias/ideia/{ideiaId}` | Authenticated, own vote only | Implemented | Auth, other votes unchanged; 11.2 |
 | VotoIdeiaController | `GET /votos-ideias` | Authenticated | Implemented | Auth; 11.2 |
@@ -713,7 +714,6 @@ rows when their owning roadmap tasks introduce the controllers.
 
 | Operation / endpoint | Target policy | Current state | Owning task |
 |---|---|---|---|
-| Manager review scores/prioritization endpoint | GESTOR | Missing | 4.1 |
 | `GET /api/dashboard/summary` including `orientationId` filter | LIDER | Missing | 6.2–6.5 |
 | `GET /api/dashboard/projects/{projectId}` if needed | LIDER | Missing | 6.4–6.5 |
 | `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Missing | 8.1 |
@@ -853,11 +853,31 @@ NOVA → CONVERTIDA_EM_PROJETO
 
 without review/approval.
 
+The backend enforces this lifecycle in `IdeiaService`. The manager-facing
+`PATCH /ideias/{id}/status` endpoint may perform the review transitions through
+`APROVADA` or `REJEITADA`, but it must reject a direct request for
+`CONVERTIDA_EM_PROJETO`, even when the current status is `APROVADA`. Conversion is
+not a standalone manager decision: Task 4.3 owns `APROVADA ->
+CONVERTIDA_EM_PROJETO` as part of the same relational transaction that creates the
+single associated project. Invalid and repeated transitions produce the standard
+structured `400 Bad Request` contract and do not mutate or audit the idea.
+
 ---
 
 # 13. Idea review and prioritization
 
 Sprint 2 should evolve prioritization beyond votes alone.
+
+Manager review is exposed through:
+
+```http
+PATCH /ideias/{id}/avaliacao
+```
+
+Only `GESTOR` may call this endpoint. Both `impacto` and `viabilidade` are required
+integer values in the inclusive range `0..10`. Task 4.1 persists these human
+signals without recalculating `prioridade`; Task 8.3 owns the final deterministic
+formula so scoring logic is not duplicated across workflows.
 
 The scoring architecture should separate four signals:
 
@@ -1667,7 +1687,8 @@ the authorization matrix and the logging restrictions in section 20.2.
 
 ## Idea prioritization
 
-- impact and viability exist conceptually but do not yet form a complete manager-review workflow;
+- backend manager review now persists validated impact and viability scores;
+- Android manager-review controls remain pending;
 - priority is currently heavily driven by votes.
 
 ## Project conversion
