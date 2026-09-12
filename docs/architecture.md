@@ -715,9 +715,9 @@ rows when their owning roadmap tasks introduce the controllers.
 
 | Operation / endpoint | Target policy | Current state | Owning task |
 |---|---|---|---|
-| `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Missing | 8.1 |
+| `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Implemented; `401`/`403`/`200` and controlled failure behavior verified | 8.1 |
 | AI history read endpoint, if exposed | GESTOR only; internal scoring service may read persisted results | Missing | 8.2 |
-| Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain operations; AI hooks deferred | 3.1–3.2, 8.1 |
+| Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain and AI-evaluation operations | 3.1–3.2, 8.1 |
 | `GET /actuator/health` | Public, overall status only; no component details | Missing | 10.1 |
 | `GET /actuator/info`, `GET /actuator/metrics`, `GET /actuator/metrics/{name}` | LIDER, sanitized metadata/metrics only | Missing | 10.1 |
 
@@ -1145,12 +1145,13 @@ Current trigger mapping:
 | Project created or edited | `PROJECT_CREATED`, `PROJECT_UPDATED`; creation records the idea's conversion statuses |
 | Project status changed to completed | `PROJECT_COMPLETED` |
 | Orientation created, edited, or deactivated | `ORIENTATION_CREATED`, `ORIENTATION_UPDATED` |
+| AI evaluation requested, completed, or failed | `AI_EVALUATION_REQUESTED`, `AI_EVALUATION_COMPLETED`, `AI_EVALUATION_FAILED` |
 
 Rejected authentication and rejected authorization attempts do not create these
-success events. The future AI orchestration service owns
-`AI_EVALUATION_REQUESTED`, `AI_EVALUATION_COMPLETED`, and
-`AI_EVALUATION_FAILED`; their hooks are added with Task 8.1 because no AI request
-workflow exists during Phase 3.
+success events. `AiIdeaEvaluationService` owns the three AI events and records the
+authenticated manager as actor. Its failure metadata is deliberately limited to
+provider, model, and failure classification; it excludes credentials and raw
+provider responses.
 
 ---
 
@@ -1232,6 +1233,13 @@ persist evaluation in MongoDB
 return evaluation DTO
 ```
 
+Task 8.1 implements the flow through validated DTO return plus the three audit
+outcomes. The service obtains the provider client through `ObjectProvider`, so the
+ordinary application still starts when `AI_ENABLED=false`; a request in that mode
+returns controlled `503 Service Unavailable`. The provider call is not wrapped in
+a MySQL transaction. MongoDB evaluation-history persistence is added in Task 8.2,
+and the deterministic application priority is calculated and stored in Task 8.3.
+
 ---
 
 ## 17.3 AI input
@@ -1250,9 +1258,10 @@ fields and validation rules are:
 | `managerImpactScore` | `Integer` | Optional; when present, inclusive `0..10`. |
 | `managerViabilityScore` | `Integer` | Optional; when present, inclusive `0..10`. |
 
-The application service introduced later must derive this context from trusted
-MySQL entities. Avoid sending user identity, credentials, audit data, or unrelated
-domain content to the provider.
+`AiIdeaEvaluationService` derives this context from trusted MySQL entities. It
+sends the idea content, category, strategic orientation, and existing manager
+scores only; user identity, credentials, audit data, and unrelated domain content
+are excluded.
 
 ---
 
@@ -1264,7 +1273,7 @@ from application-owned resource identity:
 - `AiIdeaEvaluationResult` is the provider-independent result returned by the AI
   client. It contains `strategicAlignment`, `impact`, `feasibility`, `innovation`,
   `overallScore`, and `summary`.
-- `AiIdeaEvaluationResponse` is the future HTTP response. It flattens the validated
+- `AiIdeaEvaluationResponse` is the HTTP response. It flattens the validated
   result and adds the trusted `ideaId` supplied by application code.
 
 The four dimension scores use nullable `Integer` components so a missing JSON
@@ -1394,6 +1403,11 @@ operational error logged
        ↓
 optional AI_EVALUATION_FAILED audit event
 ```
+
+Task 8.1 implements this boundary. Provider timeout maps to `504`; rate limiting,
+provider outage, and disabled AI map to `503`; rejected requests and invalid
+provider output map to `502`; request-construction failure maps to `500`. These
+responses use the application error DTO and never include the raw provider body.
 
 ---
 

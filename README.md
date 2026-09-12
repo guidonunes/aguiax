@@ -135,7 +135,11 @@ cliente, altere somente o `.env` local para `AI_ENABLED=true` e informe a chave
 real em `AI_API_KEY`. Os valores `AI_CONNECT_TIMEOUT_MS` e
 `AI_READ_TIMEOUT_MS` são números em milissegundos, sem o sufixo `ms`. A chave é
 usada apenas pelo backend e não deve ser enviada ao Android. O endpoint de
-avaliação de ideias ainda depende da implementação da Phase 8.
+avaliação está disponível para `GESTOR` em
+`POST /api/ideas/{ideaId}/ai-evaluation`. Com `AI_ENABLED=false`, ele responde
+`503 Service Unavailable`; habilite a integração somente no `.env` local para
+testar uma avaliação real. O histórico MongoDB e o cálculo determinístico de
+prioridade são adicionados pelas Tasks 8.2 e 8.3, respectivamente.
 
 ## Bootstrap controlado do primeiro líder
 

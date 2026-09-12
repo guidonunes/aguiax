@@ -464,11 +464,11 @@ backend run completed 59 tests: 58 passed, while the pre-existing
 `${DB_URL}` setup error because `@SpringBootTest` does not execute the `.env`
 bootstrap in `main`.
 
-The AI evaluation workflow does not exist until Phases 7–8, so its requested,
-completed, and failed event types are defined but cannot yet be connected. Task 8.1
-must add those three calls and Task 11.6 must retain their end-to-end verification.
-This deferral does not block Phase 4, but final Sprint-wide acceptance of Task 3.2
-remains partial until the AI workflow is implemented.
+Task 8.1 subsequently connected the AI workflow's requested, completed, and failed
+events to `AiIdeaEvaluationService`. Their focused orchestration tests pass; Task
+11.6 retains responsibility for end-to-end audit verification across the completed
+Sprint workflow. With those hooks connected, the Task 3.2 event inventory is
+implemented.
 
 ---
 
@@ -1111,6 +1111,35 @@ Behavior:
 ### Exit criterion
 
 A manager can request AI analysis for an idea and receive structured scores.
+
+### Task 8.1 record — 2026-09-12
+
+Implemented the callable AI-evaluation slice. `GESTOR` can invoke
+`POST /api/ideas/{ideaId}/ai-evaluation`; the application loads the trusted MySQL
+idea, category, strategic orientation, and manager scores, invokes the
+conditionally configured provider client, and returns the validated application
+DTO. `OPERACIONAL` and `LIDER` receive `403`, unauthenticated requests receive
+`401`, and a missing idea receives `404`.
+
+The orchestration writes `AI_EVALUATION_REQUESTED`,
+`AI_EVALUATION_COMPLETED`, or `AI_EVALUATION_FAILED` audit events with the
+authenticated manager as actor. Disabled AI and classified provider failures map
+to controlled `502`, `503`, or `504` responses as appropriate. Failure logs and
+audit metadata contain only idea/provider/model/failure classification data; the
+API key and raw provider body are not exposed. Neither success nor failure changes
+the idea status or creates a project.
+
+The behavior list above spans the whole Phase 8 pipeline. MongoDB evaluation
+history remains owned by Task 8.2, and calculation/persistence of the deterministic
+application priority remains owned by Task 8.3. Keeping those steps in their
+dedicated tasks avoids storing an undocumented score formula or duplicating the
+history model before its contract is defined. The Task 8.1 exit criterion is met
+by the endpoint and structured response.
+
+Five service tests and eleven MVC/security test invocations pass. The complete
+backend run completed 154 tests: 153 passed and only the pre-existing
+`AguiaexpressApplicationTests.contextLoads` unresolved `${DB_URL}` setup error
+remained.
 
 ---
 

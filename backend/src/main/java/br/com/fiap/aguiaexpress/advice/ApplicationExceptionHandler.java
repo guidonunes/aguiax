@@ -1,6 +1,8 @@
 package br.com.fiap.aguiaexpress.advice;
 
+import br.com.fiap.aguiaexpress.ai.client.AiProviderException;
 import br.com.fiap.aguiaexpress.dto.ErroRespostaDTO;
+import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
@@ -82,6 +84,50 @@ public class ApplicationExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(erro);
+    }
+
+    @ExceptionHandler(AiEvaluationUnavailableException.class)
+    public ResponseEntity<ErroRespostaDTO> handleAiEvaluationUnavailable(
+            AiEvaluationUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        return criarRespostaDeErro(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(AiProviderException.class)
+    public ResponseEntity<ErroRespostaDTO> handleAiProviderFailure(
+            AiProviderException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = switch (exception.failure()) {
+            case TIMEOUT -> HttpStatus.GATEWAY_TIMEOUT;
+            case RATE_LIMITED, UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
+            case REJECTED_REQUEST, INVALID_RESPONSE -> HttpStatus.BAD_GATEWAY;
+            case REQUEST_BUILD_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+
+        return criarRespostaDeErro(status, exception.getMessage(), request);
+    }
+
+    private ResponseEntity<ErroRespostaDTO> criarRespostaDeErro(
+            HttpStatus status,
+            String message,
+            HttpServletRequest request
+    ) {
+        ErroRespostaDTO erro = new ErroRespostaDTO(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                message,
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity.status(status).body(erro);
     }
 
 }
