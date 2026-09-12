@@ -1,4 +1,4 @@
-package br.com.fiap.aguiaexpress.dto;
+package br.com.fiap.aguiaexpress.dto.categoria;
 
 import br.com.fiap.aguiaexpress.model.Categoria;
 

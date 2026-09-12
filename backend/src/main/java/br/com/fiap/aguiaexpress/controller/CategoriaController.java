@@ -1,8 +1,8 @@
 package br.com.fiap.aguiaexpress.controller;
 
-import br.com.fiap.aguiaexpress.dto.AtualizarCategoriaDTO;
-import br.com.fiap.aguiaexpress.dto.MostrarCategoriaDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarCategoriaDTO;
+import br.com.fiap.aguiaexpress.dto.categoria.AtualizarCategoriaDTO;
+import br.com.fiap.aguiaexpress.dto.categoria.MostrarCategoriaDTO;
+import br.com.fiap.aguiaexpress.dto.categoria.RegistrarCategoriaDTO;
 import br.com.fiap.aguiaexpress.service.CategoriaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

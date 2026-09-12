@@ -1,6 +1,6 @@
 package br.com.fiap.aguiaexpress.service;
 
-import br.com.fiap.aguiaexpress.dto.MostrarVotoIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.MostrarVotoIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.model.Ideia;

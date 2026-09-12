@@ -241,8 +241,8 @@ The target architecture is:
                 │ MySQL          │ │ MongoDB      │ │ External AI   │
                 │                │ │              │ │ Provider      │
                 │ Core domain    │ │ Audit events │ │               │
-                │ transactions   │ │ AI history   │ │ Gemini /      │
-                │                │ │              │ │ OpenAI        │
+                │ transactions   │ │ AI history   │ │ Google        │
+                │                │ │              │ │ Gemini        │
                 └────────────────┘ └──────────────┘ └───────────────┘
 ```
 
@@ -616,9 +616,9 @@ service path may use the requested existing profile after the leader role check.
 
 ## 9.2 Complete current controller inventory
 
-All **63 explicitly mapped operations across 12 controllers** were inspected through
-2026-09-09. Paths below are the existing Portuguese routes; do not rename them to
-match illustrative `/api/...` examples elsewhere. Query filters do not change policy.
+All **65 explicitly mapped operations across 13 controllers** were inspected through
+2026-09-11. Existing Sprint 1 paths remain Portuguese; the new dashboard route uses
+the documented `/api/dashboard` contract. Query filters do not change policy.
 Framework-generated HEAD/OPTIONS handling is not counted as a separate business
 operation and must not provide a bypass to these policies.
 
@@ -681,7 +681,7 @@ mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/agui
 | VotoIdeiaController | `GET /votos-ideias/usuario/{usuarioId}` | Authenticated | Implemented | Auth; 11.2 |
 | ProjetoController | `POST /projetos` | GESTOR | Implemented | Role, approved-idea eligibility, uniqueness, and transactional conversion verified; 1.2 and 4.3 |
 | ProjetoController | `GET /projetos` | Authenticated | Implemented | Auth; 1.2 |
-| ProjetoController | `GET /projetos/{id}` | Authenticated | Implemented | Auth; 1.2 |
+| ProjetoController | `GET /projetos/{id}` | Authenticated | Implemented | Auth plus complete project-result contract and controlled missing resource verified; 1.2 and 6.4 |
 | ProjetoController | `PUT /projetos/{id}` | GESTOR | Implemented | Role, any manager; 1.2 |
 | ProjetoController | `DELETE /projetos/{id}` | GESTOR | Implemented | Role; 1.2 |
 | ProjetoController | `GET /projetos/usuario/{usuarioId}` | Authenticated | Implemented | Auth; 1.2 |
@@ -704,6 +704,7 @@ mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/agui
 | StatusIdeiaController | `GET /status-ideias/{id}` | Authenticated | Implemented | Auth; 1.4 |
 | StatusProjetoController | `GET /status-projetos` | Authenticated | Implemented | Auth; 1.4 |
 | StatusProjetoController | `GET /status-projetos/{id}` | Authenticated | Implemented | Auth; 1.4 |
+| DashboardController | `GET /api/dashboard/summary[?orientationId={id}]` | LIDER | Implemented | Controller-wide role policy plus global and filtered `401`/`403`/`200` behavior verified; 6.2–6.5 |
 | HelloWorldController | `GET /api/english` | Authenticated | Implemented | Auth; legacy diagnostic, no new privilege; 1.2 |
 | HelloWorldController | `GET /api/deutsch` | Authenticated | Implemented | Auth; legacy diagnostic, no new privilege; 1.2 |
 
@@ -714,8 +715,6 @@ rows when their owning roadmap tasks introduce the controllers.
 
 | Operation / endpoint | Target policy | Current state | Owning task |
 |---|---|---|---|
-| `GET /api/dashboard/summary` including `orientationId` filter | LIDER | Missing | 6.2–6.5 |
-| `GET /api/dashboard/projects/{projectId}` if needed | LIDER | Missing | 6.4–6.5 |
 | `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Missing | 8.1 |
 | AI history read endpoint, if exposed | GESTOR only; internal scoring service may read persisted results | Missing | 8.2 |
 | Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain operations; AI hooks deferred | 3.1–3.2, 8.1 |
@@ -1161,7 +1160,50 @@ Sprint 2 uses AI for **idea evaluation and prioritization support**.
 
 This is intentionally not a chatbot.
 
-## 17.1 AI request flow
+## 17.1 Selected provider
+
+Task 7.1 selects the **Google Gemini Developer API free tier** and the stable
+`gemini-3.6-flash` model for Sprint 2. The Flash family matches the academic
+project's priorities: no-cost development availability, low-latency evaluation,
+structured-output support, and enough contextual reasoning for a single idea and
+its strategic context. The selected model supports structured outputs and has an
+input limit of 1,048,576 tokens; this is a token context limit, not a count of
+model parameters.
+
+The originally considered `gemini-1.5-flash` identifier is not usable: Google
+shut the Gemini 1.5 models down on 2025-09-29. The implementation must use the
+explicit stable `gemini-3.6-flash` identifier rather than `gemini-flash-latest`,
+whose target may change. Provider availability, pricing, model lifecycle, and
+rate limits must be checked before demonstrations or deployment because Google
+may change them. The application must not assume a permanent 15 RPM quota; active
+limits are model- and project-specific and are visible in Google AI Studio.
+
+Official references:
+
+- [Gemini 3.6 Flash model](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash)
+- [Gemini model lifecycle](https://ai.google.dev/gemini-api/docs/deprecations)
+- [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing)
+- [Gemini API rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
+- [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output)
+
+The configuration contract to be implemented by Task 7.4 is:
+
+| Environment variable | Required | Planned default / purpose |
+|---|---|---|
+| `AI_ENABLED` | No | `false`; keeps ordinary local startup independent of an AI credential. |
+| `AI_PROVIDER` | No | `gemini`; identifies the selected provider. |
+| `AI_API_KEY` | Only when enabled | Google AI Studio key; transmitted in `x-goog-api-key` and never logged. |
+| `AI_MODEL` | No | `gemini-3.6-flash`; explicit stable model identifier. |
+| `AI_BASE_URL` | No | `https://generativelanguage.googleapis.com/v1beta`. |
+| `AI_CONNECT_TIMEOUT_MS` | No | `3000`; maximum connection establishment time. |
+| `AI_READ_TIMEOUT_MS` | No | `15000`; maximum wait for the non-streaming evaluation response. |
+
+The planned REST operation is
+`POST {AI_BASE_URL}/models/{AI_MODEL}:generateContent`, authenticated only from
+the backend. Task 7.3 owns the client and Task 7.4 owns actual property binding,
+safe enablement, and `.env.example`; Task 7.1 does not add runtime configuration.
+
+## 17.2 AI request flow
 
 ```text
 GESTOR
@@ -1176,7 +1218,7 @@ build structured AI request
   ↓
 AiIdeaEvaluationClient
   ↓
-Gemini / OpenAI
+Google Gemini
   ↓
 structured JSON
   ↓
@@ -1191,7 +1233,7 @@ return evaluation DTO
 
 ---
 
-## 17.2 AI input
+## 17.3 AI input
 
 The provider may receive:
 
@@ -1208,7 +1250,7 @@ Avoid sending unrelated user data.
 
 ---
 
-## 17.3 AI output contract
+## 17.4 AI output contract
 
 The backend should require structured output.
 
@@ -1240,7 +1282,7 @@ All provider output must be validated.
 
 ---
 
-## 17.4 AI persistence
+## 17.5 AI persistence
 
 AI evaluation history belongs in MongoDB.
 
@@ -1268,7 +1310,7 @@ This gives the system historical traceability instead of overwriting previous AI
 
 ---
 
-## 17.5 Provider abstraction
+## 17.6 Provider abstraction
 
 Application code should depend on an internal abstraction.
 
@@ -1280,21 +1322,13 @@ AiIdeaEvaluationClient
         +------ GeminiAiIdeaEvaluationClient
 ```
 
-or:
-
-```text
-AiIdeaEvaluationClient
-        |
-        +------ OpenAiIdeaEvaluationClient
-```
-
 This avoids coupling service logic to one provider's HTTP schema.
 
 It also makes tests easier because the provider client can be mocked.
 
 ---
 
-## 17.6 AI failure behavior
+## 17.7 AI failure behavior
 
 The external provider is not guaranteed to be available.
 
@@ -1369,15 +1403,112 @@ Additional filtering:
 GET /api/dashboard/summary?orientationId={id}
 ```
 
-Possible project-specific endpoint:
+Project-specific results reuse the existing project-detail contract:
 
 ```http
-GET /api/dashboard/projects/{projectId}
+GET /projetos/{projectId}
 ```
+
+A separate dashboard route would duplicate data already returned by that endpoint,
+so Task 6.4 deliberately does not introduce one.
 
 The backend owns the formulas.
 
 Android owns visualization.
+
+## 18.1 Dashboard summary contract
+
+Task 6.1 fixes the backend response boundary as the Java record
+`DashboardSummaryResponse`, under the existing `dto.dashboard` package.
+Its public JSON fields and Java types are:
+
+| JSON field | Java type | Contract rule |
+|---|---|---|
+| `totalProjects` | `long` | Non-negative and equal to the sum of all status counts. |
+| `projectsByStatus` | `Map<NomeStatusProjeto, Long>` | Contains every project status, including zero-count statuses, and is immutable after construction. |
+| `totalInvestment` | `BigDecimal` | Required decimal value. |
+| `totalFinancialReturn` | `BigDecimal` | Required decimal value. |
+| `totalCostReduction` | `BigDecimal` | Required decimal value. |
+| `estimatedResult` | `BigDecimal` | Required decimal value and may represent a negative result. |
+| `averageRoi` | `BigDecimal` | Required decimal value. |
+| `averageProductivityGain` | `BigDecimal` | Required decimal value. |
+
+The status keys are the existing enum names `PLANEJADO`, `EM_ANDAMENTO`,
+`CONCLUIDO`, and `CANCELADO`. The DTO validates structural consistency but does
+not calculate business values. Aggregation formulas remain the responsibility of
+the dashboard service introduced by Task 6.2. Task 6.4 confirmed the existing
+project-detail contract for project-specific visualization; Android summary
+integration remains Task 9.3. The dashboard controller is leader-only through a
+class-level authorization rule, verified by Task 6.5.
+
+## 18.2 Global aggregation rules
+
+`DashboardService.buscarResumo(...)` reads the persisted projects through
+`ProjetoRepository` and calculates the authoritative global summary in the
+backend. The formulas fixed by Task 6.2 are:
+
+```text
+totalInvestment = sum(investment)
+totalFinancialReturn = sum(financial return)
+totalCostReduction = sum(cost reduction)
+estimatedResult = totalFinancialReturn + totalCostReduction - totalInvestment
+averageRoi = sum(ROI) / totalProjects
+averageProductivityGain = sum(productivity gain) / totalProjects
+```
+
+Status counts include every persisted project. Decimal fields left `null` by
+legacy data are interpreted as zero, matching the current creation service's
+zero-default rule. Empty datasets return zero for every metric. Averages include
+all projects and are rounded to two decimal places with `RoundingMode.HALF_UP`.
+The response is exposed at `GET /api/dashboard/summary` and is restricted to
+`LIDER`; the controller delegates all calculation to the service.
+
+## 18.3 Strategic-orientation filter
+
+The optional `orientationId` query parameter scopes the same summary contract and
+formulas to projects linked through:
+
+```text
+Project -> Idea -> StrategicOrientation
+```
+
+`ProjetoRepository.findByIdeia_OrientacaoEstrategica_Id(...)` performs this
+filter in MySQL, so unrelated projects are not loaded for filtered requests. An
+omitted parameter returns the global summary. An existing orientation without
+projects returns the complete zero-valued summary; an unknown orientation returns
+the standard controlled `404 Not Found`. Active and inactive orientations remain
+queryable because historical executive results must not disappear when an
+orientation is deactivated.
+
+## 18.4 Project-specific result contract
+
+Task 6.4 evaluated the optional dashboard-specific route and found no additional
+DTO value. `GET /projetos/{projectId}` already returns `MostrarProjetoDTO`, which
+contains the project and linked-idea identity, responsible user, status, title,
+description, objective, investment, ROI, financial return, cost reduction,
+productivity gain, delivery dates, and audit timestamps. Those stored values are
+the complete per-project input needed by the existing Android project-result view.
+
+The route keeps the established project-read policy: every authenticated role may
+view it, including `LIDER`, while unauthenticated callers receive `401`. A missing
+project uses the centralized `404` response. Android already consumes the same
+contract through `ProjetoApi.buscarProjetoPorId`, `ProjetoDto`, and
+`ProjetoRepository`, and `ProjetosScreen` renders the result metrics. Therefore no
+duplicate `GET /api/dashboard/projects/{projectId}` route is part of the target
+architecture.
+
+## 18.5 Dashboard authorization boundary
+
+`DashboardController` declares `@PreAuthorize("hasRole('LIDER')")` at class level.
+Every current and future handler added to `/api/dashboard` therefore inherits the
+executive role restriction by default. `SecurityConfig` still requires
+authentication globally and has method security enabled. Consequently, requests
+without valid authentication receive `401`, authenticated `OPERACIONAL` and
+`GESTOR` callers receive `403`, and only `LIDER` reaches `DashboardService`.
+
+The policy applies equally when `orientationId` is omitted or supplied. The
+existing `/projetos/{id}` contract reused by Task 6.4 remains governed by the
+separate project-read policy and is not a dashboard endpoint.
 
 ---
 

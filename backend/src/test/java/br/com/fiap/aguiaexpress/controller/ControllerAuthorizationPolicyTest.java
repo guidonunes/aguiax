@@ -1,12 +1,12 @@
 package br.com.fiap.aguiaexpress.controller;
 
 import br.com.fiap.aguiaexpress.config.security.SecurityConfig;
-import br.com.fiap.aguiaexpress.dto.AtualizarAvaliacaoIdeiaDTO;
-import br.com.fiap.aguiaexpress.dto.AtualizarStatusIdeiaDTO;
-import br.com.fiap.aguiaexpress.dto.AtualizarStatusProjetoDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarIdeiaDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarOrientacaoDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarProjetoDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.AtualizarAvaliacaoIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.AtualizarStatusIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.projeto.AtualizarStatusProjetoDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.RegistrarIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.orientacao.RegistrarOrientacaoDTO;
+import br.com.fiap.aguiaexpress.dto.projeto.RegistrarProjetoDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,6 +25,14 @@ class ControllerAuthorizationPolicyTest {
                 SecurityConfig.class.getAnnotation(EnableMethodSecurity.class);
 
         assertNotNull(annotation);
+    }
+
+    @Test
+    void dashboardControllerRequiresLeaderAtTheControllerBoundary() {
+        PreAuthorize annotation = DashboardController.class.getAnnotation(PreAuthorize.class);
+
+        assertNotNull(annotation);
+        assertEquals("hasRole('LIDER')", annotation.value());
     }
 
     @Test

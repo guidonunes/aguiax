@@ -3,7 +3,7 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
-import br.com.fiap.aguiaexpress.dto.RegistrarOrientacaoDTO;
+import br.com.fiap.aguiaexpress.dto.orientacao.RegistrarOrientacaoDTO;
 import br.com.fiap.aguiaexpress.model.NomePerfil;
 import br.com.fiap.aguiaexpress.model.OrientacaoEstrategica;
 import br.com.fiap.aguiaexpress.model.TipoPerfil;

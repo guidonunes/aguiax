@@ -1,8 +1,8 @@
 package br.com.fiap.aguiaexpress.service;
 
-import br.com.fiap.aguiaexpress.dto.AtualizarCategoriaDTO;
-import br.com.fiap.aguiaexpress.dto.MostrarCategoriaDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarCategoriaDTO;
+import br.com.fiap.aguiaexpress.dto.categoria.AtualizarCategoriaDTO;
+import br.com.fiap.aguiaexpress.dto.categoria.MostrarCategoriaDTO;
+import br.com.fiap.aguiaexpress.dto.categoria.RegistrarCategoriaDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.model.Categoria;

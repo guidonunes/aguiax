@@ -1,4 +1,4 @@
-package br.com.fiap.aguiaexpress.dto;
+package br.com.fiap.aguiaexpress.dto.projeto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;

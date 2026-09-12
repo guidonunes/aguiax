@@ -1,6 +1,6 @@
 package br.com.fiap.aguiaexpress.controller;
 
-import br.com.fiap.aguiaexpress.dto.MostrarStatusProjetoDTO;
+import br.com.fiap.aguiaexpress.dto.projeto.MostrarStatusProjetoDTO;
 import br.com.fiap.aguiaexpress.service.StatusProjetoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

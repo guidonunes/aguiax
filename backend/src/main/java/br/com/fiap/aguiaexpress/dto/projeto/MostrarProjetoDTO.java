@@ -1,4 +1,4 @@
-package br.com.fiap.aguiaexpress.dto;
+package br.com.fiap.aguiaexpress.dto.projeto;
 
 import br.com.fiap.aguiaexpress.model.NomeStatusProjeto;
 import br.com.fiap.aguiaexpress.model.Projeto;

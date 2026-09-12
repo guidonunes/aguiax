@@ -1,4 +1,4 @@
-package br.com.fiap.aguiaexpress.dto;
+package br.com.fiap.aguiaexpress.dto.ideia;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

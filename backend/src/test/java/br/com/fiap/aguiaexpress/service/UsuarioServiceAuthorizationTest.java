@@ -1,8 +1,8 @@
 package br.com.fiap.aguiaexpress.service;
 
-import br.com.fiap.aguiaexpress.dto.AtualizarUsuarioDTO;
-import br.com.fiap.aguiaexpress.dto.MostrarUsuarioDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarUsuarioDTO;
+import br.com.fiap.aguiaexpress.dto.usuario.AtualizarUsuarioDTO;
+import br.com.fiap.aguiaexpress.dto.usuario.MostrarUsuarioDTO;
+import br.com.fiap.aguiaexpress.dto.usuario.RegistrarUsuarioDTO;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
 import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
 import br.com.fiap.aguiaexpress.model.NomePerfil;

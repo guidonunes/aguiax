@@ -100,6 +100,35 @@ Por padrão, o teste usa `mongodb://localhost:27017`. Outro servidor de teste po
 ser informado com `-Dmongodb.test.uri=mongodb://host:27017`. Nunca direcione esse
 teste para um banco de produção.
 
+## Provedor de IA selecionado
+
+A Task 7.1 selecionou a camada gratuita da **Google Gemini Developer API** para a
+avaliação estruturada de ideias. O modelo fixado para a implementação é
+`gemini-3.6-flash`, um modelo Flash estável com suporte a saída estruturada. O
+antigo `gemini-1.5-flash` não deve ser usado, pois foi encerrado pelo Google em
+29/09/2025. O limite documentado do modelo atual é de 1.048.576 tokens de entrada;
+isso representa contexto, não quantidade de parâmetros.
+
+A integração ainda não está ativa. As Tasks 7.3–7.4 implementarão o cliente e as
+seguintes variáveis externas, sem versionar credenciais reais:
+
+| Variável | Valor padrão ou finalidade planejada |
+|---|---|
+| `AI_ENABLED` | `false` |
+| `AI_PROVIDER` | `gemini` |
+| `AI_API_KEY` | Chave do Google AI Studio, obrigatória somente quando habilitado |
+| `AI_MODEL` | `gemini-3.6-flash` |
+| `AI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta` |
+| `AI_CONNECT_TIMEOUT_MS` | `3000` |
+| `AI_READ_TIMEOUT_MS` | `15000` |
+
+Os limites gratuitos variam por modelo e projeto. Consulte os limites ativos no
+Google AI Studio antes da demonstração; o sistema não considera 15 RPM uma
+garantia fixa. Referências oficiais: [modelo Gemini 3.6 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash),
+[preços](https://ai.google.dev/gemini-api/docs/pricing),
+[limites](https://ai.google.dev/gemini-api/docs/rate-limits) e
+[descontinuações](https://ai.google.dev/gemini-api/docs/deprecations).
+
 ## Bootstrap controlado do primeiro líder
 
 Se o banco já possui uma conta `LIDER` válida, use essa conta e não repita este

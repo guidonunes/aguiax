@@ -1,6 +1,6 @@
 package br.com.fiap.aguiaexpress.service;
 
-import br.com.fiap.aguiaexpress.dto.MostrarUsuarioBadgeDTO;
+import br.com.fiap.aguiaexpress.dto.badge.MostrarUsuarioBadgeDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;

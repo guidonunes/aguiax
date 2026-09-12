@@ -1,6 +1,6 @@
 package br.com.fiap.aguiaexpress.service;
 
-import br.com.fiap.aguiaexpress.dto.MostrarBadgeDTO;
+import br.com.fiap.aguiaexpress.dto.badge.MostrarBadgeDTO;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.model.Badge;
 import br.com.fiap.aguiaexpress.repository.BadgeRepository;

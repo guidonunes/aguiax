@@ -1,4 +1,4 @@
-package br.com.fiap.aguiaexpress.dto;
+package br.com.fiap.aguiaexpress.dto.perfil;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

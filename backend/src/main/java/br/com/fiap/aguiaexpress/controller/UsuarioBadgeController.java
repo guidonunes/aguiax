@@ -1,6 +1,6 @@
 package br.com.fiap.aguiaexpress.controller;
 
-import br.com.fiap.aguiaexpress.dto.MostrarUsuarioBadgeDTO;
+import br.com.fiap.aguiaexpress.dto.badge.MostrarUsuarioBadgeDTO;
 import br.com.fiap.aguiaexpress.service.UsuarioBadgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

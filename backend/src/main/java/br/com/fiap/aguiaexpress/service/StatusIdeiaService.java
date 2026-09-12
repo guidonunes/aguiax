@@ -1,6 +1,6 @@
 package br.com.fiap.aguiaexpress.service;
 
-import br.com.fiap.aguiaexpress.dto.MostrarStatusIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.MostrarStatusIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.model.NomeStatusIdeia;
 import br.com.fiap.aguiaexpress.model.StatusIdeia;

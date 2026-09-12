@@ -733,6 +733,27 @@ Use `BigDecimal` for monetary values.
 
 A stable dashboard response contract exists.
 
+### Task 6.1 record — 2026-09-11
+
+Implemented and verified by Codex. `DashboardSummaryResponse` is a Java record in
+the existing `dto.dashboard` package with the eight documented JSON fields.
+Project totals and status counts use `long`; all monetary and average decimal
+metrics use `BigDecimal`.
+
+The response defensively copies its status map, exposes it as immutable, and
+zero-fills all values of `NomeStatusProjeto` so clients receive a predictable
+shape even when a status has no projects. Construction rejects negative counts,
+missing decimal metrics, and a `totalProjects` value that differs from the sum of
+the status counts.
+
+Four focused tests verify JSON field names and values, complete/immutable status
+counts, and invalid-contract rejection. The focused suite passed 4 of 4 tests.
+The complete backend suite passed 99 of 100 tests; only the previously documented
+`AguiaexpressApplicationTests.contextLoads` error remains because `${DB_URL}` is
+not populated by the application's main-method `.env` bootstrap during
+`@SpringBootTest`. No aggregation service, HTTP endpoint, authorization rule, or
+Android integration was added early. The Task 6.1 exit criterion is satisfied.
+
 ---
 
 ## Task 6.2 — Implement global dashboard aggregation
@@ -749,6 +770,30 @@ Move calculation logic from Android into the backend.
 
 The backend returns all global dashboard metrics from persisted project data.
 
+### Task 6.2 record — 2026-09-11
+
+Implemented and verified by Codex. `DashboardService.buscarResumo(...)` loads
+the persisted projects through `ProjetoRepository` inside a read-only transaction
+and returns the Task 6.1 contract. The backend now owns status counts, investment,
+financial return, cost reduction, estimated result, average ROI, and average
+productivity gain. Estimated result is `return + reduction - investment`;
+averages include every project and use two-decimal `HALF_UP` rounding. Legacy
+`null` numeric fields are treated as zero, and an empty database returns a complete
+zero-valued summary.
+
+`DashboardController` exposes `GET /api/dashboard/summary`. It is leader-only from
+its introduction so the executive endpoint never has an insecure intermediate
+state; Task 6.5 remains responsible for confirming the same policy across every
+dashboard route introduced by later tasks. No orientation filter or
+project-specific endpoint was added early.
+
+Three service tests cover exact mixed-project aggregates, the empty dataset, null
+legacy values, a negative estimated result, and average rounding. Three MVC tests
+cover the response contract plus `401`, `403`, and leader access. The combined
+dashboard suite passed 10 of 10 tests. The complete backend suite passed 105 of
+106 tests; only the previously documented `contextLoads` `${DB_URL}` setup error
+remains. The Task 6.2 exit criterion is satisfied.
+
 ---
 
 ## Task 6.3 — Add strategic-orientation filter
@@ -762,6 +807,29 @@ GET /api/dashboard/summary?orientationId={id}
 ### Exit criterion
 
 A leader can view metrics scoped to one strategic orientation.
+
+### Task 6.3 record — 2026-09-11
+
+Implemented and verified by Codex. `GET /api/dashboard/summary` now accepts the
+optional `orientationId` query parameter. Omitting it preserves the Task 6.2
+global response. Supplying it uses the existing project-to-idea-to-orientation
+relationship and a Spring Data nested-property query to load only projects for
+the requested orientation before applying the same authoritative formulas.
+
+The service verifies that the orientation exists: a valid orientation without
+projects returns the normal complete zero summary, while an unknown ID returns the
+centralized `404` response. Deactivated orientations remain available for
+historical reporting. The existing `LIDER` method-security rule protects both
+global and filtered calls.
+
+Three added service tests cover exact filtered aggregates, an existing orientation
+with no projects, and an unknown orientation without a project query. Two added
+MVC tests verify query-parameter delegation and the controlled `404` contract.
+The combined dashboard suite passed 15 of 15 tests. The complete backend suite
+passed 110 of 111 tests; only the previously documented `contextLoads` `${DB_URL}`
+setup error remains. Repository-backed fixture coverage is intentionally retained
+for the broader Task 11.4 dashboard integration suite. The Task 6.3 exit criterion
+is satisfied.
 
 ---
 
@@ -779,6 +847,28 @@ Avoid duplicating existing project endpoints unless a dashboard-specific DTO add
 
 Sprint requirement for project-specific result visualization is supported by an API contract.
 
+### Task 6.4 record — 2026-09-11
+
+Implemented and verified by Codex through the task's explicit conditional path.
+No new dashboard endpoint or DTO was added because the existing authenticated
+`GET /projetos/{id}` contract already returns the complete project-specific result:
+linked idea, responsible user, status, descriptive fields, investment, ROI,
+financial return, cost reduction, productivity gain, delivery dates, and audit
+timestamps. A second `GET /api/dashboard/projects/{projectId}` route would only
+duplicate that contract.
+
+The Android client already consumes the endpoint through `ProjetoApi`,
+`ProjetoRepository`, and `ProjetoDto`, and the project screen renders its result
+metrics. The existing policy also permits a `LIDER` to inspect project results
+while requiring authentication for all project reads.
+
+Three focused MVC tests now lock down unauthenticated `401`, a leader's complete
+`200` response contract, and the centralized `404` response for an unknown project.
+Together with the dashboard tests, the focused suite passed 18 of 18 tests. The
+complete backend suite passed 113 of 114 tests; only the previously documented
+`contextLoads` `${DB_URL}` setup error remains. The Task 6.4 exit criterion is
+satisfied without duplicating production code.
+
 ---
 
 ## Task 6.5 — Restrict dashboard access
@@ -788,6 +878,23 @@ Dashboard endpoints should be accessible only to the intended role, preferably `
 ### Exit criterion
 
 Unauthorized roles receive `403`.
+
+### Task 6.5 record — 2026-09-11
+
+Implemented by Codex. The existing `LIDER` rule was promoted from the summary
+method to a class-level `@PreAuthorize` rule on `DashboardController`. This keeps
+the current behavior and makes every future handler under `/api/dashboard`
+leader-only by default. Global authentication in `SecurityConfig` continues to
+produce `401` before method authorization for callers without a valid token.
+
+The MVC suite now explicitly verifies that both `OPERACIONAL` and `GESTOR`
+receive `403` for the global summary and the orientation-filtered summary, that
+unauthenticated access receives `401`, and that `LIDER` receives `200`. It also
+verifies that denied calls never reach `DashboardService`. A structural test pins
+the controller-level role expression to `hasRole('LIDER')`. The focused dashboard
+and authorization-policy suite passed 9 of 9 tests. The complete backend suite
+passed 115 of 116 tests; only the previously documented `contextLoads` `${DB_URL}`
+setup error remains. The Task 6.5 exit criterion is satisfied, completing Phase 6.
 
 ---
 
@@ -813,6 +920,26 @@ Do not build a chatbot.
 ### Exit criterion
 
 One provider is chosen and its configuration contract is documented.
+
+### Task 7.1 record — 2026-09-11
+
+Implemented by Codex as an architecture and configuration-contract decision. The
+selected provider is the Google Gemini Developer API free tier. The pinned model
+is the supported stable `gemini-3.6-flash`, chosen for free-tier availability,
+Flash latency/cost characteristics, structured JSON support, and a context window
+that is more than sufficient for idea evaluation.
+
+The developer's original `gemini-1.5-flash` preference could not be used because
+Google shut that model down on 2025-09-29. The documented context capacity is the
+current model's 1,048,576-token input limit, not “2 million parameters.” Likewise,
+15 RPM is not treated as a fixed application guarantee: Gemini limits vary by
+model and project and must be checked in Google AI Studio.
+
+Architecture and operational documentation now define the provider, explicit
+model ID, REST base URL and operation, API-key header, safe disabled default, and
+planned environment variables/timeouts. No provider client, dependency, live key,
+or application configuration was added early; those remain Tasks 7.3–7.4. The
+Task 7.1 exit criterion is satisfied.
 
 ---
 

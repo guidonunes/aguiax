@@ -1,9 +1,9 @@
 package br.com.fiap.aguiaexpress.controller;
 
-import br.com.fiap.aguiaexpress.dto.AtualizarAvaliacaoIdeiaDTO;
-import br.com.fiap.aguiaexpress.dto.AtualizarStatusIdeiaDTO;
-import br.com.fiap.aguiaexpress.dto.MostrarIdeiaDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.AtualizarAvaliacaoIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.AtualizarStatusIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.RegistrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.model.NomeStatusIdeia;
 import br.com.fiap.aguiaexpress.service.IdeiaService;
 import jakarta.validation.Valid;

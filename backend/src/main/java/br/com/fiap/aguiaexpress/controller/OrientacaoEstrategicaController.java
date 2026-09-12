@@ -1,7 +1,7 @@
 package br.com.fiap.aguiaexpress.controller;
 
-import br.com.fiap.aguiaexpress.dto.MostrarOrientacaoDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarOrientacaoDTO;
+import br.com.fiap.aguiaexpress.dto.orientacao.MostrarOrientacaoDTO;
+import br.com.fiap.aguiaexpress.dto.orientacao.RegistrarOrientacaoDTO;
 import br.com.fiap.aguiaexpress.service.OrientacaoEstrategicaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package br.com.fiap.aguiaexpress.controller;
 
-import br.com.fiap.aguiaexpress.dto.AtualizarStatusProjetoDTO;
-import br.com.fiap.aguiaexpress.dto.MostrarProjetoDTO;
-import br.com.fiap.aguiaexpress.dto.RegistrarProjetoDTO;
+import br.com.fiap.aguiaexpress.dto.projeto.AtualizarStatusProjetoDTO;
+import br.com.fiap.aguiaexpress.dto.projeto.MostrarProjetoDTO;
+import br.com.fiap.aguiaexpress.dto.projeto.RegistrarProjetoDTO;
 import br.com.fiap.aguiaexpress.model.NomeStatusProjeto;
 import br.com.fiap.aguiaexpress.service.ProjetoService;
 import jakarta.validation.Valid;

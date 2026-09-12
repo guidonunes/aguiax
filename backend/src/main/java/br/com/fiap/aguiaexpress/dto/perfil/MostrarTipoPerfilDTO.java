@@ -1,4 +1,4 @@
-package br.com.fiap.aguiaexpress.dto;
+package br.com.fiap.aguiaexpress.dto.perfil;
 
 import br.com.fiap.aguiaexpress.model.NomePerfil;
 import br.com.fiap.aguiaexpress.model.TipoPerfil;

@@ -1,0 +1,27 @@
+package br.com.fiap.aguiaexpress.controller;
+
+import br.com.fiap.aguiaexpress.dto.dashboard.DashboardSummaryResponse;
+import br.com.fiap.aguiaexpress.service.DashboardService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/dashboard")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('LIDER')")
+public class DashboardController {
+
+    private final DashboardService dashboardService;
+
+    @GetMapping("/summary")
+    public ResponseEntity<DashboardSummaryResponse> buscarResumo(
+            @RequestParam(required = false) Long orientationId
+    ) {
+        return ResponseEntity.ok(dashboardService.buscarResumo(orientationId));
+    }
+}

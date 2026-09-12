@@ -1,4 +1,4 @@
-package br.com.fiap.aguiaexpress.dto;
+package br.com.fiap.aguiaexpress.dto.ideia;
 
 import br.com.fiap.aguiaexpress.model.VotoIdeia;
 
