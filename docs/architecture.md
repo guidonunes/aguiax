@@ -1235,24 +1235,44 @@ return evaluation DTO
 
 ## 17.3 AI input
 
-The provider may receive:
+Task 7.2 defines the provider-independent `AiIdeaEvaluationContext` record. Its
+fields and validation rules are:
 
-- idea title;
-- description;
-- problem;
-- proposed solution;
-- category;
-- strategic orientation;
-- manager impact score when available;
-- manager viability score when available.
+| Field | Type | Contract rule |
+|---|---|---|
+| `title` | `String` | Required, nonblank, trimmed. |
+| `description` | `String` | Required, nonblank, trimmed. |
+| `problem` | `String` | Optional for compatibility with legacy ideas; blank becomes `null`. |
+| `proposedSolution` | `String` | Optional for compatibility with legacy ideas; blank becomes `null`. |
+| `category` | `String` | Required, nonblank, trimmed. |
+| `strategicOrientation` | `String` | Required, nonblank, trimmed. |
+| `managerImpactScore` | `Integer` | Optional; when present, inclusive `0..10`. |
+| `managerViabilityScore` | `Integer` | Optional; when present, inclusive `0..10`. |
 
-Avoid sending unrelated user data.
+The application service introduced later must derive this context from trusted
+MySQL entities. Avoid sending user identity, credentials, audit data, or unrelated
+domain content to the provider.
 
 ---
 
 ## 17.4 AI output contract
 
-The backend should require structured output.
+The backend requires structured output and separates model-owned evaluation data
+from application-owned resource identity:
+
+- `AiIdeaEvaluationResult` is the provider-independent result used by the future
+  client. It contains `strategicAlignment`, `impact`, `feasibility`, `innovation`,
+  `overallScore`, and `summary`.
+- `AiIdeaEvaluationResponse` is the future HTTP response. It flattens the validated
+  result and adds the trusted `ideaId` supplied by application code.
+
+The four dimension scores use nullable `Integer` components so a missing JSON
+field cannot silently become zero. Every dimension is required and must be in the
+inclusive `0..10` range. `overallScore` is a required `BigDecimal` in the same
+range, preserving provider decimal precision. `summary` is required, nonblank,
+and trimmed. Response IDs must be positive. All violations fail construction with
+`IllegalArgumentException`; Task 7.3 must translate provider mapping/validation
+failures into its controlled integration exception.
 
 Example application-level response:
 
@@ -1268,7 +1288,7 @@ Example application-level response:
 }
 ```
 
-Suggested ranges:
+Required ranges:
 
 ```text
 strategicAlignment: 0..10
@@ -1278,7 +1298,10 @@ innovation:         0..10
 overallScore:       0..10
 ```
 
-All provider output must be validated.
+Gemini must never generate or select `ideaId`. The application combines its known
+idea ID with a validated result through `AiIdeaEvaluationResponse.from(...)`.
+Provider-specific request and response envelopes remain internal to the Task 7.3
+Gemini client and must not leak into this contract.
 
 ---
 

@@ -972,6 +972,32 @@ summary
 
 AI input/output schema is explicit before provider code is written.
 
+### Task 7.2 record — 2026-09-12
+
+Implemented by the developer and reviewed/fixed by Codex. Three immutable,
+provider-independent Java records now define the boundary under `dto.ai`:
+`AiIdeaEvaluationContext` for trusted idea context,
+`AiIdeaEvaluationResult` for validated model scores, and
+`AiIdeaEvaluationResponse` for the future flattened HTTP response.
+
+Required context strings are trimmed and rejected when blank. Problem, proposed
+solution, and manager scores remain optional for compatibility with current and
+legacy ideas; present manager scores must be within `0..10`. Model dimension
+scores are required `Integer` values in `0..10`, `overallScore` is a required
+`BigDecimal` in `0..10`, and the summary is required and trimmed. The response
+accepts only a positive application-owned `ideaId`, so Gemini cannot control the
+resource identity. Review normalized a null-result factory call to the same
+`IllegalArgumentException` contract used by other validation failures.
+
+Eight focused tests cover normalization, nullable legacy context, all required
+context fields, manager-score boundaries, valid structured results, missing and
+out-of-range model fields, the exact seven-field JSON response, and trusted-ID/
+null-result rejection. The focused suite passed 8 of 8 tests. No Gemini envelope,
+HTTP client, persistence, controller, or Android code was added early. The Task
+7.2 exit criterion is satisfied. The complete backend suite passed 123 of 124
+tests; only the previously documented `contextLoads` `${DB_URL}` setup error
+remains.
+
 ---
 
 ## Task 7.3 — Implement AI provider client
