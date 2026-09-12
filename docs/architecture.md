@@ -1260,7 +1260,7 @@ domain content to the provider.
 The backend requires structured output and separates model-owned evaluation data
 from application-owned resource identity:
 
-- `AiIdeaEvaluationResult` is the provider-independent result used by the future
+- `AiIdeaEvaluationResult` is the provider-independent result returned by the AI
   client. It contains `strategicAlignment`, `impact`, `feasibility`, `innovation`,
   `overallScore`, and `summary`.
 - `AiIdeaEvaluationResponse` is the future HTTP response. It flattens the validated
@@ -1271,8 +1271,8 @@ field cannot silently become zero. Every dimension is required and must be in th
 inclusive `0..10` range. `overallScore` is a required `BigDecimal` in the same
 range, preserving provider decimal precision. `summary` is required, nonblank,
 and trimmed. Response IDs must be positive. All violations fail construction with
-`IllegalArgumentException`; Task 7.3 must translate provider mapping/validation
-failures into its controlled integration exception.
+`IllegalArgumentException`; the Task 7.3 client translates provider
+mapping/validation failures into its controlled integration exception.
 
 Example application-level response:
 
@@ -1348,6 +1348,14 @@ AiIdeaEvaluationClient
 This avoids coupling service logic to one provider's HTTP schema.
 
 It also makes tests easier because the provider client can be mocked.
+
+Task 7.3 implements this boundary with `AiIdeaEvaluationClient` and
+`GeminiAiIdeaEvaluationClient`. The Gemini adapter uses Spring `RestClient`, sends
+the key only through `x-goog-api-key`, applies JDK HTTP connection and read
+timeouts, requests `application/json` with `responseJsonSchema`, and converts the
+provider envelope into `AiIdeaEvaluationResult`. Provider envelopes remain
+private to the adapter. The adapter is intentionally not registered as a Spring
+bean yet; conditional runtime configuration remains Task 7.4.
 
 ---
 

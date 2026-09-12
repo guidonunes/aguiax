@@ -1025,6 +1025,25 @@ Do not expose raw provider response directly to Android.
 
 A service test can obtain a valid mapped evaluation using a mocked provider response.
 
+### Task 7.3 record — 2026-09-12
+
+Implemented by the developer and reviewed by Codex. Application code now depends
+on `AiIdeaEvaluationClient`, while `GeminiAiIdeaEvaluationClient` owns Gemini's
+request envelope, HTTPS call, API-key header, connection/read timeouts, structured
+JSON schema, provider-response parsing, and mapping to the validated
+`AiIdeaEvaluationResult`. Provider payloads remain internal, and timeout, rate
+limit, rejected request, unavailable provider, and invalid response conditions
+are represented by controlled integration failures.
+
+Seven mocked-provider tests pass. They verify the endpoint, authentication header,
+structured request/schema, valid application mapping, invalid numeric bounds,
+malformed output without raw-response disclosure, incomplete generation, `429`,
+`5xx`, and timeout behavior. Together with the Task 7.2 contract suite, 15 focused
+AI tests pass. Runtime bean/property binding remains deliberately assigned to
+Task 7.4, and endpoint orchestration and persistence remain Phase 8 work. The
+complete backend run passed 130 of 131 tests; only the pre-existing `contextLoads`
+`${DB_URL}` configuration error recorded in the regression baseline remains.
+
 ---
 
 ## Task 7.4 — Secure provider configuration
