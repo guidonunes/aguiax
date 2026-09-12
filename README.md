@@ -109,8 +109,9 @@ antigo `gemini-1.5-flash` não deve ser usado, pois foi encerrado pelo Google em
 29/09/2025. O limite documentado do modelo atual é de 1.048.576 tokens de entrada;
 isso representa contexto, não quantidade de parâmetros.
 
-A integração ainda não está ativa. As Tasks 7.3–7.4 implementarão o cliente e as
-seguintes variáveis externas, sem versionar credenciais reais:
+O cliente Gemini e sua configuração segura foram implementados nas Tasks 7.3–7.4.
+A integração fica desabilitada por padrão e usa as seguintes variáveis externas,
+sem versionar credenciais reais:
 
 | Variável | Valor padrão ou finalidade planejada |
 |---|---|
@@ -128,6 +129,13 @@ garantia fixa. Referências oficiais: [modelo Gemini 3.6 Flash](https://ai.googl
 [preços](https://ai.google.dev/gemini-api/docs/pricing),
 [limites](https://ai.google.dev/gemini-api/docs/rate-limits) e
 [descontinuações](https://ai.google.dev/gemini-api/docs/deprecations).
+
+Sem uma chave, mantenha `AI_ENABLED=false` e `AI_API_KEY=`. Para habilitar o
+cliente, altere somente o `.env` local para `AI_ENABLED=true` e informe a chave
+real em `AI_API_KEY`. Os valores `AI_CONNECT_TIMEOUT_MS` e
+`AI_READ_TIMEOUT_MS` são números em milissegundos, sem o sufixo `ms`. A chave é
+usada apenas pelo backend e não deve ser enviada ao Android. O endpoint de
+avaliação de ideias ainda depende da implementação da Phase 8.
 
 ## Bootstrap controlado do primeiro líder
 

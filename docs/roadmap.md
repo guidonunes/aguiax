@@ -1064,6 +1064,23 @@ Never commit API keys.
 
 Repository contains no real AI credentials and application can load configuration safely.
 
+### Task 7.4 record — 2026-09-12
+
+Implemented by the developer and reviewed by Codex. `AiProviderProperties` binds
+the external `AI_*` contract through `app.ai`, and `AiClientConfiguration`
+registers `GeminiAiIdeaEvaluationClient` only when `AI_ENABLED=true`. AI remains
+disabled by default, so ordinary startup does not require a Gemini credential.
+Enabled configuration fails fast for a missing key, unsupported provider,
+non-positive timeout, or non-HTTPS provider URL. The existing `.env` bridge loads
+all AI variables, `.env.example` documents only safe placeholders, and the real
+`.env` remains ignored.
+
+Seven isolated configuration tests pass, covering disabled startup without a key,
+disabled isolation from unused invalid settings, environment-variable overrides,
+Gemini bean creation, and enabled-mode validation. The combined Task 7.2–7.4 AI
+suite passes 22 tests. The complete backend run passes 137 of 138 tests; only the
+pre-existing `contextLoads` `${DB_URL}` configuration error remains.
+
 ---
 
 # Phase 8 — AI-assisted idea prioritization

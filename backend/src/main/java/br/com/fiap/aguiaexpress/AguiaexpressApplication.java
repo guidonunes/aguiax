@@ -24,6 +24,14 @@ public class AguiaexpressApplication {
         definirPropriedadeSePresente(dotenv, "JWT_SECRET");
         definirPropriedadeSePresente(dotenv, "MONGODB_URI");
         definirPropriedadeSePresente(dotenv, "MONGODB_DATABASE");
+
+        definirPropriedadeSePresente(dotenv, "AI_ENABLED");
+        definirPropriedadeSePresente(dotenv, "AI_PROVIDER");
+        definirPropriedadeSePresente(dotenv, "AI_API_KEY");
+        definirPropriedadeSePresente(dotenv, "AI_MODEL");
+        definirPropriedadeSePresente(dotenv, "AI_BASE_URL");
+        definirPropriedadeSePresente(dotenv, "AI_CONNECT_TIMEOUT_MS");
+        definirPropriedadeSePresente(dotenv, "AI_READ_TIMEOUT_MS");
     }
 
     private static void definirPropriedadeSePresente(

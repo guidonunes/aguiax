@@ -1186,7 +1186,7 @@ Official references:
 - [Gemini API rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
 - [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output)
 
-The configuration contract to be implemented by Task 7.4 is:
+The configuration contract implemented by Task 7.4 is:
 
 | Environment variable | Required | Planned default / purpose |
 |---|---|---|
@@ -1198,10 +1198,11 @@ The configuration contract to be implemented by Task 7.4 is:
 | `AI_CONNECT_TIMEOUT_MS` | No | `3000`; maximum connection establishment time. |
 | `AI_READ_TIMEOUT_MS` | No | `15000`; maximum wait for the non-streaming evaluation response. |
 
-The planned REST operation is
+The REST operation is
 `POST {AI_BASE_URL}/models/{AI_MODEL}:generateContent`, authenticated only from
-the backend. Task 7.3 owns the client and Task 7.4 owns actual property binding,
-safe enablement, and `.env.example`; Task 7.1 does not add runtime configuration.
+the backend. Task 7.3 owns the client, while Task 7.4 binds the variables through
+typed `app.ai` properties, registers the client only when enabled, and documents
+safe placeholders in `.env.example`.
 
 ## 17.2 AI request flow
 
@@ -1354,8 +1355,10 @@ Task 7.3 implements this boundary with `AiIdeaEvaluationClient` and
 the key only through `x-goog-api-key`, applies JDK HTTP connection and read
 timeouts, requests `application/json` with `responseJsonSchema`, and converts the
 provider envelope into `AiIdeaEvaluationResult`. Provider envelopes remain
-private to the adapter. The adapter is intentionally not registered as a Spring
-bean yet; conditional runtime configuration remains Task 7.4.
+private to the adapter. Task 7.4 registers the adapter conditionally: no AI client
+bean exists when `AI_ENABLED=false`, while enabled configuration validates the
+provider, key, model, HTTPS base URL, and positive timeouts before startup
+completes.
 
 ---
 
@@ -1758,9 +1761,13 @@ JWT
   JWT_EXPIRATION
 
 AI
+  AI_ENABLED
+  AI_PROVIDER
   AI_API_KEY
   AI_MODEL
   AI_BASE_URL          # if required by provider
+  AI_CONNECT_TIMEOUT_MS
+  AI_READ_TIMEOUT_MS
 ```
 
 Variable names should ultimately match the actual repository configuration.
