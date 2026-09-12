@@ -4,6 +4,7 @@ import br.com.fiap.aguiaexpress.advice.ApplicationExceptionHandler;
 import br.com.fiap.aguiaexpress.ai.client.AiProviderException;
 import br.com.fiap.aguiaexpress.ai.client.AiProviderFailure;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
+import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.service.AiIdeaEvaluationService;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -117,6 +119,27 @@ class AiIdeaEvaluationControllerTest {
                 .andExpect(jsonPath("$.message").value(
                         "A avaliação por IA não está habilitada."
                 ));
+    }
+
+    @Test
+    void unavailableEvaluationHistoryReceivesControlled503() throws Exception {
+        when(service.avaliarIdeia(42L)).thenThrow(
+                new AiEvaluationPersistenceException(
+                        "Não foi possível armazenar o histórico da avaliação de IA.",
+                        new DataAccessResourceFailureException(
+                                "mongo unavailable"
+                        )
+                )
+        );
+
+        mockMvc.perform(post(ENDPOINT)
+                        .with(user("gestor").roles("GESTOR")))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.message").value(
+                        "Não foi possível armazenar o histórico da avaliação de IA."
+                ))
+                .andExpect(jsonPath("$.path").value(ENDPOINT));
     }
 
     @ParameterizedTest

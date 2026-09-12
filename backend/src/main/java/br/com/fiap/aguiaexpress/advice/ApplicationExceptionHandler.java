@@ -2,6 +2,7 @@ package br.com.fiap.aguiaexpress.advice;
 
 import br.com.fiap.aguiaexpress.ai.client.AiProviderException;
 import br.com.fiap.aguiaexpress.dto.ErroRespostaDTO;
+import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
@@ -89,6 +90,18 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(AiEvaluationUnavailableException.class)
     public ResponseEntity<ErroRespostaDTO> handleAiEvaluationUnavailable(
             AiEvaluationUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        return criarRespostaDeErro(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(AiEvaluationPersistenceException.class)
+    public ResponseEntity<ErroRespostaDTO> handleAiEvaluationPersistence(
+            AiEvaluationPersistenceException exception,
             HttpServletRequest request
     ) {
         return criarRespostaDeErro(

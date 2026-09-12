@@ -2,6 +2,8 @@ package br.com.fiap.aguiaexpress.ai.client;
 
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationContext;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.HttpClientErrorException;
@@ -25,7 +27,12 @@ import java.util.regex.Pattern;
 
 public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(
+            GeminiAiIdeaEvaluationClient.class
+    );
     private static final String API_KEY_HEADER = "x-goog-api-key";
+    private static final String THINKING_LEVEL = "medium";
+    private static final int MAX_OUTPUT_TOKENS = 4096;
     private static final Pattern MODEL_NAME_PATTERN =
             Pattern.compile("[a-zA-Z0-9._-]+");
 
@@ -127,7 +134,8 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
                             "application/json",
                             evaluationSchema(),
                             0.2,
-                            512
+                            MAX_OUTPUT_TOKENS,
+                            new GeminiThinkingConfig(THINKING_LEVEL)
                     );
 
             return new GeminiGenerateContentRequest(
@@ -204,6 +212,9 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
             String providerResponse
     ) {
         if (providerResponse == null || providerResponse.isBlank()) {
+            LOGGER.warn(
+                    "Resposta inválida do provedor de IA: reason=EMPTY_RESPONSE"
+            );
             throw invalidResponse(null);
         }
 
@@ -212,6 +223,9 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
             JsonNode candidate = root.at("/candidates/0");
 
             if (candidate.isMissingNode()) {
+                LOGGER.warn(
+                        "Resposta inválida do provedor de IA: reason=MISSING_CANDIDATE"
+                );
                 throw invalidResponse(null);
             }
 
@@ -220,12 +234,19 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
                     .asString("");
 
             if (!"STOP".equals(finishReason)) {
+                LOGGER.warn(
+                        "Resposta incompleta do provedor de IA: finishReason={}",
+                        finishReason.isBlank() ? "UNSPECIFIED" : finishReason
+                );
                 throw invalidResponse(null);
             }
 
             JsonNode parts = candidate.at("/content/parts");
 
             if (!parts.isArray() || parts.isEmpty()) {
+                LOGGER.warn(
+                        "Resposta inválida do provedor de IA: reason=MISSING_PARTS"
+                );
                 throw invalidResponse(null);
             }
 
@@ -240,6 +261,9 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
             }
 
             if (generatedJson.isEmpty()) {
+                LOGGER.warn(
+                        "Resposta inválida do provedor de IA: reason=EMPTY_CONTENT"
+                );
                 throw invalidResponse(null);
             }
 
@@ -254,6 +278,10 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
         } catch (AiProviderException exception) {
             throw exception;
         } catch (JacksonException | IllegalArgumentException exception) {
+            LOGGER.warn(
+                    "Avaliação inválida do provedor de IA: validationFailureType={}",
+                    exception.getClass().getSimpleName()
+            );
             throw invalidResponse(exception);
         }
     }
@@ -472,7 +500,13 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
             String responseMimeType,
             Map<String, Object> responseJsonSchema,
             double temperature,
-            int maxOutputTokens
+            int maxOutputTokens,
+            GeminiThinkingConfig thinkingConfig
+    ) {
+    }
+
+    private record GeminiThinkingConfig(
+            String thinkingLevel
     ) {
     }
 }

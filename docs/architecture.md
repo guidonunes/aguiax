@@ -716,7 +716,7 @@ rows when their owning roadmap tasks introduce the controllers.
 | Operation / endpoint | Target policy | Current state | Owning task |
 |---|---|---|---|
 | `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Implemented; `401`/`403`/`200` and controlled failure behavior verified | 8.1 |
-| AI history read endpoint, if exposed | GESTOR only; internal scoring service may read persisted results | Missing | 8.2 |
+| AI history read endpoint, if exposed | GESTOR only; internal scoring service may read persisted results | No HTTP route exposed; internal Mongo repository implemented | 8.2 |
 | Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain and AI-evaluation operations | 3.1–3.2, 8.1 |
 | `GET /actuator/health` | Public, overall status only; no component details | Missing | 10.1 |
 | `GET /actuator/info`, `GET /actuator/metrics`, `GET /actuator/metrics/{name}` | LIDER, sanitized metadata/metrics only | Missing | 10.1 |
@@ -1237,8 +1237,9 @@ Task 8.1 implements the flow through validated DTO return plus the three audit
 outcomes. The service obtains the provider client through `ObjectProvider`, so the
 ordinary application still starts when `AI_ENABLED=false`; a request in that mode
 returns controlled `503 Service Unavailable`. The provider call is not wrapped in
-a MySQL transaction. MongoDB evaluation-history persistence is added in Task 8.2,
-and the deterministic application priority is calculated and stored in Task 8.3.
+a MySQL transaction. Task 8.2 persists each validated result in MongoDB before a
+successful response; the deterministic application priority is calculated and
+stored in Task 8.3.
 
 ---
 
@@ -1337,9 +1338,18 @@ Suggested document:
 }
 ```
 
-Multiple evaluations may exist for the same idea.
+Task 8.2 implements this contract as the immutable `AiIdeaEvaluation` document in
+the `idea_ai_evaluations` collection. Each evaluation has an application-generated
+UUID, and `AiIdeaEvaluationRepository` provides
+`findAllByIdeaIdOrderByCreatedAtDesc(...)` for internal historical lookup. Saving
+a new document for every successful request retains multiple evaluations rather
+than overwriting the previous analysis.
 
-This gives the system historical traceability instead of overwriting previous AI analysis.
+History persistence occurs after provider-output validation and before the
+completed audit event and HTTP success response. A MongoDB data-access failure is
+wrapped as `AiEvaluationPersistenceException`, maps to controlled `503 Service
+Unavailable`, and follows the failed audit path. There is no public history-read
+endpoint in Sprint 2.
 
 ---
 
@@ -1363,11 +1373,14 @@ Task 7.3 implements this boundary with `AiIdeaEvaluationClient` and
 `GeminiAiIdeaEvaluationClient`. The Gemini adapter uses Spring `RestClient`, sends
 the key only through `x-goog-api-key`, applies JDK HTTP connection and read
 timeouts, requests `application/json` with `responseJsonSchema`, and converts the
-provider envelope into `AiIdeaEvaluationResult`. Provider envelopes remain
-private to the adapter. Task 7.4 registers the adapter conditionally: no AI client
-bean exists when `AI_ENABLED=false`, while enabled configuration validates the
-provider, key, model, HTTPS base URL, and positive timeouts before startup
-completes.
+provider envelope into `AiIdeaEvaluationResult`. For the bounded evaluation, the
+request uses `thinkingLevel=low` and a 4096-token maximum covering both thinking
+and visible output. This prevents the model's default thinking from consuming the
+former 512-token ceiling before emitting JSON while retaining some contextual
+reasoning. Provider envelopes remain private to the adapter. Task 7.4 registers
+the adapter conditionally: no AI client bean exists when `AI_ENABLED=false`, while
+enabled configuration validates the provider, key, model, HTTPS base URL, and
+positive timeouts before startup completes.
 
 ---
 
@@ -1408,6 +1421,9 @@ Task 8.1 implements this boundary. Provider timeout maps to `504`; rate limiting
 provider outage, and disabled AI map to `503`; rejected requests and invalid
 provider output map to `502`; request-construction failure maps to `500`. These
 responses use the application error DTO and never include the raw provider body.
+The adapter logs safe structural diagnostics such as `finishReason=MAX_TOKENS` or
+the validation exception type, but never logs the prompt, generated content, or
+API key.
 
 ---
 

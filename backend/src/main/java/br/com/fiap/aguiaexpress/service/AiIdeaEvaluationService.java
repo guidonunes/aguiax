@@ -2,6 +2,8 @@ package br.com.fiap.aguiaexpress.service;
 
 import br.com.fiap.aguiaexpress.ai.client.AiIdeaEvaluationClient;
 import br.com.fiap.aguiaexpress.ai.client.AiProviderException;
+import br.com.fiap.aguiaexpress.ai.model.AiIdeaEvaluation;
+import br.com.fiap.aguiaexpress.ai.repository.AiIdeaEvaluationRepository;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
@@ -9,6 +11,7 @@ import br.com.fiap.aguiaexpress.config.ai.AiProviderProperties;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationContext;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResult;
+import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
 import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.OrientacaoEstrategica;
@@ -17,10 +20,13 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +40,7 @@ public class AiIdeaEvaluationService {
     private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final ObjectProvider<AiIdeaEvaluationClient> clientProvider;
     private final AiProviderProperties providerProperties;
+    private final AiIdeaEvaluationRepository evaluationRepository;
     private final AuditService auditService;
 
     public AiIdeaEvaluationResponse avaliarIdeia(Long ideiaId) {
@@ -60,6 +67,7 @@ public class AiIdeaEvaluationService {
                     ideia.getId(),
                     result
             );
+            persistirAvaliacao(ideia.getId(), actor.getId(), result);
 
             Map<String, Object> metadata = metadadosDoProvedor();
             metadata.put("overallScore", response.overallScore());
@@ -128,8 +136,41 @@ public class AiIdeaEvaluationService {
         if (exception instanceof AiEvaluationUnavailableException) {
             return "AI_DISABLED";
         }
+        if (exception instanceof AiEvaluationPersistenceException) {
+            return "PERSISTENCE_UNAVAILABLE";
+        }
 
         return exception.getClass().getSimpleName();
+    }
+
+    private void persistirAvaliacao(
+            Long ideiaId,
+            Long actorId,
+            AiIdeaEvaluationResult result
+    ) {
+        AiIdeaEvaluation evaluation = new AiIdeaEvaluation(
+                UUID.randomUUID().toString(),
+                ideiaId,
+                actorId,
+                providerProperties.provider(),
+                providerProperties.model(),
+                result.strategicAlignment(),
+                result.impact(),
+                result.feasibility(),
+                result.innovation(),
+                result.overallScore(),
+                result.summary(),
+                Instant.now()
+        );
+
+        try {
+            evaluationRepository.save(evaluation);
+        } catch (DataAccessException exception) {
+            throw new AiEvaluationPersistenceException(
+                    "Não foi possível armazenar o histórico da avaliação de IA.",
+                    exception
+            );
+        }
     }
 
     private void registrarEvento(

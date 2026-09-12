@@ -1044,6 +1044,21 @@ Task 7.4, and endpoint orchestration and persistence remain Phase 8 work. The
 complete backend run passed 130 of 131 tests; only the pre-existing `contextLoads`
 `${DB_URL}` configuration error recorded in the regression baseline remains.
 
+### Task 7.3 runtime correction — 2026-09-12
+
+A real Task 8.2 endpoint request exposed `INVALID_RESPONSE` because the Gemini 3.6
+Flash request capped combined thinking and visible output at 512 tokens. The
+client now requests `thinkingLevel=low` for this bounded structured-evaluation use
+case and raises `maxOutputTokens` to 4096. The ceiling does not force consumption
+of 4096 tokens; it prevents default reasoning from exhausting the response budget
+before the small JSON result is produced.
+
+Provider-response rejection logs now contain only safe structural diagnostics:
+finish reason, missing response section, or validation exception type. They never
+contain the API key, prompt, raw provider body, or generated summary. The existing
+seven provider tests verify the new request fields and retain the `MAX_TOKENS`
+regression case.
+
 ---
 
 ## Task 7.4 — Secure provider configuration
@@ -1130,11 +1145,11 @@ API key and raw provider body are not exposed. Neither success nor failure chang
 the idea status or creates a project.
 
 The behavior list above spans the whole Phase 8 pipeline. MongoDB evaluation
-history remains owned by Task 8.2, and calculation/persistence of the deterministic
-application priority remains owned by Task 8.3. Keeping those steps in their
-dedicated tasks avoids storing an undocumented score formula or duplicating the
-history model before its contract is defined. The Task 8.1 exit criterion is met
-by the endpoint and structured response.
+history is owned by Task 8.2 and was subsequently connected to this orchestration;
+calculation/persistence of the deterministic application priority remains owned by
+Task 8.3. Keeping score calculation in its dedicated task avoids storing an
+undocumented formula. The Task 8.1 exit criterion is met by the endpoint and
+structured response.
 
 Five service tests and eleven MVC/security test invocations pass. The complete
 backend run completed 154 tests: 153 passed and only the pre-existing
@@ -1167,6 +1182,34 @@ Optionally store prompt/version metadata if useful for traceability.
 ### Exit criterion
 
 Multiple evaluations of the same idea can be retained historically.
+
+### Task 8.2 record — 2026-09-12
+
+Implemented immutable MongoDB evaluation history in the
+`idea_ai_evaluations` collection. Each successful provider result receives a new
+UUID and stores the trusted idea ID, authenticated requesting user ID,
+provider/model, four dimension scores, overall `BigDecimal` score, summary, and
+UTC `Instant`. The document constructor reuses the application result validation,
+so invalid scores or blank traceability fields cannot be persisted.
+
+`AiIdeaEvaluationService` now persists the history after provider validation and
+before emitting `AI_EVALUATION_COMPLETED`. Each request inserts a new document;
+the repository can retrieve all evaluations for an idea ordered newest-first. No
+history-read HTTP endpoint was added because Sprint 2 does not require one and the
+authorization matrix specifies a policy only if such a route is exposed.
+
+MongoDB data-access failure is translated into a controlled `503 Service
+Unavailable`, logged without provider content or credentials, and followed by the
+`AI_EVALUATION_FAILED` audit path. The service does not return a successful
+evaluation when its required history cannot be stored.
+
+Six service tests, twelve MVC/security invocations, and one real MongoDB repository
+integration test pass in the focused run (19 total). The repository test persists
+two evaluations for idea `42`, verifies that both remain present in newest-first
+order, and drops its isolated test database afterward. The complete backend run
+completed 157 tests: 156 passed and only the pre-existing
+`AguiaexpressApplicationTests.contextLoads` unresolved `${DB_URL}` setup error
+remained.
 
 ---
 

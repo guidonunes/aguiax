@@ -95,6 +95,15 @@ class GeminiAiIdeaEvaluationClientTest {
                                         + ".properties.overallScore.maximum"
                         ).value(10)
                 )
+                .andExpect(
+                        jsonPath("$.generationConfig.maxOutputTokens")
+                                .value(4096)
+                )
+                .andExpect(
+                        jsonPath(
+                                "$.generationConfig.thinkingConfig.thinkingLevel"
+                        ).value("low")
+                )
                 .andRespond(withSuccess(
                         providerResponse(validEvaluationJson(), "STOP"),
                         MediaType.APPLICATION_JSON

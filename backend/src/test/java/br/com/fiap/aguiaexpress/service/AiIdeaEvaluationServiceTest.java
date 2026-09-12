@@ -3,6 +3,8 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.ai.client.AiIdeaEvaluationClient;
 import br.com.fiap.aguiaexpress.ai.client.AiProviderException;
 import br.com.fiap.aguiaexpress.ai.client.AiProviderFailure;
+import br.com.fiap.aguiaexpress.ai.model.AiIdeaEvaluation;
+import br.com.fiap.aguiaexpress.ai.repository.AiIdeaEvaluationRepository;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
@@ -10,6 +12,7 @@ import br.com.fiap.aguiaexpress.config.ai.AiProviderProperties;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationContext;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResult;
+import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.model.Categoria;
@@ -20,7 +23,9 @@ import br.com.fiap.aguiaexpress.model.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -28,12 +33,14 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -45,6 +52,7 @@ class AiIdeaEvaluationServiceTest {
     private UsuarioAutenticadoService usuarioAutenticadoService;
     private ObjectProvider<AiIdeaEvaluationClient> clientProvider;
     private AiIdeaEvaluationClient client;
+    private AiIdeaEvaluationRepository evaluationRepository;
     private AuditService auditService;
     private AiIdeaEvaluationService service;
 
@@ -55,6 +63,7 @@ class AiIdeaEvaluationServiceTest {
         usuarioAutenticadoService = mock(UsuarioAutenticadoService.class);
         clientProvider = mock(ObjectProvider.class);
         client = mock(AiIdeaEvaluationClient.class);
+        evaluationRepository = mock(AiIdeaEvaluationRepository.class);
         auditService = mock(AuditService.class);
 
         service = new AiIdeaEvaluationService(
@@ -62,6 +71,7 @@ class AiIdeaEvaluationServiceTest {
                 usuarioAutenticadoService,
                 clientProvider,
                 providerProperties(),
+                evaluationRepository,
                 auditService
         );
     }
@@ -84,6 +94,10 @@ class AiIdeaEvaluationServiceTest {
                 ArgumentCaptor.forClass(AiIdeaEvaluationContext.class);
         verify(client).evaluate(contextCaptor.capture());
         AiIdeaEvaluationContext context = contextCaptor.getValue();
+        ArgumentCaptor<AiIdeaEvaluation> evaluationCaptor =
+                ArgumentCaptor.forClass(AiIdeaEvaluation.class);
+        verify(evaluationRepository).save(evaluationCaptor.capture());
+        AiIdeaEvaluation persisted = evaluationCaptor.getValue();
 
         assertAll(
                 () -> assertEquals(42L, response.ideaId()),
@@ -107,7 +121,46 @@ class AiIdeaEvaluationServiceTest {
                 ),
                 () -> assertEquals(8, context.managerImpactScore()),
                 () -> assertEquals(7, context.managerViabilityScore()),
+                () -> assertEquals(42L, persisted.ideaId()),
+                () -> assertEquals(17L, persisted.requestedByUserId()),
+                () -> assertEquals("gemini", persisted.provider()),
+                () -> assertEquals("gemini-3.6-flash", persisted.model()),
+                () -> assertEquals(9, persisted.strategicAlignment()),
+                () -> assertEquals(8, persisted.impact()),
+                () -> assertEquals(7, persisted.feasibility()),
+                () -> assertEquals(8, persisted.innovation()),
+                () -> assertEquals(
+                        0,
+                        new BigDecimal("8.1").compareTo(
+                                persisted.overallScore()
+                        )
+                ),
+                () -> assertEquals("Resumo validado.", persisted.summary()),
+                () -> assertEquals(36, persisted.id().length()),
+                () -> assertNotNull(persisted.createdAt()),
                 () -> assertSame(originalStatus, ideia.getStatusIdeia())
+        );
+
+        InOrder persistenceOrder = inOrder(
+                client,
+                evaluationRepository,
+                auditService
+        );
+        persistenceOrder.verify(auditService).registrarEvento(
+                eq(AuditEventType.AI_EVALUATION_REQUESTED),
+                eq(17L),
+                eq(AuditResourceType.AI_EVALUATION),
+                eq("42"),
+                any()
+        );
+        persistenceOrder.verify(client).evaluate(any());
+        persistenceOrder.verify(evaluationRepository).save(any());
+        persistenceOrder.verify(auditService).registrarEvento(
+                eq(AuditEventType.AI_EVALUATION_COMPLETED),
+                eq(17L),
+                eq(AuditResourceType.AI_EVALUATION),
+                eq("42"),
+                any()
         );
 
         verifyAudit(
@@ -158,6 +211,7 @@ class AiIdeaEvaluationServiceTest {
                 metadata -> "AI_DISABLED".equals(metadata.get("failureType"))
         );
         verifyNoInteractions(client);
+        verifyNoInteractions(evaluationRepository);
     }
 
     @Test
@@ -193,6 +247,7 @@ class AiIdeaEvaluationServiceTest {
                 any(),
                 any()
         );
+        verifyNoInteractions(evaluationRepository);
     }
 
     @Test
@@ -211,6 +266,7 @@ class AiIdeaEvaluationServiceTest {
                 usuarioAutenticadoService,
                 clientProvider,
                 client,
+                evaluationRepository,
                 auditService
         );
     }
@@ -232,6 +288,50 @@ class AiIdeaEvaluationServiceTest {
                         context.strategicOrientation()
                 )
         ));
+    }
+
+    @Test
+    void shouldFailSafelyAndAuditWhenEvaluationHistoryCannotBeStored() {
+        Ideia ideia = ideia();
+        StatusIdeia originalStatus = ideia.getStatusIdeia();
+        when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia);
+        when(usuarioAutenticadoService.getUsuarioAutenticado())
+                .thenReturn(usuario(17L));
+        when(clientProvider.getIfAvailable()).thenReturn(client);
+        when(client.evaluate(any())).thenReturn(resultado());
+        when(evaluationRepository.save(any())).thenThrow(
+                new DataAccessResourceFailureException("mongo unavailable")
+        );
+
+        AiEvaluationPersistenceException exception = assertThrows(
+                AiEvaluationPersistenceException.class,
+                () -> service.avaliarIdeia(42L)
+        );
+
+        assertAll(
+                () -> assertEquals(
+                        "Não foi possível armazenar o histórico da avaliação de IA.",
+                        exception.getMessage()
+                ),
+                () -> assertSame(originalStatus, ideia.getStatusIdeia())
+        );
+        verifyAudit(
+                AuditEventType.AI_EVALUATION_FAILED,
+                17L,
+                metadata -> "PERSISTENCE_UNAVAILABLE".equals(
+                        metadata.get("failureType")
+                )
+        );
+        verify(
+                auditService,
+                never()
+        ).registrarEvento(
+                eq(AuditEventType.AI_EVALUATION_COMPLETED),
+                any(),
+                any(),
+                any(),
+                any()
+        );
     }
 
     private Ideia ideia() {

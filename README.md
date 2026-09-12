@@ -139,7 +139,9 @@ avaliação está disponível para `GESTOR` em
 `POST /api/ideas/{ideaId}/ai-evaluation`. Com `AI_ENABLED=false`, ele responde
 `503 Service Unavailable`; habilite a integração somente no `.env` local para
 testar uma avaliação real. O histórico MongoDB e o cálculo determinístico de
-prioridade são adicionados pelas Tasks 8.2 e 8.3, respectivamente.
+prioridade pertencem às Tasks 8.2 e 8.3, respectivamente. O histórico já é
+gravado em `idea_ai_evaluations`; cada solicitação bem-sucedida cria um novo
+documento. O cálculo determinístico de prioridade ainda permanece na Task 8.3.
 
 ## Bootstrap controlado do primeiro líder
 
