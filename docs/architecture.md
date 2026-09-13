@@ -874,9 +874,10 @@ PATCH /ideias/{id}/avaliacao
 ```
 
 Only `GESTOR` may call this endpoint. Both `impacto` and `viabilidade` are required
-integer values in the inclusive range `0..10`. Task 4.1 persists these human
-signals without recalculating `prioridade`; Task 8.3 owns the final deterministic
-formula so scoring logic is not duplicated across workflows.
+integer values in the inclusive range `0..10`. Task 4.1 introduced persistence of
+these human signals; Task 8.3 subsequently connected the centralized deterministic
+formula so manager review also recalculates `prioridade` without duplicating the
+scoring rule.
 
 The scoring architecture should separate four signals:
 
@@ -892,9 +893,11 @@ AI Evaluation Score
 Deterministic Priority Score
 ```
 
-A possible formula is:
+Task 8.3 uses the following authoritative formula:
 
 ```text
+normalizedVotes = min(max(totalVotes, 0), 10)
+
 priorityScore =
     normalizedVotes * 0.20
   + impactScore     * 0.25
@@ -902,13 +905,32 @@ priorityScore =
   + aiScore         * 0.35
 ```
 
-The exact weights may change.
+All four inputs use the `0..10` scale. Vote normalization uses a fixed cap of ten,
+so a vote on an unrelated idea cannot change this idea's score. Missing impact,
+viability, or AI values contribute zero. The AI input is the `overallScore` from
+the most recently completed evaluation for the idea. The application rounds only
+the final weighted result to two decimal places using `HALF_UP`; it does not round
+the individual weighted components. Equal evaluation timestamps use descending
+document ID as a stable selection tie-breaker. `nr_prioridade` is stored in MySQL as
+`DECIMAL(4,2)`; MongoDB retains the AI history and supplies the latest successful
+`overallScore` when votes or manager scores trigger recalculation.
+
+Priority must be recalculated after vote creation, vote removal, manager review,
+and a successfully completed AI evaluation. The same stored inputs must therefore
+always produce the same result regardless of which of those operations triggered
+the calculation. The formula is application-owned and must never approve, reject,
+create a project, or otherwise change the idea workflow status.
 
 Architectural requirements:
 
 - formula is deterministic;
 - formula is implemented in application code;
 - weights are explicit;
+- vote normalization is local to the idea and capped at ten;
+- missing human or AI inputs contribute zero;
+- only the final result is rounded to two decimals with `HALF_UP`;
+- the most recently completed AI evaluation supplies `aiScore`;
+- vote, manager-review, and successful AI-evaluation writes trigger recalculation;
 - formula is testable;
 - LLM does not calculate hidden business rules;
 - final approval remains human-controlled.
@@ -1230,6 +1252,10 @@ map to application model
   ↓
 persist evaluation in MongoDB
   ↓
+calculate and store priority in MySQL
+  ↓
+audit completed evaluation
+  ↓
 return evaluation DTO
 ```
 
@@ -1238,8 +1264,8 @@ outcomes. The service obtains the provider client through `ObjectProvider`, so t
 ordinary application still starts when `AI_ENABLED=false`; a request in that mode
 returns controlled `503 Service Unavailable`. The provider call is not wrapped in
 a MySQL transaction. Task 8.2 persists each validated result in MongoDB before a
-successful response; the deterministic application priority is calculated and
-stored in Task 8.3.
+successful response. Task 8.3 then calculates and stores the deterministic
+application priority in MySQL before the completed audit and HTTP response.
 
 ---
 
@@ -1424,6 +1450,37 @@ responses use the application error DTO and never include the raw provider body.
 The adapter logs safe structural diagnostics such as `finishReason=MAX_TOKENS` or
 the validation exception type, but never logs the prompt, generated content, or
 API key.
+
+---
+
+## 17.8 Human decision boundary
+
+Task 8.4 keeps AI evaluation strictly advisory. The AI operation may persist an
+evaluation document in MongoDB and update the deterministic `prioridade` value in
+MySQL. It must not call the idea-status workflow, create a project, or return an
+approval, rejection, workflow status, or project identifier in its response.
+
+Governance remains split into explicit `GESTOR` commands:
+
+```text
+POST /api/ideas/{id}/ai-evaluation
+        -> analysis + priority only
+
+PATCH /ideias/{id}/status
+        -> explicit manager approval/rejection decision
+
+POST /projetos
+        -> explicit manager conversion of an APROVADA idea
+```
+
+`IdeiaService.atualizarStatusIdeia` remains the only manager-facing idea-status
+operation. `ProjetoService.criarProjeto` separately validates `APROVADA`, creates
+the project transactionally, and applies `CONVERTIDA_EM_PROJETO`. The AI response
+contract contains evaluation scores and a summary only. Success, disabled-provider,
+provider-failure, MongoDB-failure, and priority-persistence-failure tests preserve
+the idea's status; the AI orchestration tests also allow-list its only interactions
+with `IdeiaService` as idea lookup and, after successful persistence, priority
+update.
 
 ---
 
@@ -1898,7 +1955,9 @@ the authorization matrix and the logging restrictions in section 20.2.
 
 - backend manager review now persists validated impact and viability scores;
 - Android manager-review controls remain pending;
-- priority is currently heavily driven by votes.
+- backend priority combines capped votes, manager scores, and the latest AI score
+  through the documented deterministic formula;
+- Android prioritization presentation remains pending.
 
 ## Project conversion
 

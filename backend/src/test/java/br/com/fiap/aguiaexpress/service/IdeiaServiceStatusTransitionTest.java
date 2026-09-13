@@ -20,6 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -55,7 +56,8 @@ class IdeiaServiceStatusTransitionTest {
                 mock(CategoriaService.class),
                 statusIdeiaService,
                 mock(OrientacaoEstrategicaService.class),
-                usuarioAutenticadoService
+                usuarioAutenticadoService,
+                mock(IdeaPriorityService.class)
         );
     }
 
@@ -262,7 +264,7 @@ class IdeiaServiceStatusTransitionTest {
         ideia.setDescricao("Descrição");
         ideia.setImpacto(8);
         ideia.setViabilidade(7);
-        ideia.setPrioridade(20);
+        ideia.setPrioridade(new BigDecimal("7.00"));
         ideia.setTotalVotos(5);
         return ideia;
     }

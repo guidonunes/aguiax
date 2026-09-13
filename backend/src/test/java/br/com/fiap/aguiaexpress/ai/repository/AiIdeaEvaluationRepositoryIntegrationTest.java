@@ -2,6 +2,7 @@ package br.com.fiap.aguiaexpress.ai.repository;
 
 import br.com.fiap.aguiaexpress.ai.model.AiIdeaEvaluation;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +50,11 @@ class AiIdeaEvaluationRepositoryIntegrationTest {
         mongoTemplate.getDb().drop();
     }
 
+    @BeforeEach
+    void clearEvaluations() {
+        repository.deleteAll();
+    }
+
     @Test
     void shouldRetainMultipleEvaluationsOfTheSameIdeaInNewestFirstOrder() {
         Instant firstTimestamp = Instant.parse("2026-09-12T12:00:00Z");
@@ -68,6 +75,8 @@ class AiIdeaEvaluationRepositoryIntegrationTest {
 
         List<AiIdeaEvaluation> history =
                 repository.findAllByIdeaIdOrderByCreatedAtDesc(42L);
+        Optional<AiIdeaEvaluation> latest =
+                repository.findFirstByIdeaIdOrderByCreatedAtDescIdDesc(42L);
 
         assertThat(mongoTemplate.collectionExists("idea_ai_evaluations"))
                 .isTrue();
@@ -81,6 +90,11 @@ class AiIdeaEvaluationRepositoryIntegrationTest {
                         new BigDecimal("8.6"),
                         new BigDecimal("7.4")
                 );
+        assertThat(latest)
+                .isPresent()
+                .get()
+                .extracting(AiIdeaEvaluation::id)
+                .isEqualTo(second.id());
         assertThat(history)
                 .allSatisfy(evaluation -> {
                     assertThat(evaluation.ideaId()).isEqualTo(42L);
@@ -88,6 +102,30 @@ class AiIdeaEvaluationRepositoryIntegrationTest {
                     assertThat(evaluation.provider()).isEqualTo("gemini");
                     assertThat(evaluation.model()).isEqualTo("gemini-3.6-flash");
                 });
+    }
+
+    @Test
+    void shouldUseIdAsAStableTieBreakerForEqualTimestamps() {
+        Instant sharedTimestamp = Instant.parse("2026-09-12T14:00:00Z");
+        AiIdeaEvaluation lowerId = evaluation(
+                "00000000-0000-0000-0000-000000000001",
+                "6.0",
+                sharedTimestamp
+        );
+        AiIdeaEvaluation higherId = evaluation(
+                "00000000-0000-0000-0000-000000000002",
+                "9.0",
+                sharedTimestamp
+        );
+
+        repository.saveAll(List.of(lowerId, higherId));
+
+        assertThat(repository
+                .findFirstByIdeaIdOrderByCreatedAtDescIdDesc(42L))
+                .isPresent()
+                .get()
+                .extracting(AiIdeaEvaluation::id)
+                .isEqualTo(higherId.id());
     }
 
     private AiIdeaEvaluation evaluation(

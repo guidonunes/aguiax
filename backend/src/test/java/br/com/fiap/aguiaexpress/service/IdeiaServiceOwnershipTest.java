@@ -17,6 +17,7 @@ import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
@@ -56,7 +57,8 @@ class IdeiaServiceOwnershipTest {
                 categoriaService,
                 statusIdeiaService,
                 orientacaoService,
-                usuarioAutenticadoService
+                usuarioAutenticadoService,
+                mock(IdeaPriorityService.class)
         );
     }
 
@@ -219,7 +221,7 @@ class IdeiaServiceOwnershipTest {
         ideia.setSolucaoProposta("Solucao");
         ideia.setImpacto(0);
         ideia.setViabilidade(0);
-        ideia.setPrioridade(0);
+        ideia.setPrioridade(new BigDecimal("0.00"));
         ideia.setTotalVotos(0);
         return ideia;
     }

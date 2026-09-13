@@ -500,10 +500,11 @@ MySQL fields and the idea timestamp, returns `MostrarIdeiaDTO`, and records an
 `IDEA_UPDATED` audit event after relational persistence with previous/new scores.
 
 No Flyway migration was required because `nr_impacto` and `nr_viabilidade` already
-exist. The method deliberately leaves `prioridade` unchanged because the final
-deterministic calculation belongs to Task 8.3. Five service tests cover both valid
-boundaries, null/out-of-range rejection, audit ordering, failed-save behavior, and
-priority preservation. Controller tests cover `GESTOR` success, `OPERACIONAL` and
+exist. At Task 4.1 completion the method deliberately left `prioridade` unchanged;
+Task 8.3 subsequently connected the final deterministic calculation. Five service
+tests cover both valid boundaries, null/out-of-range rejection, audit ordering,
+failed-save behavior, and the later recalculation trigger. Controller tests cover
+`GESTOR` success, `OPERACIONAL` and
 `LIDER` denial, and invalid-payload `400`; the authorization inventory also covers
 the new endpoint. The focused run completed 23 tests with zero failures and zero
 errors. The complete backend run completed 68 tests: 67 passed, and the pre-existing
@@ -1146,9 +1147,9 @@ the idea status or creates a project.
 
 The behavior list above spans the whole Phase 8 pipeline. MongoDB evaluation
 history is owned by Task 8.2 and was subsequently connected to this orchestration;
-calculation/persistence of the deterministic application priority remains owned by
-Task 8.3. Keeping score calculation in its dedicated task avoids storing an
-undocumented formula. The Task 8.1 exit criterion is met by the endpoint and
+calculation/persistence of the deterministic application priority was subsequently
+implemented by Task 8.3. Keeping score calculation in its dedicated task avoided
+storing an undocumented formula. The Task 8.1 exit criterion is met by the endpoint and
 structured response.
 
 Five service tests and eleven MVC/security test invocations pass. The complete
@@ -1215,11 +1216,11 @@ remained.
 
 ## Task 8.3 — Define deterministic priority formula
 
-Combine human/business signals.
-
-Example:
+Combine human/business signals using this exact application-owned rule:
 
 ```text
+normalizedVotes = min(max(totalVotes, 0), 10)
+
 priorityScore =
     normalizedVotes * 0.20
   + impactScore     * 0.25
@@ -1227,11 +1228,55 @@ priorityScore =
   + aiScore         * 0.35
 ```
 
-Keep the formula in application code/config, not in the LLM prompt.
+Impact, viability, and AI inputs are constrained to the `0..10` scale. Missing
+impact, viability, or AI values contribute zero. `aiScore` comes from the most
+recently completed AI evaluation for the idea. The fixed ten-vote cap keeps an
+idea's result independent from voting activity on unrelated ideas.
+
+Round only the final result to two decimal places using `HALF_UP`. Recalculate
+after vote creation, vote removal, manager review, and successful AI evaluation.
+Keep the formula in application code/config, not in the LLM prompt, and never use
+the calculated value to approve, reject, create a project, or change workflow
+status.
 
 ### Exit criterion
 
 The same stored inputs always produce the same `priorityScore`.
+
+### Task 8.3 scoring decision — 2026-09-12
+
+The formula contract was documented before implementation: weights, fixed vote
+normalization, missing-value behavior, final rounding, latest completed AI-score
+selection, recalculation triggers, and the prohibition on workflow mutation are
+explicit.
+
+### Task 8.3 implementation record — 2026-09-12
+
+Implemented and reviewed. `IdeaPriorityCalculator` owns the exact `BigDecimal`
+formula and rounds only its final result to two decimals with `HALF_UP`.
+`IdeaPriorityService` retrieves the latest successful MongoDB evaluation, treats
+an absent evaluation as zero, applies the score without touching workflow state,
+and converts MongoDB read failures into a controlled `503` condition.
+
+Flyway migration `V12__make_idea_priority_decimal.sql` changes the existing MySQL
+priority column to `DECIMAL(4,2)` without editing an applied migration. Manager
+review, vote creation, vote removal, and successful AI evaluation all recalculate
+the score. Vote writes and their derived idea update are transactional. AI history
+is stored before the MySQL score; priority-persistence failure produces a
+controlled `503`, a failed audit classification, and no completed audit.
+
+Seven calculator tests cover the exact weights, missing inputs, both vote bounds,
+maximum score, final `HALF_UP` rounding, repeatability, and invalid score ranges.
+Service tests cover latest/absent AI history, MongoDB failure, both vote triggers,
+manager review, the AI trigger, persistence ordering, controlled HTTP failure, and
+unchanged workflow status. A MongoDB integration test also verifies stable ID
+tie-breaking when evaluation timestamps are equal. The focused Task 8.3 suite
+passed 44 of 44 tests. The
+complete backend run executed 177 tests: 175 passed, including every Task 8.3
+test; the unrelated
+Gemini thinking-level source/test mismatch produced one failure, and the previously
+documented unresolved `${DB_URL}` `contextLoads` defect produced one error. The
+Task 8.3 exit criterion is satisfied.
 
 ---
 
@@ -1247,6 +1292,23 @@ The AI endpoint must never autonomously:
 ### Exit criterion
 
 All workflow status decisions remain explicit manager actions.
+
+### Task 8.4 implementation record — 2026-09-12
+
+Implemented. The AI endpoint remains an advisory operation: it returns structured
+scores and a summary, stores the evaluation history, and updates only the derived
+priority. Its response exposes no approval, rejection, workflow-status, or project
+field. Approval/rejection still requires the separate manager-only
+`PATCH /ideias/{id}/status` command, while project creation still requires the
+separate manager-only `POST /projetos` command and an already `APROVADA` idea.
+
+The AI orchestration tests now allow-list `IdeiaService` interactions: lookup is
+always permitted and priority update is permitted only after a successfully stored
+evaluation. They verify unchanged status on success and every controlled failure
+path. The MVC contract test also proves that governance and project fields are not
+returned by the AI endpoint. Existing idea-transition and project-conversion tests
+continue to verify that those decisions occur through their explicit manager
+workflows. The focused Task 8.4 verification passed 54 of 54 tests.
 
 ---
 

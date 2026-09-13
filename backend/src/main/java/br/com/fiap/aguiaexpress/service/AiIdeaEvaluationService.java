@@ -13,6 +13,7 @@ import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResult;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
+import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableException;
 import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.OrientacaoEstrategica;
 import br.com.fiap.aguiaexpress.model.Usuario;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -69,8 +71,16 @@ public class AiIdeaEvaluationService {
             );
             persistirAvaliacao(ideia.getId(), actor.getId(), result);
 
+            BigDecimal priorityScore =
+                    ideiaService.atualizarPrioridadeComPontuacaoAi(
+                            ideia,
+                            result.overallScore()
+                    );
+
             Map<String, Object> metadata = metadadosDoProvedor();
             metadata.put("overallScore", response.overallScore());
+            metadata.put("priorityScore", priorityScore);
+
             registrarEvento(
                     AuditEventType.AI_EVALUATION_COMPLETED,
                     actor.getId(),
@@ -138,6 +148,9 @@ public class AiIdeaEvaluationService {
         }
         if (exception instanceof AiEvaluationPersistenceException) {
             return "PERSISTENCE_UNAVAILABLE";
+        }
+        if (exception instanceof PriorityCalculationUnavailableException) {
+            return "PRIORITY_UNAVAILABLE";
         }
 
         return exception.getClass().getSimpleName();

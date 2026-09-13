@@ -72,7 +72,8 @@ class ProjetoServiceConversionTest {
                 mock(CategoriaService.class),
                 statusIdeiaService,
                 mock(OrientacaoEstrategicaService.class),
-                usuarioAutenticadoService
+                usuarioAutenticadoService,
+                mock(IdeaPriorityService.class)
         );
 
         projetoService = new ProjetoService(

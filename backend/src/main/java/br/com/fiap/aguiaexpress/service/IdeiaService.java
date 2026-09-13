@@ -9,14 +9,17 @@ import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.RegistrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
+import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
 import br.com.fiap.aguiaexpress.model.*;
 import br.com.fiap.aguiaexpress.repository.IdeiaRepository;
 import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +60,7 @@ public class IdeiaService {
     private final StatusIdeiaService statusIdeiaService;
     private final OrientacaoEstrategicaService orientacaoService;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final IdeaPriorityService ideaPriorityService;
 
     public MostrarIdeiaDTO criarIdeia(RegistrarIdeiaDTO ideiaDTO) {
         if (ideiaRepository.existsByTitulo(ideiaDTO.titulo())) {
@@ -87,7 +91,7 @@ public class IdeiaService {
 
         ideia.setImpacto(0);
         ideia.setViabilidade(0);
-        ideia.setPrioridade(0);
+        ideia.setPrioridade(new BigDecimal("0.00"));
         ideia.setTotalVotos(0);
 
         ideia.setDataCriacao(LocalDateTime.now());
@@ -310,6 +314,9 @@ public class IdeiaService {
 
         ideia.setImpacto(avaliacaoDTO.impacto());
         ideia.setViabilidade(avaliacaoDTO.viabilidade());
+
+        ideaPriorityService.recalculateWithLatestEvaluation(ideia);
+
         ideia.setDataAtualizacao(LocalDateTime.now());
 
         Ideia ideiaAtualizada = ideiaRepository.save(ideia);
@@ -392,4 +399,25 @@ public class IdeiaService {
             );
         }
     }
+
+    BigDecimal atualizarPrioridadeComPontuacaoAi(
+            Ideia ideia,
+            BigDecimal aiScore
+    ) {
+        BigDecimal priority = ideaPriorityService.recalculate(ideia, aiScore);
+
+        ideia.setDataAtualizacao(LocalDateTime.now());
+        Ideia updatedIdea;
+        try {
+            updatedIdea = ideiaRepository.save(ideia);
+        } catch (DataAccessException exception) {
+            throw new PriorityCalculationUnavailableException(
+                    "Não foi possível persistir a prioridade da ideia.",
+                    exception
+            );
+        }
+
+        return updatedIdea.getPrioridade();
+    }
+
 }

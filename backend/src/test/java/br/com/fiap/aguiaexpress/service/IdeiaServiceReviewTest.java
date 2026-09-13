@@ -6,6 +6,7 @@ import br.com.fiap.aguiaexpress.audit.service.AuditService;
 import br.com.fiap.aguiaexpress.dto.ideia.AtualizarAvaliacaoIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
+import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableException;
 import br.com.fiap.aguiaexpress.model.Categoria;
 import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.NomeStatusIdeia;
@@ -17,14 +18,18 @@ import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.springframework.dao.DataAccessResourceFailureException;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +38,7 @@ class IdeiaServiceReviewTest {
     private AuditService auditService;
     private IdeiaRepository ideiaRepository;
     private UsuarioAutenticadoService usuarioAutenticadoService;
+    private IdeaPriorityService ideaPriorityService;
     private IdeiaService ideiaService;
 
     @BeforeEach
@@ -40,6 +46,7 @@ class IdeiaServiceReviewTest {
         auditService = mock(AuditService.class);
         ideiaRepository = mock(IdeiaRepository.class);
         usuarioAutenticadoService = mock(UsuarioAutenticadoService.class);
+        ideaPriorityService = mock(IdeaPriorityService.class);
 
         ideiaService = new IdeiaService(
                 auditService,
@@ -48,7 +55,8 @@ class IdeiaServiceReviewTest {
                 mock(CategoriaService.class),
                 mock(StatusIdeiaService.class),
                 mock(OrientacaoEstrategicaService.class),
-                usuarioAutenticadoService
+                usuarioAutenticadoService,
+                ideaPriorityService
         );
     }
 
@@ -58,6 +66,11 @@ class IdeiaServiceReviewTest {
         Usuario actor = user(17L);
         when(ideiaRepository.findById(42L)).thenReturn(Optional.of(ideia));
         when(usuarioAutenticadoService.getUsuarioAutenticado()).thenReturn(actor);
+        when(ideaPriorityService.recalculateWithLatestEvaluation(ideia))
+                .thenAnswer(invocation -> {
+                    ideia.setPrioridade(new BigDecimal("2.90"));
+                    return ideia.getPrioridade();
+                });
         when(ideiaRepository.save(ideia)).thenReturn(ideia);
 
         MostrarIdeiaDTO result = ideiaService.atualizarAvaliacaoIdeia(
@@ -67,9 +80,16 @@ class IdeiaServiceReviewTest {
 
         assertEquals(10, result.impacto());
         assertEquals(0, result.viabilidade());
-        assertEquals(7, result.prioridade(), "Task 4.1 must not replace Task 8.3 scoring");
+        assertEquals(new BigDecimal("2.90"), result.prioridade());
 
-        InOrder order = inOrder(ideiaRepository, auditService);
+        InOrder order = inOrder(
+                ideaPriorityService,
+                ideiaRepository,
+                auditService
+        );
+        order.verify(
+                ideaPriorityService
+        ).recalculateWithLatestEvaluation(ideia);
         order.verify(ideiaRepository).save(ideia);
         order.verify(auditService).registrarEvento(
                 AuditEventType.IDEA_UPDATED,
@@ -108,6 +128,11 @@ class IdeiaServiceReviewTest {
         Ideia ideia = idea();
         when(ideiaRepository.findById(42L)).thenReturn(Optional.of(ideia));
         when(usuarioAutenticadoService.getUsuarioAutenticado()).thenReturn(user(17L));
+        when(ideaPriorityService.recalculateWithLatestEvaluation(ideia))
+                .thenAnswer(invocation -> {
+                    ideia.setPrioridade(new BigDecimal("6.15"));
+                    return ideia.getPrioridade();
+                });
         when(ideiaRepository.save(ideia))
                 .thenThrow(new IllegalStateException("MySQL unavailable"));
 
@@ -120,6 +145,60 @@ class IdeiaServiceReviewTest {
         );
 
         verifyNoInteractions(auditService);
+        verify(ideaPriorityService).recalculateWithLatestEvaluation(ideia);
+    }
+
+    @Test
+    void shouldPersistPriorityFromSuccessfulAiEvaluationWithoutChangingStatus() {
+        Ideia ideia = idea();
+        StatusIdeia originalStatus = ideia.getStatusIdeia();
+        BigDecimal aiScore = new BigDecimal("8.10");
+        when(ideaPriorityService.recalculate(ideia, aiScore))
+                .thenAnswer(invocation -> {
+                    ideia.setPrioridade(new BigDecimal("4.34"));
+                    return ideia.getPrioridade();
+                });
+        when(ideiaRepository.save(ideia)).thenReturn(ideia);
+
+        BigDecimal result = ideiaService.atualizarPrioridadeComPontuacaoAi(
+                ideia,
+                aiScore
+        );
+
+        assertEquals(new BigDecimal("4.34"), result);
+        assertSame(originalStatus, ideia.getStatusIdeia());
+        InOrder order = inOrder(ideaPriorityService, ideiaRepository);
+        order.verify(ideaPriorityService).recalculate(ideia, aiScore);
+        order.verify(ideiaRepository).save(ideia);
+    }
+
+    @Test
+    void shouldTranslateAiPriorityPersistenceFailure() {
+        Ideia ideia = idea();
+        StatusIdeia originalStatus = ideia.getStatusIdeia();
+        BigDecimal aiScore = new BigDecimal("8.10");
+        when(ideaPriorityService.recalculate(ideia, aiScore))
+                .thenAnswer(invocation -> {
+                    ideia.setPrioridade(new BigDecimal("4.34"));
+                    return ideia.getPrioridade();
+                });
+        when(ideiaRepository.save(ideia)).thenThrow(
+                new DataAccessResourceFailureException("mysql unavailable")
+        );
+
+        PriorityCalculationUnavailableException exception = assertThrows(
+                PriorityCalculationUnavailableException.class,
+                () -> ideiaService.atualizarPrioridadeComPontuacaoAi(
+                        ideia,
+                        aiScore
+                )
+        );
+
+        assertEquals(
+                "Não foi possível persistir a prioridade da ideia.",
+                exception.getMessage()
+        );
+        assertSame(originalStatus, ideia.getStatusIdeia());
     }
 
     private void assertInvalidReview(AtualizarAvaliacaoIdeiaDTO request) {
@@ -128,7 +207,12 @@ class IdeiaServiceReviewTest {
                 () -> ideiaService.atualizarAvaliacaoIdeia(42L, request)
         );
 
-        verifyNoInteractions(ideiaRepository, usuarioAutenticadoService, auditService);
+        verifyNoInteractions(
+                ideiaRepository,
+                usuarioAutenticadoService,
+                ideaPriorityService,
+                auditService
+        );
     }
 
     private Ideia idea() {
@@ -149,7 +233,7 @@ class IdeiaServiceReviewTest {
         ideia.setDescricao("Descrição");
         ideia.setImpacto(2);
         ideia.setViabilidade(3);
-        ideia.setPrioridade(7);
+        ideia.setPrioridade(new BigDecimal("7.00"));
         ideia.setTotalVotos(2);
         return ideia;
     }

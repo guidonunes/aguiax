@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.dto.ideia;
 import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.NomeStatusIdeia;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record MostrarIdeiaDTO(
@@ -16,7 +17,7 @@ public record MostrarIdeiaDTO(
 
         Integer impacto,
         Integer viabilidade,
-        Integer prioridade,
+        BigDecimal prioridade,
         Integer totalVotos,
 
         Long usuarioId,

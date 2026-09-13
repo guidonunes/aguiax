@@ -11,6 +11,7 @@ import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import br.com.fiap.aguiaexpress.repository.VotoIdeiaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +25,9 @@ public class VotoIdeiaService {
     private final IdeiaService ideiaService;
     private final IdeiaRepository ideiaRepository;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
+    private final IdeaPriorityService ideaPriorityService;
 
+    @Transactional
     public MostrarVotoIdeiaDTO votarIdeia(Long ideiaId) {
         Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
@@ -80,6 +83,7 @@ public class VotoIdeiaService {
                 .toList();
     }
 
+    @Transactional
     public void removerVoto(Long ideiaId) {
         Usuario usuario = usuarioAutenticadoService.getUsuarioAutenticado();
 
@@ -101,13 +105,8 @@ public class VotoIdeiaService {
     private void atualizarTotalVotosEPrioridade(Ideia ideia) {
         long totalVotos = votoIdeiaRepository.countByIdeia(ideia);
 
-        ideia.setTotalVotos((int) totalVotos);
-
-        int impacto = ideia.getImpacto() != null ? ideia.getImpacto() : 0;
-        int viabilidade = ideia.getViabilidade() != null ? ideia.getViabilidade() : 0;
-        int votos = ideia.getTotalVotos() != null ? ideia.getTotalVotos() : 0;
-
-        ideia.setPrioridade(impacto + viabilidade + votos);
+        ideia.setTotalVotos(Math.toIntExact(totalVotos));
+        ideaPriorityService.recalculateWithLatestEvaluation(ideia);
         ideia.setDataAtualizacao(LocalDateTime.now());
 
         ideiaRepository.save(ideia);

@@ -6,6 +6,7 @@ import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
+import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -143,4 +144,15 @@ public class ApplicationExceptionHandler {
         return ResponseEntity.status(status).body(erro);
     }
 
+    @ExceptionHandler(PriorityCalculationUnavailableException.class)
+    public ResponseEntity<ErroRespostaDTO> handlePriorityCalculationUnavailable(
+            PriorityCalculationUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        return criarRespostaDeErro(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(),
+                request
+        );
+    }
 }

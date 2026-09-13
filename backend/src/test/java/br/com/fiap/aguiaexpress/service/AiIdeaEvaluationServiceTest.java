@@ -14,6 +14,7 @@ import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResult;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
+import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.model.Categoria;
 import br.com.fiap.aguiaexpress.model.Ideia;
@@ -44,6 +45,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 class AiIdeaEvaluationServiceTest {
@@ -87,6 +89,10 @@ class AiIdeaEvaluationServiceTest {
         when(usuarioAutenticadoService.getUsuarioAutenticado()).thenReturn(actor);
         when(clientProvider.getIfAvailable()).thenReturn(client);
         when(client.evaluate(any(AiIdeaEvaluationContext.class))).thenReturn(result);
+        when(ideiaService.atualizarPrioridadeComPontuacaoAi(
+                ideia,
+                result.overallScore()
+        )).thenReturn(new BigDecimal("7.34"));
 
         AiIdeaEvaluationResponse response = service.avaliarIdeia(42L);
 
@@ -144,6 +150,7 @@ class AiIdeaEvaluationServiceTest {
         InOrder persistenceOrder = inOrder(
                 client,
                 evaluationRepository,
+                ideiaService,
                 auditService
         );
         persistenceOrder.verify(auditService).registrarEvento(
@@ -155,6 +162,12 @@ class AiIdeaEvaluationServiceTest {
         );
         persistenceOrder.verify(client).evaluate(any());
         persistenceOrder.verify(evaluationRepository).save(any());
+        persistenceOrder.verify(
+                ideiaService
+        ).atualizarPrioridadeComPontuacaoAi(
+                ideia,
+                result.overallScore()
+        );
         persistenceOrder.verify(auditService).registrarEvento(
                 eq(AuditEventType.AI_EVALUATION_COMPLETED),
                 eq(17L),
@@ -175,6 +188,8 @@ class AiIdeaEvaluationServiceTest {
                 actor.getId(),
                 metadata -> new BigDecimal("8.1").equals(
                         metadata.get("overallScore")
+                ) && new BigDecimal("7.34").equals(
+                        metadata.get("priorityScore")
                 )
         );
         verify(
@@ -187,11 +202,15 @@ class AiIdeaEvaluationServiceTest {
                 any(),
                 any()
         );
+        verify(ideiaService).buscarEntidadePorId(42L);
+        verifyNoMoreInteractions(ideiaService);
     }
 
     @Test
     void shouldReturnControlledFailureAndAuditWhenAiIsDisabled() {
-        when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia());
+        Ideia ideia = ideia();
+        StatusIdeia originalStatus = ideia.getStatusIdeia();
+        when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia);
         when(usuarioAutenticadoService.getUsuarioAutenticado())
                 .thenReturn(usuario(17L));
         when(clientProvider.getIfAvailable()).thenReturn(null);
@@ -205,6 +224,7 @@ class AiIdeaEvaluationServiceTest {
                 "A avaliação por IA não está habilitada.",
                 exception.getMessage()
         );
+        assertSame(originalStatus, ideia.getStatusIdeia());
         verifyAudit(
                 AuditEventType.AI_EVALUATION_FAILED,
                 17L,
@@ -212,15 +232,23 @@ class AiIdeaEvaluationServiceTest {
         );
         verifyNoInteractions(client);
         verifyNoInteractions(evaluationRepository);
+        verify(
+                ideiaService,
+                never()
+        ).atualizarPrioridadeComPontuacaoAi(any(), any());
+        verify(ideiaService).buscarEntidadePorId(42L);
+        verifyNoMoreInteractions(ideiaService);
     }
 
     @Test
     void shouldPropagateClassifiedProviderFailureAndAuditIt() {
+        Ideia ideia = ideia();
+        StatusIdeia originalStatus = ideia.getStatusIdeia();
         AiProviderException providerException = new AiProviderException(
                 AiProviderFailure.TIMEOUT,
                 "O provedor de IA excedeu o tempo limite."
         );
-        when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia());
+        when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia);
         when(usuarioAutenticadoService.getUsuarioAutenticado())
                 .thenReturn(usuario(17L));
         when(clientProvider.getIfAvailable()).thenReturn(client);
@@ -232,6 +260,7 @@ class AiIdeaEvaluationServiceTest {
         );
 
         assertSame(providerException, thrown);
+        assertSame(originalStatus, ideia.getStatusIdeia());
         verifyAudit(
                 AuditEventType.AI_EVALUATION_FAILED,
                 17L,
@@ -248,6 +277,12 @@ class AiIdeaEvaluationServiceTest {
                 any()
         );
         verifyNoInteractions(evaluationRepository);
+        verify(
+                ideiaService,
+                never()
+        ).atualizarPrioridadeComPontuacaoAi(any(), any());
+        verify(ideiaService).buscarEntidadePorId(42L);
+        verifyNoMoreInteractions(ideiaService);
     }
 
     @Test
@@ -269,17 +304,21 @@ class AiIdeaEvaluationServiceTest {
                 evaluationRepository,
                 auditService
         );
+        verify(ideiaService).buscarEntidadePorId(404L);
+        verifyNoMoreInteractions(ideiaService);
     }
 
     @Test
     void shouldUseOnlyOrientationTitleWhenItsDescriptionIsBlank() {
         Ideia ideia = ideia();
+        StatusIdeia originalStatus = ideia.getStatusIdeia();
+        AiIdeaEvaluationResult result = resultado();
         ideia.getOrientacaoEstrategica().setDescricao("  ");
         when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia);
         when(usuarioAutenticadoService.getUsuarioAutenticado())
                 .thenReturn(usuario(17L));
         when(clientProvider.getIfAvailable()).thenReturn(client);
-        when(client.evaluate(any())).thenReturn(resultado());
+        when(client.evaluate(any())).thenReturn(result);
 
         service.avaliarIdeia(42L);
 
@@ -288,6 +327,13 @@ class AiIdeaEvaluationServiceTest {
                         context.strategicOrientation()
                 )
         ));
+        assertSame(originalStatus, ideia.getStatusIdeia());
+        verify(ideiaService).buscarEntidadePorId(42L);
+        verify(ideiaService).atualizarPrioridadeComPontuacaoAi(
+                ideia,
+                result.overallScore()
+        );
+        verifyNoMoreInteractions(ideiaService);
     }
 
     @Test
@@ -332,6 +378,68 @@ class AiIdeaEvaluationServiceTest {
                 any(),
                 any()
         );
+        verify(
+                ideiaService,
+                never()
+        ).atualizarPrioridadeComPontuacaoAi(any(), any());
+        verify(ideiaService).buscarEntidadePorId(42L);
+        verifyNoMoreInteractions(ideiaService);
+    }
+
+    @Test
+    void shouldFailSafelyWhenCalculatedPriorityCannotBePersisted() {
+        Ideia ideia = ideia();
+        StatusIdeia originalStatus = ideia.getStatusIdeia();
+        AiIdeaEvaluationResult result = resultado();
+        PriorityCalculationUnavailableException persistenceFailure =
+                new PriorityCalculationUnavailableException(
+                        "Não foi possível persistir a prioridade da ideia.",
+                        new DataAccessResourceFailureException(
+                                "mysql unavailable"
+                        )
+                );
+
+        when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia);
+        when(usuarioAutenticadoService.getUsuarioAutenticado())
+                .thenReturn(usuario(17L));
+        when(clientProvider.getIfAvailable()).thenReturn(client);
+        when(client.evaluate(any())).thenReturn(result);
+        when(ideiaService.atualizarPrioridadeComPontuacaoAi(
+                ideia,
+                result.overallScore()
+        )).thenThrow(persistenceFailure);
+
+        PriorityCalculationUnavailableException thrown = assertThrows(
+                PriorityCalculationUnavailableException.class,
+                () -> service.avaliarIdeia(42L)
+        );
+
+        assertSame(persistenceFailure, thrown);
+        assertSame(originalStatus, ideia.getStatusIdeia());
+        verify(evaluationRepository).save(any(AiIdeaEvaluation.class));
+        verifyAudit(
+                AuditEventType.AI_EVALUATION_FAILED,
+                17L,
+                metadata -> "PRIORITY_UNAVAILABLE".equals(
+                        metadata.get("failureType")
+                )
+        );
+        verify(
+                auditService,
+                never()
+        ).registrarEvento(
+                eq(AuditEventType.AI_EVALUATION_COMPLETED),
+                any(),
+                any(),
+                any(),
+                any()
+        );
+        verify(ideiaService).buscarEntidadePorId(42L);
+        verify(ideiaService).atualizarPrioridadeComPontuacaoAi(
+                ideia,
+                result.overallScore()
+        );
+        verifyNoMoreInteractions(ideiaService);
     }
 
     private Ideia ideia() {

@@ -6,6 +6,7 @@ import br.com.fiap.aguiaexpress.ai.client.AiProviderFailure;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
+import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.service.AiIdeaEvaluationService;
 import org.junit.jupiter.api.Test;
@@ -85,7 +86,14 @@ class AiIdeaEvaluationControllerTest {
                 .andExpect(jsonPath("$.feasibility").value(7))
                 .andExpect(jsonPath("$.innovation").value(8))
                 .andExpect(jsonPath("$.overallScore").value(8.1))
-                .andExpect(jsonPath("$.summary").value("Resumo validado."));
+                .andExpect(jsonPath("$.summary").value("Resumo validado."))
+                .andExpect(jsonPath("$.status").doesNotExist())
+                .andExpect(jsonPath("$.statusIdeia").doesNotExist())
+                .andExpect(jsonPath("$.decision").doesNotExist())
+                .andExpect(jsonPath("$.approved").doesNotExist())
+                .andExpect(jsonPath("$.rejected").doesNotExist())
+                .andExpect(jsonPath("$.projectId").doesNotExist())
+                .andExpect(jsonPath("$.projetoId").doesNotExist());
 
         verify(service).avaliarIdeia(42L);
     }
@@ -138,6 +146,27 @@ class AiIdeaEvaluationControllerTest {
                 .andExpect(jsonPath("$.status").value(503))
                 .andExpect(jsonPath("$.message").value(
                         "Não foi possível armazenar o histórico da avaliação de IA."
+                ))
+                .andExpect(jsonPath("$.path").value(ENDPOINT));
+    }
+
+    @Test
+    void unavailablePriorityCalculationReceivesControlled503() throws Exception {
+        when(service.avaliarIdeia(42L)).thenThrow(
+                new PriorityCalculationUnavailableException(
+                        "Não foi possível persistir a prioridade da ideia.",
+                        new DataAccessResourceFailureException(
+                                "mysql unavailable"
+                        )
+                )
+        );
+
+        mockMvc.perform(post(ENDPOINT)
+                        .with(user("gestor").roles("GESTOR")))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.message").value(
+                        "Não foi possível persistir a prioridade da ideia."
                 ))
                 .andExpect(jsonPath("$.path").value(ENDPOINT));
     }

@@ -54,7 +54,8 @@ class IdeiaServiceAuditTest {
                 categoriaService,
                 statusIdeiaService,
                 orientacaoService,
-                usuarioAutenticadoService
+                usuarioAutenticadoService,
+                mock(IdeaPriorityService.class)
         );
     }
 

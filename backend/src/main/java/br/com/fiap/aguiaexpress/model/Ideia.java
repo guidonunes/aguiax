@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -52,8 +53,8 @@ public class Ideia {
     @Column(name = "nr_viabilidade")
     private Integer viabilidade;
 
-    @Column(name = "nr_prioridade")
-    private Integer prioridade;
+    @Column(name = "nr_prioridade", precision = 4, scale = 2, nullable = false)
+    private BigDecimal prioridade;
 
     @Column(name = "nr_total_votos")
     private Integer totalVotos;
