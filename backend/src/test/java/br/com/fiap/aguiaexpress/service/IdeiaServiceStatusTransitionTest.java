@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.ideia.AtualizarStatusIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
@@ -40,6 +41,7 @@ class IdeiaServiceStatusTransitionTest {
     private IdeiaRepository ideiaRepository;
     private StatusIdeiaService statusIdeiaService;
     private UsuarioAutenticadoService usuarioAutenticadoService;
+    private BusinessMetrics businessMetrics;
     private IdeiaService ideiaService;
 
     @BeforeEach
@@ -48,6 +50,7 @@ class IdeiaServiceStatusTransitionTest {
         ideiaRepository = mock(IdeiaRepository.class);
         statusIdeiaService = mock(StatusIdeiaService.class);
         usuarioAutenticadoService = mock(UsuarioAutenticadoService.class);
+        businessMetrics = mock(BusinessMetrics.class);
 
         ideiaService = new IdeiaService(
                 auditService,
@@ -57,7 +60,8 @@ class IdeiaServiceStatusTransitionTest {
                 statusIdeiaService,
                 mock(OrientacaoEstrategicaService.class),
                 usuarioAutenticadoService,
-                mock(IdeaPriorityService.class)
+                mock(IdeaPriorityService.class),
+                businessMetrics
         );
     }
 
@@ -94,6 +98,12 @@ class IdeiaServiceStatusTransitionTest {
                         "newStatus", newStatus.name()
                 )
         );
+
+        if (newStatus == NomeStatusIdeia.APROVADA) {
+            verify(businessMetrics).recordIdeaApproved();
+        } else {
+            verify(businessMetrics, never()).recordIdeaApproved();
+        }
     }
 
     @ParameterizedTest(name = "{0} -/-> {1}")
@@ -124,7 +134,8 @@ class IdeiaServiceStatusTransitionTest {
         verifyNoInteractions(
                 statusIdeiaService,
                 usuarioAutenticadoService,
-                auditService
+                auditService,
+                businessMetrics
         );
     }
 
@@ -153,7 +164,8 @@ class IdeiaServiceStatusTransitionTest {
         verifyNoInteractions(
                 statusIdeiaService,
                 usuarioAutenticadoService,
-                auditService
+                auditService,
+                businessMetrics
         );
     }
 
@@ -172,7 +184,8 @@ class IdeiaServiceStatusTransitionTest {
                 ideiaRepository,
                 statusIdeiaService,
                 usuarioAutenticadoService,
-                auditService
+                auditService,
+                businessMetrics
         );
     }
 
@@ -194,7 +207,8 @@ class IdeiaServiceStatusTransitionTest {
                 ideiaRepository,
                 statusIdeiaService,
                 usuarioAutenticadoService,
-                auditService
+                auditService,
+                businessMetrics
         );
     }
 

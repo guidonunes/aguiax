@@ -1801,14 +1801,28 @@ Spring Boot Actuator / Micrometer should expose at least:
 /actuator/metrics
 ```
 
-Optional custom metrics may include:
+Task 10.3 adds these custom metrics:
 
 ```text
-AI evaluation count
-AI provider failures
-ideas approved
-projects created
+aguiaexpress.ai.evaluation.duration     timer, outcome=success|failure
+aguiaexpress.ai.evaluation.failures    counter
+aguiaexpress.ideas.approved             counter
+aguiaexpress.projects.created           counter
 ```
+
+The AI timer measures the complete validated evaluation orchestration and its
+built-in count represents the number of completed attempts. An attempt begins
+only after the idea and authenticated actor have been resolved. Failures include
+controlled provider, configuration, AI-history persistence, priority-persistence,
+and unexpected orchestration failures. Missing ideas and authentication failures
+do not start an AI measurement.
+
+An idea is counted only when a valid manager transition reaches `APROVADA`. A
+project is counted only after the relational project-creation transaction commits;
+rollbacks never increment the counter. Metric tags remain bounded to the two AI
+outcomes and must not contain idea/user identifiers, exception messages, JWTs, or
+other secrets. The counters represent the current application process and reset
+when that process restarts.
 
 Task 10.1 implements the baseline with Spring Boot Actuator and Micrometer.
 HTTP exposure is an explicit allowlist containing only `health`, `info`, and
@@ -1818,6 +1832,10 @@ subpaths are denied. Safe application metadata and built-in metrics require an
 authenticated `LIDER`. Five isolated integration tests use the real JWT filter,
 security chain, and Actuator endpoints to verify the `200`/`401`/`403`/`404`
 contract without depending on MySQL or MongoDB.
+
+Task 10.3 centralizes custom instrumentation in `BusinessMetrics`; focused meter,
+service, transaction-synchronization, and Actuator tests verify the metric
+lifecycle and retain the Task 10.1 leader-only read policy.
 
 ---
 

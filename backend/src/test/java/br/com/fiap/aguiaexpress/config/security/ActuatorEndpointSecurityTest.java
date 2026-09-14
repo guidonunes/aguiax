@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.config.security;
 
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.model.NomePerfil;
 import br.com.fiap.aguiaexpress.model.TipoPerfil;
 import br.com.fiap.aguiaexpress.model.Usuario;
@@ -94,6 +95,14 @@ class ActuatorEndpointSecurityTest {
                         .header(HttpHeaders.AUTHORIZATION, bearer(leaderToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("jvm.memory.used"));
+
+        mockMvc.perform(get("/actuator/metrics/"
+                        + BusinessMetrics.PROJECTS_CREATED)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(leaderToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name")
+                        .value(BusinessMetrics.PROJECTS_CREATED))
+                .andExpect(jsonPath("$.measurements[0].value").value(0.0));
     }
 
     @Test
@@ -139,7 +148,12 @@ class ActuatorEndpointSecurityTest {
             MongoAutoConfiguration.class,
             DataMongoAutoConfiguration.class
     })
-    @Import({SecurityConfig.class, TokenVerification.class, TokenService.class})
+    @Import({
+            SecurityConfig.class,
+            TokenVerification.class,
+            TokenService.class,
+            BusinessMetrics.class
+    })
     static class TestApplication {
     }
 }

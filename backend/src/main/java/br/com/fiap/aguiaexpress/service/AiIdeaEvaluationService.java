@@ -8,6 +8,7 @@ import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
 import br.com.fiap.aguiaexpress.config.ai.AiProviderProperties;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationContext;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResult;
@@ -17,6 +18,7 @@ import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableExceptio
 import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.OrientacaoEstrategica;
 import br.com.fiap.aguiaexpress.model.Usuario;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,7 @@ public class AiIdeaEvaluationService {
     private final AiProviderProperties providerProperties;
     private final AiIdeaEvaluationRepository evaluationRepository;
     private final AuditService auditService;
+    private final BusinessMetrics businessMetrics;
 
     public AiIdeaEvaluationResponse avaliarIdeia(Long ideiaId) {
         Ideia ideia = ideiaService.buscarEntidadePorId(ideiaId);
@@ -56,6 +59,7 @@ public class AiIdeaEvaluationService {
                 metadadosDoProvedor()
         );
 
+        Timer.Sample sample = businessMetrics.startAiEvaluation();
         try {
             AiIdeaEvaluationClient client = clientProvider.getIfAvailable();
             if (client == null) {
@@ -87,9 +91,10 @@ public class AiIdeaEvaluationService {
                     ideia.getId(),
                     metadata
             );
-
+            businessMetrics.recordAiEvaluationSuccess(sample);
             return response;
         } catch (RuntimeException exception) {
+            businessMetrics.recordAiEvaluationFailure(sample);
             String failureType = tipoDaFalha(exception);
             LOGGER.warn(
                     "Falha na avaliação de IA: ideaId={}, provider={}, failureType={}",

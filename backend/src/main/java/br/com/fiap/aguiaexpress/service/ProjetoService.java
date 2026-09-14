@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.projeto.AtualizarStatusProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.projeto.MostrarProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.projeto.RegistrarProjetoDTO;
@@ -32,6 +33,7 @@ public class ProjetoService {
     private final UsuarioRepository usuarioRepository;
     private final IdeiaService ideiaService;
     private final StatusProjetoService statusProjetoService;
+    private final BusinessMetrics businessMetrics;
 
     @Transactional
     public MostrarProjetoDTO criarProjeto(RegistrarProjetoDTO projetoDTO) {
@@ -93,7 +95,7 @@ public class ProjetoService {
                         "newIdeaStatus", NomeStatusIdeia.CONVERTIDA_EM_PROJETO.name()
                 )
         );
-
+        businessMetrics.recordProjectCreated();
         return new MostrarProjetoDTO(projetoSalvo);
     }
 

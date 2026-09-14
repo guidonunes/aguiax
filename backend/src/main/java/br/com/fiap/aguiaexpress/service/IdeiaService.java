@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.ideia.AtualizarAvaliacaoIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.AtualizarStatusIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
@@ -61,6 +62,7 @@ public class IdeiaService {
     private final OrientacaoEstrategicaService orientacaoService;
     private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final IdeaPriorityService ideaPriorityService;
+    private final BusinessMetrics businessMetrics;
 
     public MostrarIdeiaDTO criarIdeia(RegistrarIdeiaDTO ideiaDTO) {
         if (ideiaRepository.existsByTitulo(ideiaDTO.titulo())) {
@@ -269,6 +271,10 @@ public class IdeiaService {
                         "newStatus", newStatus.name()
                 )
         );
+
+        if (newStatus == NomeStatusIdeia.APROVADA) {
+            businessMetrics.recordIdeaApproved();
+        }
 
         return new MostrarIdeiaDTO(ideiaAtualizada);
     }

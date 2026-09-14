@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.projeto.MostrarProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.projeto.RegistrarProjetoDTO;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
@@ -53,6 +54,7 @@ class ProjetoServiceConversionTest {
     private IdeiaRepository ideiaRepository;
     private StatusIdeiaService statusIdeiaService;
     private StatusProjetoService statusProjetoService;
+    private BusinessMetrics businessMetrics;
     private ProjetoService projetoService;
 
     @BeforeEach
@@ -64,6 +66,7 @@ class ProjetoServiceConversionTest {
         ideiaRepository = mock(IdeiaRepository.class);
         statusIdeiaService = mock(StatusIdeiaService.class);
         statusProjetoService = mock(StatusProjetoService.class);
+        businessMetrics = mock(BusinessMetrics.class);
 
         IdeiaService ideiaService = new IdeiaService(
                 auditService,
@@ -73,7 +76,8 @@ class ProjetoServiceConversionTest {
                 statusIdeiaService,
                 mock(OrientacaoEstrategicaService.class),
                 usuarioAutenticadoService,
-                mock(IdeaPriorityService.class)
+                mock(IdeaPriorityService.class),
+                mock(BusinessMetrics.class)
         );
 
         projetoService = new ProjetoService(
@@ -82,7 +86,8 @@ class ProjetoServiceConversionTest {
                 projetoRepository,
                 usuarioRepository,
                 ideiaService,
-                statusProjetoService
+                statusProjetoService,
+                businessMetrics
         );
     }
 
@@ -125,7 +130,12 @@ class ProjetoServiceConversionTest {
                 ideia.getStatusIdeia().getStatus());
         assertNotNull(ideia.getDataAtualizacao());
 
-        InOrder order = inOrder(projetoRepository, ideiaRepository, auditService);
+        InOrder order = inOrder(
+                projetoRepository,
+                ideiaRepository,
+                auditService,
+                businessMetrics
+        );
         order.verify(projetoRepository).save(any(Projeto.class));
         order.verify(ideiaRepository).save(ideia);
         order.verify(projetoRepository).flush();
@@ -142,6 +152,7 @@ class ProjetoServiceConversionTest {
                         "newIdeaStatus", "CONVERTIDA_EM_PROJETO"
                 )
         );
+        order.verify(businessMetrics).recordProjectCreated();
     }
 
     @ParameterizedTest
@@ -171,7 +182,8 @@ class ProjetoServiceConversionTest {
                 usuarioRepository,
                 statusProjetoService,
                 statusIdeiaService,
-                auditService
+                auditService,
+                businessMetrics
         );
     }
 
@@ -197,7 +209,8 @@ class ProjetoServiceConversionTest {
                 usuarioRepository,
                 statusProjetoService,
                 statusIdeiaService,
-                auditService
+                auditService,
+                businessMetrics
         );
     }
 
@@ -214,7 +227,7 @@ class ProjetoServiceConversionTest {
 
         assertEquals(NomeStatusIdeia.APROVADA, ideia.getStatusIdeia().getStatus());
         verify(ideiaRepository, never()).save(any());
-        verifyNoInteractions(auditService);
+        verifyNoInteractions(auditService, businessMetrics);
     }
 
     @Test
@@ -235,7 +248,7 @@ class ProjetoServiceConversionTest {
 
         verify(projetoRepository).save(any(Projeto.class));
         verify(ideiaRepository).save(ideia);
-        verifyNoInteractions(auditService);
+        verifyNoInteractions(auditService, businessMetrics);
     }
 
     @Test
@@ -258,7 +271,7 @@ class ProjetoServiceConversionTest {
         verify(projetoRepository).save(any(Projeto.class));
         verify(ideiaRepository).save(ideia);
         verify(projetoRepository).flush();
-        verifyNoInteractions(auditService);
+        verifyNoInteractions(auditService, businessMetrics);
     }
 
     @Test

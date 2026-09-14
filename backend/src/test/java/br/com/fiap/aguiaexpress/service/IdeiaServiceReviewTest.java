@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.ideia.AtualizarAvaliacaoIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
@@ -56,7 +57,8 @@ class IdeiaServiceReviewTest {
                 mock(StatusIdeiaService.class),
                 mock(OrientacaoEstrategicaService.class),
                 usuarioAutenticadoService,
-                ideaPriorityService
+                ideaPriorityService,
+                mock(BusinessMetrics.class)
         );
     }
 

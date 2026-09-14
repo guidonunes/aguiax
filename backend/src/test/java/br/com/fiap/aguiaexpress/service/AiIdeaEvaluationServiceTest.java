@@ -9,6 +9,7 @@ import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
 import br.com.fiap.aguiaexpress.config.ai.AiProviderProperties;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationContext;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResponse;
 import br.com.fiap.aguiaexpress.dto.ai.AiIdeaEvaluationResult;
@@ -24,6 +25,7 @@ import br.com.fiap.aguiaexpress.model.Usuario;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import io.micrometer.core.instrument.Timer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -62,6 +64,8 @@ class AiIdeaEvaluationServiceTest {
     private AiIdeaEvaluationClient client;
     private AiIdeaEvaluationRepository evaluationRepository;
     private AuditService auditService;
+    private BusinessMetrics businessMetrics;
+    private Timer.Sample metricSample;
     private AiIdeaEvaluationService service;
 
     @BeforeEach
@@ -73,6 +77,9 @@ class AiIdeaEvaluationServiceTest {
         client = mock(AiIdeaEvaluationClient.class);
         evaluationRepository = mock(AiIdeaEvaluationRepository.class);
         auditService = mock(AuditService.class);
+        businessMetrics = mock(BusinessMetrics.class);
+        metricSample = mock(Timer.Sample.class);
+        when(businessMetrics.startAiEvaluation()).thenReturn(metricSample);
 
         service = new AiIdeaEvaluationService(
                 ideiaService,
@@ -80,7 +87,8 @@ class AiIdeaEvaluationServiceTest {
                 clientProvider,
                 providerProperties(),
                 evaluationRepository,
-                auditService
+                auditService,
+                businessMetrics
         );
     }
 
@@ -210,6 +218,9 @@ class AiIdeaEvaluationServiceTest {
         );
         verify(ideiaService).buscarEntidadePorId(42L);
         verifyNoMoreInteractions(ideiaService);
+        verify(businessMetrics).startAiEvaluation();
+        verify(businessMetrics).recordAiEvaluationSuccess(metricSample);
+        verify(businessMetrics, never()).recordAiEvaluationFailure(any());
     }
 
     @Test
@@ -244,6 +255,9 @@ class AiIdeaEvaluationServiceTest {
         ).atualizarPrioridadeComPontuacaoAi(any(), any());
         verify(ideiaService).buscarEntidadePorId(42L);
         verifyNoMoreInteractions(ideiaService);
+        verify(businessMetrics).startAiEvaluation();
+        verify(businessMetrics).recordAiEvaluationFailure(metricSample);
+        verify(businessMetrics, never()).recordAiEvaluationSuccess(any());
     }
 
     @Test
@@ -354,6 +368,9 @@ class AiIdeaEvaluationServiceTest {
         );
         verify(ideiaService).buscarEntidadePorId(404L);
         verifyNoMoreInteractions(ideiaService);
+        verify(businessMetrics, never()).startAiEvaluation();
+        verify(businessMetrics, never()).recordAiEvaluationSuccess(any());
+        verify(businessMetrics, never()).recordAiEvaluationFailure(any());
     }
 
     @Test

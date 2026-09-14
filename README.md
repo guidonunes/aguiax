@@ -111,6 +111,25 @@ curl -i \
   http://localhost:8080/actuator/metrics
 ```
 
+As métricas de negócio da Sprint 2 são:
+
+- `aguiaexpress.ai.evaluation.duration`, timer com `outcome=success|failure`;
+- `aguiaexpress.ai.evaluation.failures`;
+- `aguiaexpress.ideas.approved`;
+- `aguiaexpress.projects.created`.
+
+Consulte uma métrica individual, por exemplo:
+
+```bash
+curl -i \
+  -H "Authorization: Bearer <LIDER_TOKEN>" \
+  http://localhost:8080/actuator/metrics/aguiaexpress.projects.created
+```
+
+Os valores pertencem ao processo atual do backend e reiniciam junto com a
+aplicação. Criações de projeto só são contabilizadas depois do commit da transação.
+As métricas não exigem variáveis de ambiente adicionais.
+
 Uma chamada sem token para métricas retorna `401`; um perfil diferente de
 `LIDER` recebe `403`. Endpoints não expostos, como `/actuator/env`, retornam
 `404`.
@@ -119,7 +138,7 @@ O teste isolado não depende dos bancos locais:
 
 ```bash
 cd backend
-./mvnw -Dtest=ActuatorEndpointSecurityTest test
+./mvnw -Dtest=BusinessMetricsTest,ActuatorEndpointSecurityTest test
 ```
 
 Os logs operacionais usam SLF4J parametrizado. Rejeições de autenticação,

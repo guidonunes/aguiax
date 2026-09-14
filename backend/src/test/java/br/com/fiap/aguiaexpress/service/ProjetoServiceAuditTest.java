@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.service;
 import br.com.fiap.aguiaexpress.audit.model.AuditEventType;
 import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
+import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.projeto.AtualizarStatusProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.projeto.RegistrarProjetoDTO;
 import br.com.fiap.aguiaexpress.model.Ideia;
@@ -40,6 +41,7 @@ class ProjetoServiceAuditTest {
     private UsuarioRepository usuarioRepository;
     private IdeiaService ideiaService;
     private StatusProjetoService statusProjetoService;
+    private BusinessMetrics businessMetrics;
     private ProjetoService projetoService;
 
     @BeforeEach
@@ -50,6 +52,7 @@ class ProjetoServiceAuditTest {
         usuarioRepository = mock(UsuarioRepository.class);
         ideiaService = mock(IdeiaService.class);
         statusProjetoService = mock(StatusProjetoService.class);
+        businessMetrics = mock(BusinessMetrics.class);
 
         projetoService = new ProjetoService(
                 usuarioAutenticadoService,
@@ -57,7 +60,8 @@ class ProjetoServiceAuditTest {
                 projetoRepository,
                 usuarioRepository,
                 ideiaService,
-                statusProjetoService
+                statusProjetoService,
+                businessMetrics
         );
     }
 

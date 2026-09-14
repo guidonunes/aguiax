@@ -1588,6 +1588,31 @@ Do not let optional metrics block core delivery.
 
 At least built-in application metrics exist; custom metrics are a bonus.
 
+### Task 10.3 implementation record — 2026-09-14
+
+Implemented by the developer and reviewed/fixed by Codex. `BusinessMetrics`
+registers an AI-evaluation timer split by bounded `success`/`failure` outcomes,
+an AI-failure counter, an idea-approval counter, and a project-creation counter.
+The AI timer starts only after a valid idea and authenticated actor are resolved.
+Approval counts change only for successful transitions to `APROVADA`. Project
+counts are transaction-aware and increment after commit, never after rollback.
+No identifiers, exception messages, credentials, tokens, or provider payloads are
+used as metric tags.
+
+Four focused registry/transaction tests cover timer outcomes, counters, immediate
+non-transactional recording, commit deferral, and rollback behavior. Existing AI,
+idea-status, project-conversion/audit, ownership/review, and real secured Actuator
+tests were updated for the new dependency and metric hooks. The focused selection
+passed 65 of 65 tests, including a leader read of a custom metric through
+`/actuator/metrics/{name}`. The optional custom-metric work and the Phase 10 exit
+criterion are satisfied.
+
+The complete backend run executed 197 tests: 195 passed, while the two previously
+documented unrelated baseline defects remained (`contextLoads` does not load
+`.env`, leaving `${DB_URL}` unresolved, and the Gemini request test expects
+`thinkingLevel=low` while the implementation sends `medium`). No Task 10.3
+regression appeared outside the focused selection.
+
 ---
 
 # Phase 11 — Test suite
