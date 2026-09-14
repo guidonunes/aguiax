@@ -724,7 +724,11 @@ rows when their owning roadmap tasks introduce the controllers.
 Other Actuator endpoints must remain unexposed. Swagger UI and OpenAPI GET routes
 may be public only in an explicitly enabled local/development documentation profile;
 they must be disabled in non-development deployments unless a separate policy is
-documented. Current security does not exempt these documentation routes (Task 12.1).
+documented. Task 12.1 implements this through the explicit `local` profile: base
+configuration disables Springdoc, while `application-local.properties` enables
+it and lets `SecurityConfig` permit only its GET routes. Public login and public
+operational registration omit the global bearer requirement; every other API
+operation inherits it.
 Framework error dispatch must return a controlled error without exposing internals;
 it does not grant access to the original protected operation.
 
@@ -1898,6 +1902,26 @@ JWT Bearer authentication
 
 Swagger/OpenAPI documents the public backend contract.
 
+The contract defines `bearerAuth` as an HTTP bearer scheme with JWT format.
+Swagger/OpenAPI is disabled by default and available only when the `local` Spring
+profile is explicitly active. The local routes are:
+
+```text
+/swagger-ui/index.html
+/swagger-ui.html
+/v3/api-docs
+```
+
+The generated schemas preserve Jakarta validation constraints from request DTOs.
+Presentation-critical operations additionally document role/ownership rules,
+workflow invariants, and expected success and controlled error response codes.
+
+The versioned Postman v2.1 collection complements OpenAPI with an executable
+demonstration. Its main folder follows the documented role/workflow sequence and
+captures JWTs and resource identifiers through collection-variable scripts.
+Collection exports must contain empty credential/token variables; real passwords,
+JWTs, cookies, and provider keys are never versioned.
+
 The API should use stable resource-oriented paths.
 
 Examples:
@@ -1946,7 +1970,6 @@ MongoDB
 
 JWT
   JWT_SECRET
-  JWT_EXPIRATION
 
 AI
   AI_ENABLED
@@ -1962,6 +1985,23 @@ Variable names should ultimately match the actual repository configuration.
 
 Do not duplicate conflicting configuration names simply to match this document.
 
+`JWT_EXPIRATION` is deliberately absent from the implemented configuration
+contract: `TokenService` currently fixes token lifetime at two hours. It must not
+be presented as externally configurable until the application actually binds and
+uses such a setting.
+
+The backend loads only the listed `DB_*`, `JWT_SECRET`, `MONGODB_*`, and `AI_*`
+keys from an optional `backend/.env`. JVM system properties have highest
+precedence, followed by process environment variables and then `.env` values.
+Required blank values fail startup. Optional AI values have application defaults,
+and AI remains disabled unless explicitly enabled with a valid external key.
+
+Spring profile selection is separate from the dotenv whitelist. The default
+profile keeps API documentation disabled; operators set
+`SPRING_PROFILES_ACTIVE=local` in the process environment (or the equivalent JVM
+property) to enable local Swagger/OpenAPI. The local profile does not provide
+database credentials or change persistence ownership.
+
 Use safe placeholders in:
 
 ```text
@@ -1970,6 +2010,10 @@ README.md
 ```
 
 Never commit real credentials.
+
+The executable setup contract, safe template, database prerequisites, startup
+checks, and failure guide are maintained in `docs/environment.md` and
+`backend/.env.example`.
 
 ---
 

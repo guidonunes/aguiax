@@ -5,6 +5,11 @@ import br.com.fiap.aguiaexpress.dto.usuario.AtualizarUsuarioDTO;
 import br.com.fiap.aguiaexpress.dto.usuario.MostrarUsuarioDTO;
 import br.com.fiap.aguiaexpress.dto.usuario.RegistrarUsuarioDTO;
 import br.com.fiap.aguiaexpress.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,12 +22,24 @@ import java.util.List;
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
+@Tag(name = "Usuários", description = "Cadastro público e administração de usuários")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
     @PostMapping("/admin")
     @PreAuthorize("hasRole('LIDER')")
+    @Operation(
+            summary = "Criar usuário como líder",
+            description = "Somente LIDER. Provisiona uma conta com um dos perfis existentes."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Usuário criado", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "401", description = "JWT ausente, inválido ou expirado"),
+            @ApiResponse(responseCode = "403", description = "Perfil diferente de LIDER"),
+            @ApiResponse(responseCode = "409", description = "Email já cadastrado")
+    })
     public ResponseEntity<MostrarUsuarioDTO> criarUsuarioAdmin(
             @RequestBody @Valid RegistrarUsuarioDTO usuarioDTO
     ) {
@@ -35,6 +52,16 @@ public class UsuarioController {
     }
 
     @PostMapping
+    @SecurityRequirements
+    @Operation(
+            summary = "Cadastrar usuário operacional",
+            description = "Rota pública. Sempre cria OPERACIONAL e rejeita perfis privilegiados."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Usuário operacional criado", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos ou tentativa de perfil privilegiado"),
+            @ApiResponse(responseCode = "409", description = "Email já cadastrado")
+    })
     public ResponseEntity<MostrarUsuarioDTO> salvarUsuario(
             @RequestBody @Valid RegistrarUsuarioDTO usuarioDTO
     ) {

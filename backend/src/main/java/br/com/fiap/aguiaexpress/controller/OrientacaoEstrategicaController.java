@@ -3,6 +3,10 @@ package br.com.fiap.aguiaexpress.controller;
 import br.com.fiap.aguiaexpress.dto.orientacao.MostrarOrientacaoDTO;
 import br.com.fiap.aguiaexpress.dto.orientacao.RegistrarOrientacaoDTO;
 import br.com.fiap.aguiaexpress.service.OrientacaoEstrategicaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,12 +19,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/orientacoes")
 @RequiredArgsConstructor
+@Tag(name = "Orientações estratégicas", description = "Diretrizes estratégicas administradas por líderes")
 public class OrientacaoEstrategicaController {
 
     private final OrientacaoEstrategicaService orientacaoService;
 
     @PostMapping
     @PreAuthorize("hasRole('LIDER')")
+    @Operation(summary = "Criar orientação estratégica", description = "Somente LIDER.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Orientação criada", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "401", description = "JWT ausente, inválido ou expirado"),
+            @ApiResponse(responseCode = "403", description = "Perfil diferente de LIDER"),
+            @ApiResponse(responseCode = "409", description = "Título de orientação duplicado")
+    })
     public ResponseEntity<MostrarOrientacaoDTO> criarOrientacao(
             @RequestBody @Valid RegistrarOrientacaoDTO orientacaoDTO
     ) {
@@ -66,6 +79,7 @@ public class OrientacaoEstrategicaController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('LIDER')")
+    @Operation(summary = "Atualizar orientação estratégica", description = "Somente LIDER.")
     public ResponseEntity<MostrarOrientacaoDTO> atualizarOrientacao(
             @PathVariable Long id,
             @RequestBody @Valid RegistrarOrientacaoDTO orientacaoDTO
@@ -78,6 +92,10 @@ public class OrientacaoEstrategicaController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('LIDER')")
+    @Operation(
+            summary = "Desativar orientação estratégica",
+            description = "Somente LIDER. A exclusão é uma desativação lógica."
+    )
     public ResponseEntity<Void> deletarOrientacao(
             @PathVariable Long id
     ) {

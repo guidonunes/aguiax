@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress.dto.dashboard;
 
 import br.com.fiap.aguiaexpress.model.NomeStatusProjeto;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -8,6 +9,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Schema(description = "Resumo executivo global ou filtrado por orientação estratégica")
 public record DashboardSummaryResponse(
         long totalProjects,
         Map<NomeStatusProjeto, Long> projectsByStatus,

@@ -1,321 +1,463 @@
 # AguiaExpress
 
-Projeto acadêmico desenvolvido para o Challenge Águia Branca.
+AguiaExpress é uma plataforma acadêmica de gestão de inovação desenvolvida para
+o Challenge FIAP / Grupo Águia Branca. O fluxo principal conecta orientações
+estratégicas, ideias, votação e priorização, projetos, resultados executivos e
+medalhas.
 
-O **AguiaExpress** é uma aplicação mobile nativa para Android, desenvolvida com **Kotlin + Jetpack Compose**, integrada a uma **API REST em Spring Boot**. A proposta inicial do projeto é permitir o registro, organização, priorização e acompanhamento de ideias, atendendo aos requisitos da disciplina.
+O sistema ativo é composto por um aplicativo Android nativo em Kotlin/Jetpack
+Compose e uma API REST Java/Spring Boot. A Sprint 2 acrescenta autorização no
+servidor, MongoDB, avaliação consultiva por IA, dashboard no backend, auditoria,
+métricas, testes e documentação de entrega.
 
-## Stack do Projeto
+## Arquitetura
 
-### Frontend
-- Kotlin
-- Jetpack Compose
-- Android Studio
-- Retrofit para consumo da API REST
+```text
+Android (Kotlin + Compose)
+          |
+          | REST/JSON + Bearer JWT
+          v
+Spring Boot API (Java 21)
+          |
+          +--> MySQL
+          |      domínio transacional e Flyway
+          |
+          +--> MongoDB
+          |      eventos de auditoria e histórico de IA
+          |
+          +--> Google Gemini Developer API
+                 avaliação estruturada de ideias
+```
 
-### Backend
-- Java
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- MySQL Database
-- Spring Data MongoDB
-- MongoDB
-- Flyway
-- Spring Boot Actuator / Micrometer
-- Lombok
-- Maven
+O Android apresenta e envia dados, mas não é autoridade para autorização,
+transições de fluxo, prioridade ou agregações executivas. Essas regras pertencem
+ao backend. A IA apoia a decisão humana e nunca aprova, rejeita ou muda o status
+de uma ideia.
 
-## Estrutura do Repositório
+## Estrutura do repositório
 
-```txt
-aguiaexpress/
-├── backend/                # API REST ativa em Spring Boot
-├── frontend/               # Aplicativo Android ativo com Jetpack Compose
-├── docs/                   # Arquitetura, roadmap e baseline da Sprint 2
-├── aguiaexpress-entrega/   # Snapshot histórico da atividade do semestre anterior
+```text
+aguiax/
+├── backend/                # API Spring Boot ativa
+├── frontend/               # aplicativo Android ativo
+├── docs/                   # arquitetura, configuração, roadmap e evidências
+├── postman/                # coleção conjunta das Sprints 1 e 2
+├── aguiaexpress-entrega/   # snapshot histórico do semestre anterior
 └── README.md
 ```
 
-O desenvolvimento, a compilação e os testes atuais consideram apenas `backend/` e
-`frontend/`. O diretório `aguiaexpress-entrega/` é mantido somente como registro
-histórico e não participa da funcionalidade, da arquitetura nem do escopo da Sprint 2.
+Somente `backend/` e `frontend/` participam da aplicação atual.
+`aguiaexpress-entrega/` não deve ser compilado, testado ou usado como evidência
+da Sprint 2.
 
-## Documentação da Sprint 2
+## Pré-requisitos
 
-- [Arquitetura](docs/architecture.md)
-- [Política de autorização e inventário de endpoints — Task 1.1](docs/architecture.md#91-task-11-policy-decisions)
-- [Roadmap](docs/roadmap.md)
-- [Matriz de requisitos da Sprint 2](docs/sprint2-requirement-matrix.md)
-- [Baseline de regressão](docs/sprint2-regression-baseline.md)
+Para executar o backend:
 
-A política da Task 1.1 e sua aplicação nas Tasks 1.2–1.5 estão documentadas. O
-cadastro público cria apenas `OPERACIONAL`; contas privilegiadas usam a rota
-leader-only `POST /usuarios/admin`. O interceptor Android não registra JWTs nem o
-cabeçalho Authorization.
+- Java 21;
+- MySQL instalado e acessível;
+- MongoDB instalado e acessível;
+- `mongosh` e o cliente `mysql` para os testes de conectividade;
+- `curl` para validar a API;
+- uma chave Google AI Studio somente para testar a avaliação real por IA.
 
-O fluxo Android de avaliação gerencial permite somente ao perfil `GESTOR` informar
-impacto e viabilidade entre `0` e `10`. Os valores são enviados para
-`PATCH /ideias/{id}/avaliacao`, persistidos no MySQL e recarregados pela consulta
-normal de ideias; eles não são mantidos como estado local permanente no aparelho.
+Maven não precisa ser instalado globalmente: o repositório inclui `backend/mvnw`.
+Não há Docker Compose neste projeto; os exemplos abaixo usam serviços instalados
+localmente.
 
-No mesmo detalhe de ideia, o `GESTOR` pode usar **Analisar com IA**. O Android
-chama o backend em `POST /api/ideas/{ideaId}/ai-evaluation`, mostra carregamento e
-exibe alinhamento estratégico, impacto, viabilidade, inovação, pontuação geral e
-resumo em formato estruturado, com opção de tentar novamente em falhas
-controladas. Não há interface de chat e o aplicativo nunca recebe a chave Gemini.
-O resultado é consultivo: aprovação, rejeição e conversão em projeto continuam
-ações explícitas e separadas.
+Para executar o aplicativo:
 
-O dashboard executivo do `LIDER` consome
-`GET /api/dashboard/summary` diretamente. Totais, médias, resultado estimado e
-contagens por status são calculados pelo backend; o Android apenas formata e exibe
-esses valores. O seletor de orientação estratégica envia `orientationId` para
-obter o mesmo resumo filtrado, enquanto “Todas as orientações” usa a consulta
-global. A visualização individual continua usando o contrato existente
-`GET /projetos/{projectId}`.
+- Android Studio;
+- Android SDK 36;
+- emulador ou aparelho com Android 9/API 28 ou superior.
 
-A navegação Android segue a mesma matriz de autorização do backend:
+## Início rápido do backend
 
-- `OPERACIONAL`: inicia em Ideias, cria ideias e edita/exclui somente ideias próprias;
-- `GESTOR`: inicia em Projetos, avalia/prioriza ideias e gerencia projetos;
-- `LIDER`: inicia no Dashboard e gerencia orientações estratégicas.
+### 1. Inicie MySQL e MongoDB
 
-Todos os três perfis autenticados podem consultar orientações, ideias, projetos e
-medalhas, além de votar. Rotas privilegiadas também são protegidas no cliente e
-perfis desconhecidos falham de forma fechada. Essas restrições melhoram a
-experiência, mas não substituem Spring Security: chamadas sem autenticação ou com
-papel inadequado continuam recebendo `401` ou `403` do backend.
+Em uma distribuição Linux com `systemd`:
 
-## Observabilidade local
+```bash
+sudo systemctl start mysql
+sudo systemctl start mongod
+systemctl is-active mysql
+systemctl is-active mongod
+```
 
-O backend expõe somente os endpoints Actuator necessários para a Sprint 2:
+Algumas distribuições nomeiam o serviço MySQL como `mysqld`. Nesse caso, troque
+`mysql` por `mysqld`. Os dois comandos de estado devem retornar `active`.
 
-- `GET /actuator/health` é público e retorna apenas o estado agregado;
-- `GET /actuator/info` exige um JWT de `LIDER` e retorna metadados seguros;
-- `GET /actuator/metrics` e `GET /actuator/metrics/{nome}` exigem um JWT de
-  `LIDER`.
+### 2. Crie o banco e usuário MySQL locais
 
-A página de descoberta, os endpoints JMX, detalhes/componentes de saúde e demais
-endpoints Actuator não ficam disponíveis. Não são necessárias novas variáveis de
-ambiente. Com o backend em execução, valide a saúde pública com:
+Abra uma sessão administrativa:
+
+```bash
+sudo mysql
+```
+
+Escolha uma senha local e execute, uma vez:
+
+```sql
+CREATE DATABASE aguiaexpress
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+CREATE USER 'aguiaexpress_local'@'localhost'
+    IDENTIFIED BY 'replace-with-your-local-mysql-password';
+GRANT ALL PRIVILEGES ON aguiaexpress.*
+    TO 'aguiaexpress_local'@'localhost';
+```
+
+O texto `replace-with-your-local-mysql-password` é apenas um marcador. Use uma
+senha escolhida localmente. Flyway criará e validará as tabelas quando o backend
+iniciar; ele não cria o banco nem o usuário MySQL.
+
+### 3. Crie a configuração local
+
+```bash
+cd backend
+cp .env.example .env
+chmod 600 .env
+```
+
+Edite `backend/.env` e informe o usuário, a senha e um segredo JWT privados. Para
+gerar um segredo local:
+
+```bash
+openssl rand -base64 48
+```
+
+O arquivo `.env` real é ignorado pelo Git. O contrato completo, a precedência dos
+valores e o diagnóstico de falhas estão em
+[`docs/environment.md`](docs/environment.md).
+
+### 4. Confira as conexões
+
+```bash
+mysql --host=localhost --user=aguiaexpress_local --password aguiaexpress \
+  --execute='SELECT 1;'
+mongosh "mongodb://localhost:27017/admin" --quiet \
+  --eval 'db.runCommand({ping: 1}).ok'
+```
+
+O cliente MySQL solicitará a senha. O comando MongoDB deve imprimir `1`.
+
+### 5. Inicie e valide a API
+
+Execute o Maven a partir de `backend/`, pois é nesse diretório que o carregador
+procura `.env`:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Em outro terminal:
 
 ```bash
 curl -i http://localhost:8080/actuator/health
 ```
 
-Para consultar as métricas incorporadas, envie o JWT de um líder:
+O resultado esperado é `200 OK` com `{"status":"UP"}`. A API usa a porta 8080.
 
-```bash
-curl -i \
-  -H "Authorization: Bearer <LIDER_TOKEN>" \
-  http://localhost:8080/actuator/metrics
+## Variáveis de ambiente
+
+O modelo seguro versionado é [`backend/.env.example`](backend/.env.example).
+
+| Variável | Obrigatoriedade | Finalidade/padrão |
+|---|---|---|
+| `DB_URL` | Obrigatória | URL JDBC do MySQL; exemplo local: `jdbc:mysql://localhost:3306/aguiaexpress`. |
+| `DB_USER` | Obrigatória | Usuário MySQL da aplicação. |
+| `DB_PASSWORD` | Obrigatória | Senha privada do usuário MySQL. |
+| `JWT_SECRET` | Obrigatória | Segredo privado usado para assinar JWTs. |
+| `MONGODB_URI` | Obrigatória | URI do MongoDB; exemplo local: `mongodb://localhost:27017`. |
+| `MONGODB_DATABASE` | Obrigatória | Banco documental; exemplo local: `aguiaexpress`. |
+| `AI_ENABLED` | Opcional | `false`; habilita explicitamente a integração Gemini. |
+| `AI_PROVIDER` | Opcional | `gemini`; único provedor aceito atualmente. |
+| `AI_API_KEY` | Condicional | Obrigatória somente quando `AI_ENABLED=true`. |
+| `AI_MODEL` | Opcional | `gemini-3.6-flash`. |
+| `AI_BASE_URL` | Opcional | `https://generativelanguage.googleapis.com/v1beta`. |
+| `AI_CONNECT_TIMEOUT_MS` | Opcional | `3000`, em milissegundos. |
+| `AI_READ_TIMEOUT_MS` | Opcional | `15000`, em milissegundos. |
+
+Não existe `JWT_EXPIRATION` configurável: a validade atual do token é fixa em duas
+horas. Propriedades JVM têm precedência sobre variáveis do processo, que têm
+precedência sobre `.env`.
+
+Nunca versione senhas, JWTs, URIs autenticadas, chaves Gemini ou o arquivo
+`backend/.env`.
+
+## Responsabilidade dos bancos
+
+| Armazenamento | Responsabilidade |
+|---|---|
+| MySQL | Usuários, perfis, categorias, orientações, ideias, votos, projetos, medalhas e relacionamentos transacionais. |
+| MongoDB | `audit_events` e `idea_ai_evaluations`, usados para rastreabilidade e histórico documental. |
+
+MySQL é a fonte de verdade do domínio. MongoDB não é uma cópia das entidades
+relacionais e não substitui transações MySQL. O banco e suas coleções MongoDB
+podem aparecer no Compass somente depois da primeira gravação de auditoria ou IA;
+apenas iniciar a aplicação não garante a materialização imediata.
+
+## Perfis e autorização
+
+Os papéis são independentes; `LIDER` não herda permissões de `GESTOR` ou
+`OPERACIONAL`. Controles ocultos no Android melhoram a experiência, mas toda
+autorização relevante também é validada pelo backend.
+
+| Operação | OPERACIONAL | GESTOR | LIDER |
+|---|:---:|:---:|:---:|
+| Consultar orientações, ideias e projetos | sim | sim | sim |
+| Criar/editar/excluir orientações | não | não | sim |
+| Criar ideia | sim | não | não |
+| Editar/excluir ideia própria | sim | não | não |
+| Editar/excluir ideia de outra pessoa | não | não | não |
+| Votar/remover o próprio voto | sim | sim | sim |
+| Avaliar impacto/viabilidade e mudar status da ideia | não | sim | não |
+| Solicitar avaliação por IA | não | sim | não |
+| Criar e gerenciar projetos | não | sim | não |
+| Consultar dashboard executivo | não | não | sim |
+| Administrar usuários e categorias | não | não | sim |
+| Conceder/remover medalhas de usuários | não | sim | não |
+
+Comportamento HTTP esperado:
+
+- sem autenticação: `401 Unauthorized`;
+- autenticado sem permissão: `403 Forbidden`;
+- recurso inexistente: `404 Not Found`;
+- entrada inválida ou transição proibida: `400 Bad Request`;
+- conflito de unicidade: `409 Conflict`.
+
+O cadastro público `POST /usuarios` cria somente `OPERACIONAL`. Depois do primeiro
+líder, contas privilegiadas são criadas por `POST /usuarios/admin` com JWT de
+`LIDER`.
+
+## Fluxo principal da Sprint 2
+
+```text
+LIDER cria orientação
+        |
+OPERACIONAL cria ideia e usuários votam
+        |
+GESTOR informa impacto/viabilidade e solicita avaliação de IA
+        |
+GESTOR prioriza, aprova ou rejeita
+        |
+ideia APROVADA vira projeto em uma transação MySQL
+        |
+ideia passa para CONVERTIDA_EM_PROJETO
+        |
+LIDER acompanha resultados no dashboard
 ```
 
-As métricas de negócio da Sprint 2 são:
+As transições aceitas são:
 
-- `aguiaexpress.ai.evaluation.duration`, timer com `outcome=success|failure`;
+```text
+NOVA -> EM_ANALISE
+EM_ANALISE -> PRIORIZADA | APROVADA | REJEITADA
+PRIORIZADA -> APROVADA | REJEITADA
+APROVADA -> CONVERTIDA_EM_PROJETO
+```
+
+A criação do projeto e a conversão da ideia são atômicas, e existe no máximo um
+projeto por ideia.
+
+## Avaliação de ideias por IA
+
+O endpoint protegido do `GESTOR` é:
+
+```http
+POST /api/ideas/{ideaId}/ai-evaluation
+```
+
+O backend envia contexto estruturado ao Gemini e valida alinhamento estratégico,
+impacto, viabilidade, inovação, pontuação geral e resumo. A resposta é persistida
+no MongoDB e participa do cálculo determinístico de prioridade no MySQL. O cliente
+usa `thinkingLevel=medium` e saída JSON estruturada.
+
+A integração fica desabilitada por padrão. Sem uma chave, mantenha:
+
+```dotenv
+AI_ENABLED=false
+AI_API_KEY=
+```
+
+Nesse modo, apenas o endpoint de IA retorna `503 Service Unavailable`; o restante
+da aplicação continua funcionando. Para uma demonstração real, configure a chave
+somente no `.env` local, altere `AI_ENABLED=true` e reinicie o backend. A chave
+nunca deve chegar ao Android ou à coleção Postman.
+
+## Android
+
+O Retrofit está configurado em
+[`RetrofitClient.kt`](frontend/app/src/main/java/br/com/fiap/aguiaexpress/data/remote/RetrofitClient.kt)
+com:
+
+```kotlin
+private const val BASE_URL = "http://10.0.2.2:8080/"
+```
+
+Esse endereço é correto para o emulador Android: `10.0.2.2` representa o
+`localhost` da máquina que executa o backend.
+
+Para um aparelho físico, substitua temporariamente `BASE_URL` pelo IP LAN da
+máquina, por exemplo `http://192.168.0.10:8080/`, mantendo a barra final. O celular
+e o computador devem estar na mesma rede, e a porta 8080 precisa estar liberada no
+firewall. Não use `localhost` no Android, pois ele apontaria para o próprio
+emulador/aparelho.
+
+O manifesto permite HTTP sem TLS para desenvolvimento local. Uma implantação
+real deve usar HTTPS e restringir tráfego em texto claro.
+
+Para compilar e executar os testes unitários:
+
+```bash
+cd frontend
+bash ./gradlew testDebugUnitTest
+bash ./gradlew assembleDebug
+```
+
+Depois, abra `frontend/` no Android Studio, selecione o emulador/aparelho e execute
+o módulo `app`.
+
+## Swagger/OpenAPI
+
+A documentação fica desabilitada no perfil padrão. Para habilitá-la somente no
+desenvolvimento local:
+
+```bash
+cd backend
+SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
+```
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+No Swagger, faça login, clique em **Authorize** e informe apenas o JWT; o prefixo
+`Bearer` é adicionado automaticamente. Não use o perfil `local` para publicar a
+documentação em produção.
+
+## Postman
+
+A coleção conjunta das Sprints 1 e 2 está em
+[`postman/aguiaexpress.postman_collection.json`](postman/aguiaexpress.postman_collection.json).
+Ela não contém credenciais e inclui a pasta numerada **Sprint 2 - Fluxo
+principal**, que captura tokens e IDs automaticamente. Consulte as
+[`instruções da coleção`](postman/README.md).
+
+## Actuator, logs e métricas
+
+| Endpoint | Acesso |
+|---|---|
+| `GET /actuator/health` | Público; apenas estado agregado. |
+| `GET /actuator/info` | Somente `LIDER`. |
+| `GET /actuator/metrics` | Somente `LIDER`. |
+| `GET /actuator/metrics/{nome}` | Somente `LIDER`. |
+
+Outros endpoints Actuator, detalhes/componentes de saúde, descoberta e JMX não
+ficam expostos. As métricas de negócio são:
+
+- `aguiaexpress.ai.evaluation.duration`;
 - `aguiaexpress.ai.evaluation.failures`;
 - `aguiaexpress.ideas.approved`;
 - `aguiaexpress.projects.created`.
 
-Consulte uma métrica individual, por exemplo:
+Os logs usam SLF4J e não devem conter senhas, JWTs, cabeçalhos Authorization,
+chaves de IA, prompts ou respostas do provedor.
 
-```bash
-curl -i \
-  -H "Authorization: Bearer <LIDER_TOKEN>" \
-  http://localhost:8080/actuator/metrics/aguiaexpress.projects.created
-```
+## Testes
 
-Os valores pertencem ao processo atual do backend e reiniciam junto com a
-aplicação. Criações de projeto só são contabilizadas depois do commit da transação.
-As métricas não exigem variáveis de ambiente adicionais.
+### Backend
 
-Uma chamada sem token para métricas retorna `401`; um perfil diferente de
-`LIDER` recebe `403`. Endpoints não expostos, como `/actuator/env`, retornam
-`404`.
-
-O teste isolado não depende dos bancos locais:
+Com o MongoDB local ativo:
 
 ```bash
 cd backend
-./mvnw -Dtest=BusinessMetricsTest,ActuatorEndpointSecurityTest test
-```
-
-Os logs operacionais usam SLF4J parametrizado. Rejeições de autenticação,
-autorização e fluxo são registradas em `WARN`; falhas de acesso a dados e de
-persistência da prioridade usam `ERROR`. Os eventos incluem somente contexto
-seguro, como método, rota, identificador do recurso, provedor e classificação da
-falha. Senhas, JWTs, cabeçalhos Authorization, URLs/senhas de banco, chaves de IA,
-prompts e corpos/resumos do provedor não são registrados.
-
-Para executar a verificação focada de logs:
-
-```bash
-cd backend
-./mvnw -Dtest=ApplicationExceptionHandlerLoggingTest,AuthControllerLoggingTest,IdeiaStatusJwtIntegrationTest,AiIdeaEvaluationServiceTest test
-```
-
-## Testes automatizados do backend
-
-A Phase 11 consolidou os testes de segurança, fluxo de ideias, conversão de
-projetos, dashboard, IA e auditoria. Com o MongoDB local ativo, execute a suíte
-padrão a partir de `backend/`:
-
-```bash
 ./mvnw test
 ```
 
-A verificação de 14/09/2026 passou **208 de 208 testes**. A suíte não chama a API
-real do Gemini: as respostas do provedor são simuladas. Os testes de persistência
-MongoDB usam um banco exclusivo de teste e limpam seus dados. O teste de contexto
-da aplicação também não depende do `.env`, do MySQL nem do MongoDB; para executá-lo
-isoladamente:
+A última suíte completa verificada em 14/09/2026 passou **211 de 211 testes**. Os
+testes de IA simulam o Gemini e nunca consomem a API real.
+
+Testes úteis isolados:
 
 ```bash
+# Contexto sem .env nem bancos externos
 ./mvnw -Dtest=AguiaexpressApplicationTests test
+
+# Persistência MongoDB em banco exclusivo de teste
+./mvnw -Dtest=MongoPersistenceIntegrationTest test
+
+# Segurança/contrato do Actuator
+./mvnw -Dtest=BusinessMetricsTest,ActuatorEndpointSecurityTest test
 ```
 
-## Configuração local dos bancos
+O teste MongoDB aceita outra URI com
+`-Dmongodb.test.uri=mongodb://host:27017`. Nunca use um banco de produção.
 
-O MySQL continua sendo a fonte de verdade dos dados de negócio. O MongoDB é um
-banco complementar destinado aos eventos de auditoria e ao histórico de avaliações
-de IA; ele não replica as entidades relacionais.
-
-1. Crie a configuração local do backend a partir do modelo e substitua somente os
-   valores locais necessários:
-
-   ```bash
-   cd backend
-   cp .env.example .env
-   ```
-
-2. Para uma instalação nativa do MongoDB no Linux, inicie e valide o serviço:
-
-   ```bash
-   sudo systemctl start mongod
-   mongosh "mongodb://localhost:27017/admin" --quiet --eval 'db.runCommand({ping: 1}).ok'
-   ```
-
-   O segundo comando deve retornar `1`. As variáveis padrão para esse serviço são
-   `MONGODB_URI=mongodb://localhost:27017` e
-   `MONGODB_DATABASE=aguiaexpress`.
-
-3. Com MySQL e MongoDB ativos, execute o backend a partir de `backend/`:
-
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-
-O banco de produção `aguiaexpress` pode não aparecer no MongoDB Compass
-imediatamente. A Task 2.2 valida escrita e leitura em um banco de teste temporário
-e exclusivo para cada execução, removendo-o ao terminar. Com as Tasks 3.1–3.2, o
-MongoDB materializa `aguiaexpress` e a coleção `audit_events` após a primeira ação
-auditada bem-sucedida, como login, criação de ideia, projeto ou orientação. Apenas
-iniciar o backend não cria necessariamente o banco ou a coleção.
-
-Para executar apenas a prova de persistência da Task 2.2:
+### Android
 
 ```bash
-./mvnw -Dtest=MongoPersistenceIntegrationTest test
+cd frontend
+bash ./gradlew testDebugUnitTest
+bash ./gradlew assembleDebug
 ```
 
-Por padrão, o teste usa `mongodb://localhost:27017`. Outro servidor de teste pode
-ser informado com `-Dmongodb.test.uri=mongodb://host:27017`. Nunca direcione esse
-teste para um banco de produção.
+A última verificação passou **56 de 56 testes unitários** e gerou o APK de debug.
+Os testes instrumentados exigem emulador/aparelho conectado:
 
-## Provedor de IA selecionado
+```bash
+bash ./gradlew connectedDebugAndroidTest
+```
 
-A Task 7.1 selecionou a camada gratuita da **Google Gemini Developer API** para a
-avaliação estruturada de ideias. O modelo fixado para a implementação é
-`gemini-3.6-flash`, um modelo Flash estável com suporte a saída estruturada. O
-antigo `gemini-1.5-flash` não deve ser usado, pois foi encerrado pelo Google em
-29/09/2025. O limite documentado do modelo atual é de 1.048.576 tokens de entrada;
-isso representa contexto, não quantidade de parâmetros.
+## Bootstrap controlado do primeiro LIDER
 
-O cliente Gemini e sua configuração segura foram implementados nas Tasks 7.3–7.4.
-A integração fica desabilitada por padrão e usa as seguintes variáveis externas,
-sem versionar credenciais reais:
+Não existe senha padrão nem endpoint HTTP público para criar o primeiro `LIDER`.
+Em uma instalação vazia, um operador confiável precisa criá-lo uma única vez no
+MySQL.
 
-| Variável | Valor padrão ou finalidade planejada |
-|---|---|
-| `AI_ENABLED` | `false` |
-| `AI_PROVIDER` | `gemini` |
-| `AI_API_KEY` | Chave do Google AI Studio, obrigatória somente quando habilitado |
-| `AI_MODEL` | `gemini-3.6-flash` |
-| `AI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta` |
-| `AI_CONNECT_TIMEOUT_MS` | `3000` |
-| `AI_READ_TIMEOUT_MS` | `15000` |
+Gere um hash BCrypt de custo 10 sem colocar a senha no histórico:
 
-Os limites gratuitos variam por modelo e projeto. Consulte os limites ativos no
-Google AI Studio antes da demonstração; o sistema não considera 15 RPM uma
-garantia fixa. Referências oficiais: [modelo Gemini 3.6 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash),
-[preços](https://ai.google.dev/gemini-api/docs/pricing),
-[limites](https://ai.google.dev/gemini-api/docs/rate-limits) e
-[descontinuações](https://ai.google.dev/gemini-api/docs/deprecations).
+```bash
+read -rsp "Senha inicial do líder: " FIRST_LEADER_PASSWORD
+printf '\n'
+FIRST_LEADER_HASH="$(htpasswd -bnBC 10 bootstrap "$FIRST_LEADER_PASSWORD" | cut -d: -f2)"
+unset FIRST_LEADER_PASSWORD
+printf '%s\n' "$FIRST_LEADER_HASH"
+```
 
-Sem uma chave, mantenha `AI_ENABLED=false` e `AI_API_KEY=`. Para habilitar o
-cliente, altere somente o `.env` local para `AI_ENABLED=true` e informe a chave
-real em `AI_API_KEY`. Os valores `AI_CONNECT_TIMEOUT_MS` e
-`AI_READ_TIMEOUT_MS` são números em milissegundos, sem o sufixo `ms`. A chave é
-usada apenas pelo backend e não deve ser enviada ao Android. O endpoint de
-avaliação está disponível para `GESTOR` em
-`POST /api/ideas/{ideaId}/ai-evaluation`. Com `AI_ENABLED=false`, ele responde
-`503 Service Unavailable`; habilite a integração somente no `.env` local para
-testar uma avaliação real. O histórico MongoDB e o cálculo determinístico de
-prioridade pertencem às Tasks 8.2 e 8.3, respectivamente. O histórico é gravado
-em `idea_ai_evaluations`; cada solicitação bem-sucedida cria um novo documento.
-A prioridade decimal é recalculada depois de votos, avaliações do gestor e uma
-avaliação de IA bem-sucedida usando a avaliação de IA mais recente.
-O cliente usa `thinkingLevel=medium` como escolha deliberada para dar mais espaço
-de raciocínio à avaliação, mantendo a resposta estruturada limitada a 4096 tokens.
-Esse endpoint fornece apenas apoio à decisão: ele não aprova ou rejeita ideias,
-não altera o status do fluxo e não cria projetos. Essas ações continuam sendo
-comandos explícitos e separados do `GESTOR`.
+`htpasswd` pertence ao pacote `apache2-utils` no Debian/Ubuntu. Abra o cliente
+MySQL sem histórico e informe a senha do banco interativamente:
 
-## Bootstrap controlado do primeiro líder
+```bash
+MYSQL_HISTFILE=/dev/null mysql \
+  --host=localhost --user=aguiaexpress_local --password aguiaexpress
+```
 
-Se o banco já possui uma conta `LIDER` válida, use essa conta e não repita este
-procedimento. Em uma instalação vazia, um operador confiável deve criar exatamente
-o primeiro líder diretamente no MySQL local/de implantação. Não existe rota HTTP
-pública de bootstrap e nenhuma senha padrão deve ser adicionada ao repositório.
+Substitua os marcadores e execute uma única vez:
 
-1. Em uma máquina administrativa, gere um hash BCrypt (custo 10, compatível com o
-   `BCryptPasswordEncoder` atual) a partir de uma senha fornecida fora do código:
+```sql
+INSERT INTO t_usuarios (
+    id_perfil, nm_nome, ds_email, ds_senha, ds_cargo, ds_departamento,
+    nr_pontos, st_status, dt_criacao, dt_data_atualizacao
+)
+SELECT
+    id_perfil, '<nome>', '<email>', '<hash-bcrypt>', 'Lider', '<departamento>',
+    0, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM t_tipos_perfis
+WHERE nm_perfil = 'LIDER'
+  AND NOT EXISTS (
+      SELECT 1 FROM t_usuarios WHERE ds_email = '<email>'
+  );
+```
 
-   ```bash
-   read -rsp "Senha inicial do líder: " FIRST_LEADER_PASSWORD
-   printf '\n'
-   FIRST_LEADER_HASH="$(htpasswd -bnBC 10 bootstrap "$FIRST_LEADER_PASSWORD" | cut -d: -f2)"
-   unset FIRST_LEADER_PASSWORD
-   printf '%s\n' "$FIRST_LEADER_HASH"
-   ```
+Confirme o login em `POST /auth/login`; depois use
+`POST /usuarios/admin` com o JWT do líder para criar contas `GESTOR` ou `LIDER`.
+Finalize com `unset FIRST_LEADER_HASH`.
 
-   O comando `htpasswd` pertence ao pacote `apache2-utils` (Debian/Ubuntu). Copie
-   somente o hash exibido e não registre a senha em arquivo ou histórico.
+## Documentação complementar
 
-2. Abra o cliente MySQL de forma interativa (ele solicitará a senha do banco):
-
-   ```bash
-   MYSQL_HISTFILE=/dev/null mysql --host=localhost --user=<usuario-do-banco> --password <nome-do-banco>
-   ```
-
-3. Substitua os valores entre `<...>` e execute uma única vez:
-
-   ```sql
-   INSERT INTO t_usuarios (
-       id_perfil, nm_nome, ds_email, ds_senha, ds_cargo, ds_departamento,
-       nr_pontos, st_status, dt_criacao, dt_data_atualizacao
-   )
-   SELECT
-       id_perfil, '<nome>', '<email>', '<hash-bcrypt>', 'Lider', '<departamento>',
-       0, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-   FROM t_tipos_perfis
-   WHERE nm_perfil = 'LIDER'
-     AND NOT EXISTS (
-         SELECT 1 FROM t_usuarios WHERE ds_email = '<email>'
-     );
-   ```
-
-4. Confirme que exatamente uma linha foi inserida, autentique em `POST /auth/login`
-   e passe a criar contas seguintes por `POST /usuarios/admin` com o JWT do líder.
-   Depois, descarte a variável local com `unset FIRST_LEADER_HASH`.
+- [Configuração completa do ambiente](docs/environment.md)
+- [Arquitetura e decisões técnicas](docs/architecture.md)
+- [Roadmap da Sprint 2](docs/roadmap.md)
+- [Matriz de requisitos](docs/sprint2-requirement-matrix.md)
+- [Baseline de regressão](docs/sprint2-regression-baseline.md)
+- [Coleção Postman](postman/README.md)

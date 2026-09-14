@@ -6,6 +6,10 @@ import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.RegistrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.model.NomeStatusIdeia;
 import br.com.fiap.aguiaexpress.service.IdeiaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,12 +22,25 @@ import java.util.List;
 @RestController
 @RequestMapping("/ideias")
 @RequiredArgsConstructor
+@Tag(name = "Ideias", description = "Cadastro, consulta, avaliação gerencial e fluxo de ideias")
 public class IdeiaController {
 
     private final IdeiaService ideiaService;
 
     @PostMapping
     @PreAuthorize("hasRole('OPERACIONAL')")
+    @Operation(
+            summary = "Criar ideia",
+            description = "Somente OPERACIONAL. O autor é obtido do JWT e a ideia começa em NOVA."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Ideia criada", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "401", description = "JWT ausente, inválido ou expirado"),
+            @ApiResponse(responseCode = "403", description = "Perfil diferente de OPERACIONAL"),
+            @ApiResponse(responseCode = "404", description = "Categoria ou orientação não encontrada"),
+            @ApiResponse(responseCode = "409", description = "Título de ideia duplicado")
+    })
     public ResponseEntity<MostrarIdeiaDTO> criarIdeia(
             @RequestBody @Valid RegistrarIdeiaDTO ideiaDTO
     ) {
@@ -52,6 +69,10 @@ public class IdeiaController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('OPERACIONAL')")
+    @Operation(
+            summary = "Atualizar ideia própria",
+            description = "Somente o OPERACIONAL que criou a ideia pode alterá-la."
+    )
     public ResponseEntity<MostrarIdeiaDTO> atualizarIdeia(
             @PathVariable Long id,
             @RequestBody @Valid RegistrarIdeiaDTO ideiaDTO
@@ -63,6 +84,10 @@ public class IdeiaController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('OPERACIONAL')")
+    @Operation(
+            summary = "Excluir ideia própria",
+            description = "Somente o OPERACIONAL que criou a ideia pode excluí-la."
+    )
     public ResponseEntity<Void> deletarIdeia(
             @PathVariable Long id
     ) {
@@ -118,6 +143,17 @@ public class IdeiaController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('GESTOR')")
+    @Operation(
+            summary = "Alterar status da ideia",
+            description = "Somente GESTOR. Aceita apenas transições do fluxo documentado; a conversão em projeto ocorre em POST /projetos."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Status atualizado", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Status ausente ou transição inválida"),
+            @ApiResponse(responseCode = "401", description = "JWT ausente, inválido ou expirado"),
+            @ApiResponse(responseCode = "403", description = "Perfil diferente de GESTOR"),
+            @ApiResponse(responseCode = "404", description = "Ideia não encontrada")
+    })
     public ResponseEntity<MostrarIdeiaDTO> atualizarStatusIdeia(
             @PathVariable Long id,
             @RequestBody @Valid AtualizarStatusIdeiaDTO statusDTO
@@ -129,6 +165,18 @@ public class IdeiaController {
 
     @PatchMapping("/{id}/avaliacao")
     @PreAuthorize("hasRole('GESTOR')")
+    @Operation(
+            summary = "Registrar avaliação gerencial",
+            description = "Somente GESTOR. Impacto e viabilidade devem estar entre 0 e 10; a prioridade é recalculada sem alterar o status."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Avaliação salva e prioridade recalculada", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Pontuações ausentes ou fora de 0 a 10"),
+            @ApiResponse(responseCode = "401", description = "JWT ausente, inválido ou expirado"),
+            @ApiResponse(responseCode = "403", description = "Perfil diferente de GESTOR"),
+            @ApiResponse(responseCode = "404", description = "Ideia não encontrada"),
+            @ApiResponse(responseCode = "503", description = "Prioridade temporariamente indisponível")
+    })
     public ResponseEntity<MostrarIdeiaDTO> atualizarAvaliacaoIdeia(
             @PathVariable Long id,
             @RequestBody @Valid AtualizarAvaliacaoIdeiaDTO avaliacaoDTO

@@ -14,8 +14,15 @@ import br.com.fiap.aguiaexpress.repository.UsuarioBadgeRepository;
 import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import br.com.fiap.aguiaexpress.repository.VotoIdeiaRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
         "api.security.token.secret=test-secret-with-sufficient-length",
@@ -26,7 +33,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
                 + "org.springframework.boot.mongodb.autoconfigure.MongoAutoConfiguration,"
                 + "org.springframework.boot.data.mongodb.autoconfigure.DataMongoAutoConfiguration"
 })
+@AutoConfigureMockMvc
 class AguiaexpressApplicationTests {
+
+    @Autowired
+    private MockMvc mockMvc;
 
     @MockitoBean
     private AiIdeaEvaluationRepository aiIdeaEvaluationRepository;
@@ -70,6 +81,13 @@ class AguiaexpressApplicationTests {
     @Test
     void contextLoadsWithoutExternalDatabasesOrDotenv() {
         // Spring successfully creates the application graph with persistence mocked.
+    }
+
+    @Test
+    void openApiEndpointsAreDisabledOutsideLocalProfile() throws Exception {
+        mockMvc.perform(get("/v3/api-docs")
+                        .with(user("leader").roles("LIDER")))
+                .andExpect(status().isNotFound());
     }
 
 }

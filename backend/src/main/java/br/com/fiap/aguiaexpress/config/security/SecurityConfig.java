@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -28,7 +30,14 @@ public class SecurityConfig {
     private final TokenVerification tokenVerification;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            Environment environment
+    ) throws Exception {
+        boolean openApiPublic = environment.acceptsProfiles(
+                Profiles.of("local")
+        );
+
         return http
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -75,23 +84,32 @@ public class SecurityConfig {
                         })
                 )
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
-                        // Public liveness/health check, without component details
-                        .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-                        // Prevent public or authenticated access to health component subpaths
-                        .requestMatchers("/actuator/health/**").denyAll()
-                        // Operational information is restricted to executives
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/actuator/info",
-                                "/actuator/metrics",
-                                "/actuator/metrics/**"
-                        ).hasRole("LIDER")
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
+                    auth.requestMatchers(HttpMethod.POST, "/usuarios").permitAll();
+                    // Public liveness/health check, without component details
+                    auth.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll();
+                    // Prevent public or authenticated access to health component subpaths
+                    auth.requestMatchers("/actuator/health/**").denyAll();
+                    // Operational information is restricted to executives
+                    auth.requestMatchers(
+                            HttpMethod.GET,
+                            "/actuator/info",
+                            "/actuator/metrics",
+                            "/actuator/metrics/**"
+                    ).hasRole("LIDER");
 
-                        .anyRequest().authenticated()
-                )
+                    if (openApiPublic) {
+                        auth.requestMatchers(
+                                HttpMethod.GET,
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll();
+                    }
+
+                    auth.anyRequest().authenticated();
+                })
 
                 .addFilterBefore(tokenVerification, UsernamePasswordAuthenticationFilter.class)
 

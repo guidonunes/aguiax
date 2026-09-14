@@ -1782,6 +1782,25 @@ Include:
 
 All presentation-critical APIs can be understood and tested from Swagger.
 
+### Task 12.1 implementation record — 2026-09-14
+
+Implemented by Codex. OpenAPI now defines an HTTP bearer/JWT scheme globally,
+while public login and public operational registration explicitly opt out.
+Presentation-critical authentication, idea creation/review/status, voting, AI
+evaluation, project conversion/status, dashboard, orientation, and privileged
+user-provisioning operations document their role/business rules and relevant
+success/error status codes. Request contracts expose Jakarta validation limits
+and safe examples; structured AI, dashboard, token, and domain return types are
+generated from their response DTOs.
+
+Documentation is disabled by default. The explicit `local` Spring profile enables
+`/v3/api-docs` and Swagger UI and is the only profile in which security permits
+those GET routes without a JWT. Focused integration tests prove default-profile
+`404`, local unauthenticated access, the bearer scheme, public-operation overrides,
+critical paths/responses, and score/financial schema bounds. All four focused
+tests pass. The complete backend regression suite passes **211 of 211 tests**,
+satisfying the Task 12.1 exit criterion.
+
 ---
 
 ## Task 12.2 — Update Postman collection
@@ -1799,6 +1818,30 @@ Add:
 ### Exit criterion
 
 A reviewer can demonstrate the main Sprint 2 flow without constructing requests manually.
+
+### Task 12.2 implementation record — 2026-09-14
+
+Exported by the developer and reviewed/fixed by Codex. The active Postman v2.1
+collection intentionally combines Sprint 1 and Sprint 2. The original export had
+61 requests but embedded 16 bearer tokens, 12 literal passwords, fixed URLs/IDs,
+no reusable variables or scripts, an invalid `400/100` manager-score example, a
+blank request, and one mislabeled vote request pointing to an idea endpoint.
+
+The corrected collection contains no committed credential values, uses
+`{{baseUrl}}` and role/resource variables, and retains the broad endpoint catalog.
+A numbered 14-request **Sprint 2 - Fluxo principal** folder logs in all three
+roles, creates and captures an orientation and idea, votes, records valid manager
+scores, follows `NOVA -> EM_ANALISE -> APROVADA`, requests structured AI analysis,
+converts the idea into a project, queries global/filtered dashboards, and verifies
+public health. Test scripts assert the principal responses and automatically
+capture role JWTs and resource IDs.
+
+`jq` validates the exported JSON. Structural checks find 73 requests, 66 bearer
+references all expressed as variables, 15 password fields all expressed as
+variables, no hard-coded request host, and no JWT or common API-key signature.
+Import/run instructions are versioned beside the collection. Together with the
+developer's completed Postman endpoint testing, the Task 12.2 exit criterion is
+satisfied.
 
 ---
 
@@ -1822,6 +1865,23 @@ Provide safe examples only.
 
 Another developer can run the backend without receiving private credentials from the repository.
 
+### Task 12.3 implementation record — 2026-09-14
+
+Implemented by Codex. `docs/environment.md` now defines the exact external
+configuration contract for MySQL, MongoDB, JWT signing, optional Gemini access,
+and Spring profile selection. It documents required versus optional values,
+defaults, JVM/environment/`.env` precedence, safe local provisioning, connectivity
+and health checks, secret-handling rules, and controlled startup-failure guidance.
+
+The tracked `.env.example` contains placeholders only and explains the required
+services and opt-in `local` profile. The real `backend/.env` remains ignored.
+Architecture no longer advertises the unused `JWT_EXPIRATION` variable: the
+current two-hour token lifetime is accurately documented as fixed in code.
+Configuration-key and secret scans plus documentation link checks satisfy the
+Task 12.3 exit criterion without reading or exposing the developer's local `.env`.
+The isolated application-context verification also passes 2 of 2 tests without
+external databases or dotenv configuration.
+
 ---
 
 ## Task 12.4 — Final README update
@@ -1844,6 +1904,22 @@ Document:
 ### Exit criterion
 
 The repository is self-explanatory enough for evaluator setup.
+
+### Task 12.4 implementation record — 2026-09-14
+
+Implemented by Codex. The root README is reorganized around evaluator setup rather
+than implementation chronology. It now contains the active polyglot-persistence
+architecture, repository scope, prerequisites, native MySQL/MongoDB startup and
+connectivity commands, safe environment setup, backend startup/health check, the
+complete role matrix and workflow, Gemini behavior, Android emulator/physical-
+device base URLs, Swagger/Postman usage, Actuator access, automated test commands,
+and controlled first-leader bootstrap.
+
+Every required Task 12.4 topic is directly discoverable by a README heading or
+table. Local-link, documented-path, command-wrapper, configuration-key, safe-
+placeholder, and Markdown whitespace checks pass. No application source change
+was needed. Together with Tasks 12.1–12.3, this completes Phase 12; live role and
+device journeys remain the separate Phase 13 verification gate.
 
 ---
 

@@ -5,6 +5,10 @@ import br.com.fiap.aguiaexpress.dto.projeto.MostrarProjetoDTO;
 import br.com.fiap.aguiaexpress.dto.projeto.RegistrarProjetoDTO;
 import br.com.fiap.aguiaexpress.model.NomeStatusProjeto;
 import br.com.fiap.aguiaexpress.service.ProjetoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,12 +21,25 @@ import java.util.List;
 @RestController
 @RequestMapping("/projetos")
 @RequiredArgsConstructor
+@Tag(name = "Projetos", description = "Conversão de ideias aprovadas e gestão de projetos")
 public class ProjetoController {
 
     private final ProjetoService projetoService;
 
     @PostMapping
     @PreAuthorize("hasRole('GESTOR')")
+    @Operation(
+            summary = "Criar projeto a partir de ideia aprovada",
+            description = "Somente GESTOR. Aceita uma ideia APROVADA sem projeto e a muda transacionalmente para CONVERTIDA_EM_PROJETO."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Projeto criado e ideia convertida", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Dados financeiros inválidos ou ideia inelegível"),
+            @ApiResponse(responseCode = "401", description = "JWT ausente, inválido ou expirado"),
+            @ApiResponse(responseCode = "403", description = "Perfil diferente de GESTOR"),
+            @ApiResponse(responseCode = "404", description = "Ideia, responsável ou status não encontrado"),
+            @ApiResponse(responseCode = "409", description = "Já existe um projeto para a ideia")
+    })
     public ResponseEntity<MostrarProjetoDTO> criarProjeto(
             @RequestBody @Valid RegistrarProjetoDTO projetoDTO
     ) {
@@ -108,6 +125,17 @@ public class ProjetoController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('GESTOR')")
+    @Operation(
+            summary = "Alterar status do projeto",
+            description = "Somente GESTOR. Atualiza o status e registra a data quando o projeto é concluído."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Status atualizado", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "Status ausente ou inválido"),
+            @ApiResponse(responseCode = "401", description = "JWT ausente, inválido ou expirado"),
+            @ApiResponse(responseCode = "403", description = "Perfil diferente de GESTOR"),
+            @ApiResponse(responseCode = "404", description = "Projeto ou status não encontrado")
+    })
     public ResponseEntity<MostrarProjetoDTO> atualizarStatusProjeto(
             @PathVariable Long id,
             @RequestBody @Valid AtualizarStatusProjetoDTO statusDTO
