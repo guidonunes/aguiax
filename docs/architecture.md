@@ -718,8 +718,8 @@ rows when their owning roadmap tasks introduce the controllers.
 | `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Implemented; `401`/`403`/`200` and controlled failure behavior verified | 8.1 |
 | AI history read endpoint, if exposed | GESTOR only; internal scoring service may read persisted results | No HTTP route exposed; internal Mongo repository implemented | 8.2 |
 | Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain and AI-evaluation operations | 3.1–3.2, 8.1 |
-| `GET /actuator/health` | Public, overall status only; no component details | Missing | 10.1 |
-| `GET /actuator/info`, `GET /actuator/metrics`, `GET /actuator/metrics/{name}` | LIDER, sanitized metadata/metrics only | Missing | 10.1 |
+| `GET /actuator/health` | Public, overall status only; no component details | Implemented and integration-tested | 10.1 |
+| `GET /actuator/info`, `GET /actuator/metrics`, `GET /actuator/metrics/{name}` | LIDER, sanitized metadata/metrics only | Implemented and integration-tested | 10.1 |
 
 Other Actuator endpoints must remain unexposed. Swagger UI and OpenAPI GET routes
 may be public only in an explicitly enabled local/development documentation profile;
@@ -1792,6 +1792,15 @@ AI provider failures
 ideas approved
 projects created
 ```
+
+Task 10.1 implements the baseline with Spring Boot Actuator and Micrometer.
+HTTP exposure is an explicit allowlist containing only `health`, `info`, and
+`metrics`; JMX exposure and the Actuator discovery page are disabled. Public
+health output never includes component names or details, and health component
+subpaths are denied. Safe application metadata and built-in metrics require an
+authenticated `LIDER`. Five isolated integration tests use the real JWT filter,
+security chain, and Actuator endpoints to verify the `200`/`401`/`403`/`404`
+contract without depending on MySQL or MongoDB.
 
 ---
 

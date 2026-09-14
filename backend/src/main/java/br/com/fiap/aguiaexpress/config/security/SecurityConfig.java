@@ -60,6 +60,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
+                        // Public liveness/health check, without component details
+                        .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        // Prevent public or authenticated access to health component subpaths
+                        .requestMatchers("/actuator/health/**").denyAll()
+                        // Operational information is restricted to executives
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/actuator/info",
+                                "/actuator/metrics",
+                                "/actuator/metrics/**"
+                        ).hasRole("LIDER")
 
                         .anyRequest().authenticated()
                 )

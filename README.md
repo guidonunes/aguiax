@@ -21,6 +21,7 @@ O **AguiaExpress** é uma aplicação mobile nativa para Android, desenvolvida c
 - Spring Data MongoDB
 - MongoDB
 - Flyway
+- Spring Boot Actuator / Micrometer
 - Lombok
 - Maven
 
@@ -84,6 +85,42 @@ medalhas, além de votar. Rotas privilegiadas também são protegidas no cliente
 perfis desconhecidos falham de forma fechada. Essas restrições melhoram a
 experiência, mas não substituem Spring Security: chamadas sem autenticação ou com
 papel inadequado continuam recebendo `401` ou `403` do backend.
+
+## Observabilidade local
+
+O backend expõe somente os endpoints Actuator necessários para a Sprint 2:
+
+- `GET /actuator/health` é público e retorna apenas o estado agregado;
+- `GET /actuator/info` exige um JWT de `LIDER` e retorna metadados seguros;
+- `GET /actuator/metrics` e `GET /actuator/metrics/{nome}` exigem um JWT de
+  `LIDER`.
+
+A página de descoberta, os endpoints JMX, detalhes/componentes de saúde e demais
+endpoints Actuator não ficam disponíveis. Não são necessárias novas variáveis de
+ambiente. Com o backend em execução, valide a saúde pública com:
+
+```bash
+curl -i http://localhost:8080/actuator/health
+```
+
+Para consultar as métricas incorporadas, envie o JWT de um líder:
+
+```bash
+curl -i \
+  -H "Authorization: Bearer <LIDER_TOKEN>" \
+  http://localhost:8080/actuator/metrics
+```
+
+Uma chamada sem token para métricas retorna `401`; um perfil diferente de
+`LIDER` recebe `403`. Endpoints não expostos, como `/actuator/env`, retornam
+`404`.
+
+O teste isolado não depende dos bancos locais:
+
+```bash
+cd backend
+./mvnw -Dtest=ActuatorEndpointSecurityTest test
+```
 
 ## Configuração local dos bancos
 

@@ -1510,6 +1510,23 @@ Do not expose sensitive configuration.
 
 Health and metrics endpoints work locally.
 
+### Task 10.1 implementation record — 2026-09-14
+
+Implemented by the developer and reviewed by Codex. The backend includes Spring
+Boot Actuator and exposes only `health`, `info`, and `metrics` over HTTP. The
+discovery page and all JMX endpoints are disabled. `GET /actuator/health` is
+public and returns only the aggregate status; component health subpaths are
+denied. Safe application metadata, the metric-name catalog, and individual
+metric values require `LIDER`. All other application routes retain their
+existing authentication policy.
+
+Five isolated integration tests exercise the real Actuator endpoints through
+the real JWT filter and Spring Security chain without requiring MySQL or
+MongoDB. They verify public sanitized health, unauthenticated `401`, wrong-role
+`403`, leader `200`, built-in JVM metrics, denied health details, and `404` for
+unexposed endpoints. The focused suite passed 5 of 5 tests. The exit criterion
+is satisfied.
+
 ---
 
 ## Task 10.2 — Improve application logs
