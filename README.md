@@ -52,6 +52,27 @@ cadastro público cria apenas `OPERACIONAL`; contas privilegiadas usam a rota
 leader-only `POST /usuarios/admin`. O interceptor Android não registra JWTs nem o
 cabeçalho Authorization.
 
+O fluxo Android de avaliação gerencial permite somente ao perfil `GESTOR` informar
+impacto e viabilidade entre `0` e `10`. Os valores são enviados para
+`PATCH /ideias/{id}/avaliacao`, persistidos no MySQL e recarregados pela consulta
+normal de ideias; eles não são mantidos como estado local permanente no aparelho.
+
+No mesmo detalhe de ideia, o `GESTOR` pode usar **Analisar com IA**. O Android
+chama o backend em `POST /api/ideas/{ideaId}/ai-evaluation`, mostra carregamento e
+exibe alinhamento estratégico, impacto, viabilidade, inovação, pontuação geral e
+resumo em formato estruturado, com opção de tentar novamente em falhas
+controladas. Não há interface de chat e o aplicativo nunca recebe a chave Gemini.
+O resultado é consultivo: aprovação, rejeição e conversão em projeto continuam
+ações explícitas e separadas.
+
+O dashboard executivo do `LIDER` consome
+`GET /api/dashboard/summary` diretamente. Totais, médias, resultado estimado e
+contagens por status são calculados pelo backend; o Android apenas formata e exibe
+esses valores. O seletor de orientação estratégica envia `orientationId` para
+obter o mesmo resumo filtrado, enquanto “Todas as orientações” usa a consulta
+global. A visualização individual continua usando o contrato existente
+`GET /projetos/{projectId}`.
+
 ## Configuração local dos bancos
 
 O MySQL continua sendo a fonte de verdade dos dados de negócio. O MongoDB é um

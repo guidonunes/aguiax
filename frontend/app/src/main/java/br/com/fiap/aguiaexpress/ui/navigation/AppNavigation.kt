@@ -264,17 +264,27 @@ fun AppNavigation() {
 
             composable(Routes.IDEIAS) {
                 IdeiasScreen(
-                    podeEditarExcluirIdeia = SessionManager.podeEditarExcluirIdeia(),
-                    podeAtualizarStatusIdeia = SessionManager.podeAtualizarStatusIdeia(),
-                    podeVotarEmIdeia = SessionManager.podeVotarEmIdeia(),
+                    podeEditarExcluirIdeia =
+                        SessionManager.podeEditarExcluirIdeia(),
+                    podeAtualizarStatusIdeia =
+                        SessionManager.podeAtualizarStatusIdeia(),
+                    podeAvaliarIdeia =
+                        SessionManager.podeAvaliarIdeia(),
+                    podeSolicitarAvaliacaoIa =
+                        SessionManager.podeSolicitarAvaliacaoIa(),
+                    podeVotarEmIdeia =
+                        SessionManager.podeVotarEmIdeia(),
                     usuarioIdLogado = SessionManager.usuarioId,
                     onCriarIdeiaClick = {
                         navController.navigate(Routes.CRIAR_IDEIA)
                     },
                     onEditarIdeiaClick = { ideiaId ->
-                        navController.navigate(Routes.editarIdeiaRoute(ideiaId))
+                        navController.navigate(
+                            Routes.editarIdeiaRoute(ideiaId)
+                        )
                     }
                 )
+
             }
 
             composable(Routes.CRIAR_IDEIA) {

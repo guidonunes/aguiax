@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress.data.dto
 
 import br.com.fiap.aguiaexpress.domain.model.Ideia
+import java.math.BigDecimal
 
 data class IdeiaDto(
     val id: Long? = null,
@@ -11,6 +12,9 @@ data class IdeiaDto(
     val descricao: String,
     val problema: String,
     val solucaoProposta: String,
+    val impacto: Int?,
+    val viabilidade: Int?,
+    val prioridade: BigDecimal,
     val statusIdeia: String? = null,
     val nomeUsuario: String? = null,
     val nomeCategoria: String? = null,
@@ -30,6 +34,9 @@ fun IdeiaDto.toDomain(): Ideia {
         descricao = descricao,
         problema = problema,
         solucaoProposta = solucaoProposta,
+        impacto = impacto,
+        viabilidade = viabilidade,
+        prioridade = prioridade,
         status = mappedStatus,
         usuarioId = usuarioId,
         categoriaId = categoriaId,

@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.ui.screens.dashboard
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,15 +25,24 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import br.com.fiap.aguiaexpress.domain.model.Orientacao
+import java.math.BigDecimal
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val summary = uiState.summary
 
     Column(
         modifier = Modifier
@@ -57,6 +67,15 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        DashboardOrientationFilter(
+            orientacoes = uiState.orientacoes,
+            selectedOrientationId = uiState.orientacaoSelecionadaId,
+            enabled = !uiState.isLoading,
+            onOrientationSelected = viewModel::selecionarOrientacao
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         when {
             uiState.isLoading -> {
                 LoadingIndicator(message = "Carregando dashboard...")
@@ -71,39 +90,102 @@ fun DashboardScreen(
                 )
             }
 
-            uiState.projetos.isEmpty() -> {
+            summary == null -> {
+                ErrorMessage(
+                    message = "O resumo do dashboard não está disponível.",
+                    onRetry = viewModel::carregarDashboard
+                )
+            }
+
+            summary.totalProjects == 0L -> {
                 EmptyState(
-                    message = "Nenhum projeto encontrado para gerar o dashboard."
+                    message = if (uiState.orientacaoSelecionadaId == null) {
+                        "Nenhum projeto encontrado para gerar o dashboard."
+                    } else {
+                        "Nenhum projeto encontrado para esta orientação."
+                    }
                 )
             }
 
             else -> {
                 DashboardMetricsSection(
-                    projetosEmAndamento = uiState.projetosEmAndamento,
-                    investimentoTotal = uiState.investimentoTotal,
-                    retornoFinanceiroTotal = uiState.retornoFinanceiroTotal,
-                    reducaoCustosTotal = uiState.reducaoCustosTotal,
-                    roiMedio = uiState.roiMedio,
-                    ganhoProdutividadeMedio = uiState.ganhoProdutividadeMedio
+                    totalProjetos = summary.totalProjects,
+                    projetosEmAndamento = summary.projectsInProgress,
+                    roiMedio = summary.averageRoi,
+                    ganhoProdutividadeMedio = summary.averageProductivityGain
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 ResumoFinanceiroSection(
-                    investimentoTotal = uiState.investimentoTotal,
-                    retornoFinanceiroTotal = uiState.retornoFinanceiroTotal,
-                    reducaoCustosTotal = uiState.reducaoCustosTotal,
-                    resultadoEstimado = uiState.resultadoEstimado
+                    investimentoTotal = summary.totalInvestment,
+                    retornoFinanceiroTotal = summary.totalFinancialReturn,
+                    reducaoCustosTotal = summary.totalCostReduction,
+                    resultadoEstimado = summary.estimatedResult
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
                 ProjetosPorStatusSection(
-                    projetosPorStatus = uiState.projetosPorStatus
+                    projetosPorStatus = summary.projectsByStatus
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardOrientationFilter(
+    orientacoes: List<Orientacao>,
+    selectedOrientationId: Long?,
+    enabled: Boolean,
+    onOrientationSelected: (Long?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedOrientation = orientacoes.firstOrNull { orientation ->
+        orientation.id == selectedOrientationId
+    }
+
+    Column {
+        Text(
+            text = "Orientação estratégica",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(
+                onClick = { expanded = true },
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = selectedOrientation?.titulo ?: "Todas as orientações"
+                )
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Todas as orientações") },
+                    onClick = {
+                        expanded = false
+                        onOrientationSelected(null)
+                    }
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-
+                orientacoes.forEach { orientation ->
+                    DropdownMenuItem(
+                        text = { Text(orientation.titulo) },
+                        onClick = {
+                            expanded = false
+                            onOrientationSelected(orientation.id)
+                        }
+                    )
+                }
             }
         }
     }
@@ -111,12 +193,10 @@ fun DashboardScreen(
 
 @Composable
 private fun DashboardMetricsSection(
-    projetosEmAndamento: Int,
-    investimentoTotal: Double,
-    retornoFinanceiroTotal: Double,
-    reducaoCustosTotal: Double,
-    roiMedio: Double,
-    ganhoProdutividadeMedio: Double
+    totalProjetos: Long,
+    projetosEmAndamento: Long,
+    roiMedio: BigDecimal,
+    ganhoProdutividadeMedio: BigDecimal
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -126,46 +206,26 @@ private fun DashboardMetricsSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             DashboardMetricCard(
+                title = "Total de projetos",
+                value = totalProjetos.toString(),
+                modifier = Modifier.weight(1f)
+            )
+
+            DashboardMetricCard(
                 title = "Projetos em andamento",
                 value = projetosEmAndamento.toString(),
                 modifier = Modifier.weight(1f)
             )
+        }
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             DashboardMetricCard(
                 title = "ROI médio",
                 value = formatarPercentual(roiMedio),
                 modifier = Modifier.weight(1f)
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            DashboardMetricCard(
-                title = "Investimento",
-                value = formatarMoeda(investimentoTotal),
-                modifier = Modifier.weight(1f),
-                valueColor = MaterialTheme.colorScheme.onSurface
-            )
-
-            DashboardMetricCard(
-                title = "Retorno",
-                value = formatarMoeda(retornoFinanceiroTotal),
-                modifier = Modifier.weight(1f),
-                valueColor = Color(0xFF2E7D32)
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            DashboardMetricCard(
-                title = "Redução custos",
-                value = formatarMoeda(reducaoCustosTotal),
-                modifier = Modifier.weight(1f),
-                valueColor = Color(0xFF2E7D32)
             )
 
             DashboardMetricCard(
@@ -214,23 +274,25 @@ private fun DashboardMetricCard(
     }
 }
 
-private fun formatarMoeda(valor: Double): String {
+private fun formatarMoeda(valor: BigDecimal): String {
     return java.text.NumberFormat
-        .getCurrencyInstance(java.util.Locale("pt", "BR"))
+        .getCurrencyInstance(java.util.Locale.forLanguageTag("pt-BR"))
         .format(valor)
 }
 
-private fun formatarPercentual(valor: Double): String {
-    return String.format(
-        java.util.Locale("pt", "BR"),
-        "%.1f%%",
-        valor
-    )
+private fun formatarPercentual(valor: BigDecimal): String {
+    val formatter = java.text.NumberFormat.getNumberInstance(
+        java.util.Locale.forLanguageTag("pt-BR")
+    ).apply {
+        minimumFractionDigits = 2
+        maximumFractionDigits = 2
+    }
+    return "${formatter.format(valor)}%"
 }
 
 @Composable
 private fun ProjetosPorStatusSection(
-    projetosPorStatus: Map<String, Int>
+    projetosPorStatus: Map<String, Long>
 ) {
     Column {
         Text(
@@ -270,7 +332,7 @@ private fun ProjetosPorStatusSection(
 @Composable
 private fun StatusCountCard(
     label: String,
-    count: Int
+    count: Long
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -306,10 +368,10 @@ private fun StatusCountCard(
 
 @Composable
 private fun ResumoFinanceiroSection(
-    investimentoTotal: Double,
-    retornoFinanceiroTotal: Double,
-    reducaoCustosTotal: Double,
-    resultadoEstimado: Double
+    investimentoTotal: BigDecimal,
+    retornoFinanceiroTotal: BigDecimal,
+    reducaoCustosTotal: BigDecimal,
+    resultadoEstimado: BigDecimal
 ) {
     Column {
         Text(

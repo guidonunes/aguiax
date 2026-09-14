@@ -1327,6 +1327,26 @@ Use real backend API calls.
 
 Scores survive app restart because they are persisted on the backend.
 
+### Task 9.1 implementation record — 2026-09-13
+
+Implemented by the developer and reviewed/fixed by Codex. Android now maps the
+backend `impacto`, `viabilidade`, and decimal `prioridade` fields, sends the exact
+`PATCH /ideias/{id}/avaliacao` contract through Retrofit and the repository, and
+shows a manager-only review dialog with prefilled values, `0..10` validation,
+submission state, and controlled errors. A successful response replaces the idea
+in the current list; a later application load reads the same MySQL-backed values
+through the normal ideas endpoint. Review does not invoke a status transition.
+
+The review found and fixed an unmatched Compose block that prevented compilation
+and made the dialog helper local to the idea card. It also connected the previously
+unrendered dialog to its ViewModel state. Nine Task 9.1 tests now cover request
+field names, repository request/response mapping, nullable legacy scores, decimal
+priority mapping, repository failure propagation, inclusive boundaries, invalid
+input, and the GESTOR-only UI capability. The complete Android unit suite passed
+22 of 22 tests and
+`assembleDebug` completed successfully. The Task 9.1 exit criterion is satisfied;
+the final live-device journey remains part of Phases 13 and 14.
+
 ---
 
 ## Task 9.2 — Integrate AI evaluation
@@ -1358,6 +1378,32 @@ Avoid chat UI.
 
 Android invokes the real external-AI-backed endpoint and displays the structured response.
 
+### Task 9.2 implementation record — 2026-09-13
+
+Implemented by Codex. The manager-only `Analisar com IA` action is available in
+the expanded idea details and invokes the real
+`POST /api/ideas/{ideaId}/ai-evaluation` backend route through Retrofit and the
+idea repository. Android validates and maps the complete structured response into
+a provider-independent domain model, then displays strategic alignment, impact,
+feasibility, innovation, overall score, and summary in a bounded result dialog.
+The flow has explicit loading, retry, and controlled error states and is not a
+chat interface.
+
+The client never contacts Gemini directly and never derives or sends a workflow
+decision. A successful evaluation refreshes the selected idea from the backend so
+the newly calculated priority is visible without treating a refresh failure as an
+AI-evaluation failure. Android's HTTP read/write timeout is 30 seconds, which is
+longer than the backend's configured 15-second provider timeout and allows the
+backend to return its controlled error response first.
+
+Ten Task 9.2 tests cover the structured DTO contract and ranges, absence of
+workflow fields, request routing and response identity, repository failure
+propagation, GESTOR-only capability, and safe timeout/HTTP/malformed-response
+messages. The complete Android unit suite passed 32 of 32 tests and
+`assembleDebug` completed successfully. The exit criterion is satisfied at the
+implemented and automated-contract level; the final real-key/device journey
+remains part of Phases 13 and 14.
+
 ---
 
 ## Task 9.3 — Integrate backend dashboard
@@ -1373,6 +1419,33 @@ Support:
 ### Exit criterion
 
 Dashboard values come from backend analytics endpoints.
+
+### Task 9.3 implementation record — 2026-09-13
+
+Implemented by Codex. Android no longer downloads the project collection or
+calculates executive totals, averages, status counts, or financial results.
+`DashboardApi` calls the real `GET /api/dashboard/summary` endpoint,
+`DashboardSummaryDto` validates and preserves the backend's `long` counts and
+`BigDecimal` values, and `DashboardRepository` exposes the mapped summary to
+`DashboardViewModel`.
+
+The dashboard initially requests the global summary. Its strategic-orientation
+selector loads the complete orientation catalog and sends the selected ID as the
+optional `orientationId` query parameter; selecting “Todas as orientações” omits
+that parameter. Empty global and filtered results, stale concurrent responses,
+invalid contracts, `401`, `403`, and an unknown-orientation `404` have controlled
+UI behavior. The screen displays total projects, the backend-provided
+`EM_ANDAMENTO` count, all four status counts, financial totals, estimated result,
+average ROI, and average productivity gain without recalculating them.
+
+Project-specific results continue through the existing authenticated
+`GET /projetos/{projectId}` Android flow, as decided in Task 6.4; no duplicate
+dashboard endpoint was introduced. Thirteen Android dashboard tests cover DTO
+mapping and rejection, global and filtered request routing, exact status-count
+consumption, safe errors, and repository failure propagation. The complete
+Android unit suite passed 42 of 42 tests and `assembleDebug` completed
+successfully. The Task 9.3 exit criterion is satisfied; device-level journeys
+remain in Phases 13 and 14.
 
 ---
 

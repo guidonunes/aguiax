@@ -94,4 +94,12 @@ object SessionManager {
     fun podeConsultarMedalhas(): Boolean {
         return estaLogado()
     }
+
+    fun podeAvaliarIdeia(): Boolean {
+        return isGestor()
+    }
+
+    fun podeSolicitarAvaliacaoIa(): Boolean {
+        return isGestor()
+    }
 }

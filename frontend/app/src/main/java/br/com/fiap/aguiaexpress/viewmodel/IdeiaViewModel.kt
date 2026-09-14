@@ -9,6 +9,7 @@ import br.com.fiap.aguiaexpress.data.repository.CategoriaRepository
 import br.com.fiap.aguiaexpress.data.repository.IdeiaRepository
 import br.com.fiap.aguiaexpress.data.repository.OrientacaoRepository
 import br.com.fiap.aguiaexpress.data.repository.VotoIdeiaRepository
+import br.com.fiap.aguiaexpress.domain.model.AiIdeaEvaluation
 import br.com.fiap.aguiaexpress.domain.model.Categoria
 import br.com.fiap.aguiaexpress.domain.model.Ideia
 import br.com.fiap.aguiaexpress.domain.model.Orientacao
@@ -16,6 +17,8 @@ import br.com.fiap.aguiaexpress.domain.model.StatusIdeia
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.net.SocketTimeoutException
 
 private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
 
@@ -58,6 +61,74 @@ data class EditarIdeiaUiState(
     val successMessage: String? = null
 )
 
+data class AvaliacaoIdeiaUiState(
+    val ideiaId: Long? = null,
+    val impacto: String = "",
+    val viabilidade: String = "",
+    val isSaving: Boolean = false,
+    val errorMessage: String? = null
+)
+
+data class AiAvaliacaoIdeiaUiState(
+    val ideiaId: Long? = null,
+    val tituloIdeia: String = "",
+    val isLoading: Boolean = false,
+    val resultado: AiIdeaEvaluation? = null,
+    val errorMessage: String? = null
+)
+
+internal data class PontuacoesAvaliacaoIdeia(
+    val impacto: Int,
+    val viabilidade: Int
+)
+
+internal fun validarPontuacoesAvaliacaoIdeia(
+    impacto: String,
+    viabilidade: String
+): PontuacoesAvaliacaoIdeia? {
+    val impactoNumerico = impacto.toIntOrNull()
+    val viabilidadeNumerica = viabilidade.toIntOrNull()
+
+    if (
+        impactoNumerico == null ||
+        viabilidadeNumerica == null ||
+        impactoNumerico !in 0..10 ||
+        viabilidadeNumerica !in 0..10
+    ) {
+        return null
+    }
+
+    return PontuacoesAvaliacaoIdeia(
+        impacto = impactoNumerico,
+        viabilidade = viabilidadeNumerica
+    )
+}
+
+internal fun mensagemErroAvaliacaoIa(error: Throwable): String {
+    if (error is SocketTimeoutException) {
+        return "A avaliação por IA excedeu o tempo limite. Tente novamente."
+    }
+
+    if (error is HttpException) {
+        return when (error.code()) {
+            401 -> "Sua sessão expirou. Entre novamente."
+            403 -> "Apenas gestores podem solicitar uma avaliação por IA."
+            404 -> "A ideia não foi encontrada."
+            502 -> "O provedor de IA retornou uma avaliação inválida."
+            503 -> "A avaliação por IA está temporariamente indisponível."
+            504 -> "A avaliação por IA excedeu o tempo limite. Tente novamente."
+            else -> "Não foi possível avaliar a ideia por IA."
+        }
+    }
+
+    if (error is IllegalArgumentException) {
+        return "A resposta da avaliação por IA é inválida."
+    }
+
+    return "Não foi possível avaliar a ideia por IA."
+}
+
+
 class IdeiaViewModel : ViewModel() {
 
     private val repository = IdeiaRepository(
@@ -80,6 +151,17 @@ class IdeiaViewModel : ViewModel() {
 
     private val _editarIdeiaUiState = MutableStateFlow(EditarIdeiaUiState())
     val editarIdeiaUiState = _editarIdeiaUiState.asStateFlow()
+
+    private val _avaliacaoIdeiaUiState =
+        MutableStateFlow(AvaliacaoIdeiaUiState())
+
+    val avaliacaoIdeiaUiState = _avaliacaoIdeiaUiState.asStateFlow()
+
+    private val _aiAvaliacaoIdeiaUiState =
+        MutableStateFlow(AiAvaliacaoIdeiaUiState())
+
+    val aiAvaliacaoIdeiaUiState = _aiAvaliacaoIdeiaUiState.asStateFlow()
+
 
     init {
         carregarIdeias()
@@ -511,6 +593,182 @@ class IdeiaViewModel : ViewModel() {
                     _editarIdeiaUiState.value = _editarIdeiaUiState.value.copy(
                         isSaving = false,
                         errorMessage = error.message ?: "Erro ao atualizar ideia"
+                    )
+                }
+        }
+    }
+
+    fun abrirAvaliacaoIdeia(ideia: Ideia) {
+        _avaliacaoIdeiaUiState.value = AvaliacaoIdeiaUiState(
+            ideiaId = ideia.id,
+            impacto = ideia.impacto?.toString().orEmpty(),
+            viabilidade = ideia.viabilidade?.toString().orEmpty()
+        )
+    }
+
+    fun fecharAvaliacaoIdeia() {
+        if (_avaliacaoIdeiaUiState.value.isSaving) {
+            return
+        }
+
+        _avaliacaoIdeiaUiState.value = AvaliacaoIdeiaUiState()
+    }
+
+    fun atualizarImpactoAvaliacao(impacto: String) {
+        _avaliacaoIdeiaUiState.value =
+            _avaliacaoIdeiaUiState.value.copy(
+                impacto = impacto,
+                errorMessage = null
+            )
+    }
+
+    fun atualizarViabilidadeAvaliacao(viabilidade: String) {
+        _avaliacaoIdeiaUiState.value =
+            _avaliacaoIdeiaUiState.value.copy(
+                viabilidade = viabilidade,
+                errorMessage = null
+            )
+    }
+
+    fun salvarAvaliacaoIdeia() {
+        val state = _avaliacaoIdeiaUiState.value
+
+        if (!SessionManager.podeAvaliarIdeia()) {
+            _avaliacaoIdeiaUiState.value = state.copy(
+                errorMessage = "Apenas gestores podem avaliar ideias."
+            )
+            return
+        }
+
+        val ideiaId = state.ideiaId
+        val pontuacoes = validarPontuacoesAvaliacaoIdeia(
+            impacto = state.impacto,
+            viabilidade = state.viabilidade
+        )
+
+        if (ideiaId == null || pontuacoes == null) {
+            _avaliacaoIdeiaUiState.value = state.copy(
+                errorMessage = "Impacto e viabilidade devem estar entre 0 e 10."
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            _avaliacaoIdeiaUiState.value = state.copy(
+                isSaving = true,
+                errorMessage = null
+            )
+
+            repository.atualizarAvaliacao(
+                ideiaId = ideiaId,
+                impacto = pontuacoes.impacto,
+                viabilidade = pontuacoes.viabilidade
+            )
+                .onSuccess { ideiaAtualizada ->
+                    _uiState.value = _uiState.value.copy(
+                        ideias = _uiState.value.ideias.map { ideia ->
+                            if (ideia.id == ideiaAtualizada.id) {
+                                ideiaAtualizada
+                            } else {
+                                ideia
+                            }
+                        }
+                    )
+
+                    _avaliacaoIdeiaUiState.value =
+                        AvaliacaoIdeiaUiState()
+                }
+                .onFailure { error ->
+                    _avaliacaoIdeiaUiState.value =
+                        _avaliacaoIdeiaUiState.value.copy(
+                            isSaving = false,
+                            errorMessage = error.message
+                                ?: "Erro ao salvar a avaliação da ideia."
+                        )
+                }
+        }
+    }
+
+    fun solicitarAvaliacaoIa(ideia: Ideia) {
+        iniciarAvaliacaoIa(
+            ideiaId = ideia.id,
+            tituloIdeia = ideia.titulo
+        )
+    }
+
+    fun repetirAvaliacaoIa() {
+        val state = _aiAvaliacaoIdeiaUiState.value
+        val ideiaId = state.ideiaId ?: return
+
+        iniciarAvaliacaoIa(
+            ideiaId = ideiaId,
+            tituloIdeia = state.tituloIdeia
+        )
+    }
+
+    fun fecharAvaliacaoIa() {
+        if (_aiAvaliacaoIdeiaUiState.value.isLoading) {
+            return
+        }
+
+        _aiAvaliacaoIdeiaUiState.value = AiAvaliacaoIdeiaUiState()
+    }
+
+    private fun iniciarAvaliacaoIa(
+        ideiaId: Long,
+        tituloIdeia: String
+    ) {
+        if (_aiAvaliacaoIdeiaUiState.value.isLoading) {
+            return
+        }
+
+        if (!SessionManager.podeSolicitarAvaliacaoIa()) {
+            _aiAvaliacaoIdeiaUiState.value = AiAvaliacaoIdeiaUiState(
+                ideiaId = ideiaId,
+                tituloIdeia = tituloIdeia,
+                errorMessage = "Apenas gestores podem solicitar uma avaliação por IA."
+            )
+            return
+        }
+
+        _aiAvaliacaoIdeiaUiState.value = AiAvaliacaoIdeiaUiState(
+            ideiaId = ideiaId,
+            tituloIdeia = tituloIdeia,
+            isLoading = true
+        )
+
+        viewModelScope.launch {
+            val evaluationResult = repository.avaliarIdeiaComIa(ideiaId)
+
+            if (evaluationResult.isFailure) {
+                val error = checkNotNull(evaluationResult.exceptionOrNull())
+                _aiAvaliacaoIdeiaUiState.value =
+                    _aiAvaliacaoIdeiaUiState.value.copy(
+                        isLoading = false,
+                        resultado = null,
+                        errorMessage = mensagemErroAvaliacaoIa(error)
+                    )
+                return@launch
+            }
+
+            val evaluation = evaluationResult.getOrThrow()
+            _aiAvaliacaoIdeiaUiState.value =
+                _aiAvaliacaoIdeiaUiState.value.copy(
+                    isLoading = false,
+                    resultado = evaluation,
+                    errorMessage = null
+                )
+
+            repository.buscarIdeiaPorId(ideiaId)
+                .onSuccess { ideiaAtualizada ->
+                    _uiState.value = _uiState.value.copy(
+                        ideias = _uiState.value.ideias.map { ideia ->
+                            if (ideia.id == ideiaAtualizada.id) {
+                                ideiaAtualizada
+                            } else {
+                                ideia
+                            }
+                        }
                     )
                 }
         }

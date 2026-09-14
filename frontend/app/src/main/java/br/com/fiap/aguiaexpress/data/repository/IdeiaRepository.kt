@@ -1,9 +1,11 @@
 package br.com.fiap.aguiaexpress.data.repository
 
+import br.com.fiap.aguiaexpress.data.dto.AtualizarAvaliacaoIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.AtualizarStatusIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.CriarIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.toDomain
 import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
+import br.com.fiap.aguiaexpress.domain.model.AiIdeaEvaluation
 import br.com.fiap.aguiaexpress.domain.model.Ideia
 
 class IdeiaRepository(
@@ -88,6 +90,44 @@ class IdeiaRepository(
             Result.success(ideiaAtualizada)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    suspend fun atualizarAvaliacao(
+        ideiaId: Long,
+        impacto: Int,
+        viabilidade: Int
+    ): Result<Ideia> {
+        return try {
+            val request = AtualizarAvaliacaoIdeiaRequestDto(
+                impacto = impacto,
+                viabilidade = viabilidade
+            )
+            val ideiaAtualizada = ideiaApi.atualizarAvaliacaoIdeia(
+                id = ideiaId,
+                request = request
+            ).toDomain()
+            Result.success(ideiaAtualizada)
+        } catch (exception: Exception) {
+            Result.failure(exception)
+        }
+    }
+
+    suspend fun avaliarIdeiaComIa(
+        ideiaId: Long
+    ): Result<AiIdeaEvaluation> {
+        return try {
+            val evaluation = ideiaApi.avaliarIdeiaComIa(
+                id = ideiaId
+            ).toDomain()
+
+            require(evaluation.ideaId == ideiaId) {
+                "A avaliação de IA retornou uma ideia diferente da solicitada."
+            }
+
+            Result.success(evaluation)
+        } catch (exception: Exception) {
+            Result.failure(exception)
         }
     }
 }

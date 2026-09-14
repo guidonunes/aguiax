@@ -1,11 +1,16 @@
 package br.com.fiap.aguiaexpress.domain.model
 
+import java.math.BigDecimal
+
 data class Ideia(
     val id: Long,
     val titulo: String,
     val descricao: String,
     val problema: String,
     val solucaoProposta: String,
+    val impacto: Int?,
+    val viabilidade: Int?,
+    val prioridade: BigDecimal,
     val status: String,
     val usuarioId: Long,
     val categoriaId: Long,

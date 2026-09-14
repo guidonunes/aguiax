@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -24,6 +27,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FabPosition
@@ -32,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -61,19 +66,29 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
+import br.com.fiap.aguiaexpress.viewmodel.AvaliacaoIdeiaUiState
+import br.com.fiap.aguiaexpress.viewmodel.AiAvaliacaoIdeiaUiState
 
 @Composable
 fun IdeiasScreen(
     podeEditarExcluirIdeia: Boolean,
     podeAtualizarStatusIdeia: Boolean,
     podeVotarEmIdeia: Boolean,
+    podeAvaliarIdeia: Boolean,
+    podeSolicitarAvaliacaoIa: Boolean,
     usuarioIdLogado: Long?,
     onCriarIdeiaClick: () -> Unit,
     onEditarIdeiaClick: (Long) -> Unit,
     viewModel: IdeiaViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val avaliacaoUiState by
+    viewModel.avaliacaoIdeiaUiState.collectAsState()
+    val aiAvaliacaoUiState by
+    viewModel.aiAvaliacaoIdeiaUiState.collectAsState()
+
     var ideiaIdParaExcluir by remember { mutableStateOf<Long?>(null) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -138,19 +153,28 @@ fun IdeiasScreen(
                         votosUsuario = uiState.ideiasVotadasPeloUsuario,
                         podeVotarEmIdeia = podeVotarEmIdeia,
                         podeEditarExcluirIdeia = podeEditarExcluirIdeia,
-                        usuarioIdLogado = usuarioIdLogado,
                         podeAtualizarStatusIdeia = podeAtualizarStatusIdeia,
+                        podeAvaliarIdeia = podeAvaliarIdeia,
+                        podeSolicitarAvaliacaoIa = podeSolicitarAvaliacaoIa,
+                        usuarioIdLogado = usuarioIdLogado,
                         onAlternarVotoClick = { ideiaId ->
                             viewModel.alternarVotoIdeia(ideiaId)
                         },
                         onAtualizarStatusClick = { ideiaId, status ->
                             viewModel.atualizarStatusIdeia(ideiaId, status)
                         },
+                        onAvaliarIdeiaClick = { ideia ->
+                            viewModel.abrirAvaliacaoIdeia(ideia)
+                        },
+                        onSolicitarAvaliacaoIaClick = { ideia ->
+                            viewModel.solicitarAvaliacaoIa(ideia)
+                        },
                         onEditarIdeiaClick = onEditarIdeiaClick,
                         onExcluirIdeiaClick = { ideiaId ->
                             ideiaIdParaExcluir = ideiaId
                         }
                     )
+
                 }
             }
         }
@@ -190,6 +214,24 @@ fun IdeiasScreen(
             }
         )
     }
+
+    if (avaliacaoUiState.ideiaId != null) {
+        AvaliacaoIdeiaDialog(
+            state = avaliacaoUiState,
+            onImpactoChange = viewModel::atualizarImpactoAvaliacao,
+            onViabilidadeChange = viewModel::atualizarViabilidadeAvaliacao,
+            onConfirm = viewModel::salvarAvaliacaoIdeia,
+            onDismiss = viewModel::fecharAvaliacaoIdeia
+        )
+    }
+
+    if (aiAvaliacaoUiState.ideiaId != null) {
+        AiAvaliacaoIdeiaDialog(
+            state = aiAvaliacaoUiState,
+            onRetry = viewModel::repetirAvaliacaoIa,
+            onDismiss = viewModel::fecharAvaliacaoIa
+        )
+    }
 }
 
 @Composable
@@ -201,8 +243,12 @@ private fun IdeiaList(
     podeEditarExcluirIdeia: Boolean,
     usuarioIdLogado: Long?,
     podeAtualizarStatusIdeia: Boolean,
+    podeAvaliarIdeia: Boolean,
+    podeSolicitarAvaliacaoIa: Boolean,
     onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatusClick: (Long, StatusIdeia) -> Unit,
+    onAvaliarIdeiaClick: (Ideia) -> Unit,
+    onSolicitarAvaliacaoIaClick: (Ideia) -> Unit,
     onEditarIdeiaClick: (Long) -> Unit,
     onExcluirIdeiaClick: (Long) -> Unit
 ) {
@@ -221,12 +267,18 @@ private fun IdeiaList(
                     podeEditarExcluirIdeia &&
                             usuarioIdLogado != null &&
                             ideia.usuarioId == usuarioIdLogado,
-                podeAtualizarStatusIdeia = podeAtualizarStatusIdeia,
+                podeAtualizarStatusIdeia =
+                    podeAtualizarStatusIdeia,
+                podeAvaliarIdeia = podeAvaliarIdeia,
+                podeSolicitarAvaliacaoIa = podeSolicitarAvaliacaoIa,
                 onAlternarVotoClick = onAlternarVotoClick,
                 onAtualizarStatus = onAtualizarStatusClick,
+                onAvaliarClick = onAvaliarIdeiaClick,
+                onSolicitarAvaliacaoIaClick = onSolicitarAvaliacaoIaClick,
                 onEditarClick = onEditarIdeiaClick,
                 onExcluirClick = onExcluirIdeiaClick
             )
+
         }
     }
 }
@@ -239,6 +291,10 @@ private fun IdeiaCard(
     podeVotarEmIdeia: Boolean,
     podeEditarExcluirIdeia: Boolean,
     podeAtualizarStatusIdeia: Boolean,
+    podeAvaliarIdeia: Boolean,
+    podeSolicitarAvaliacaoIa: Boolean,
+    onAvaliarClick: (Ideia) -> Unit,
+    onSolicitarAvaliacaoIaClick: (Ideia) -> Unit,
     onAlternarVotoClick: (Long) -> Unit,
     onAtualizarStatus: (Long, StatusIdeia) -> Unit,
     onEditarClick: (Long) -> Unit,
@@ -390,8 +446,58 @@ private fun IdeiaCard(
                     label = "Categoria",
                     value = ideia.nomeCategoria
                 )
-            }
+                InfoText(
+                    label = "Impacto",
+                    value = ideia.impacto?.let { "$it/10" }
+                        ?: "Não avaliado"
+                )
 
+                InfoText(
+                    label = "Viabilidade",
+                    value = ideia.viabilidade?.let { "$it/10" }
+                        ?: "Não avaliada"
+                )
+
+                InfoText(
+                    label = "Prioridade",
+                    value = ideia.prioridade.toPlainString()
+                )
+
+                if (podeAvaliarIdeia) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            onAvaliarClick(ideia)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = if (
+                                ideia.impacto == null ||
+                                ideia.viabilidade == null
+                            ) {
+                                "Avaliar ideia"
+                            } else {
+                                "Editar avaliação"
+                            }
+                        )
+                    }
+                }
+
+                if (podeSolicitarAvaliacaoIa) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            onSolicitarAvaliacaoIaClick(ideia)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Analisar com IA")
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -468,6 +574,238 @@ private fun IdeiaCard(
 }
 
 @Composable
+private fun AvaliacaoIdeiaDialog(
+    state: AvaliacaoIdeiaUiState,
+    onImpactoChange: (String) -> Unit,
+    onViabilidadeChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = {
+            if (!state.isSaving) {
+                onDismiss()
+            }
+        },
+        title = {
+            Text("Avaliar ideia")
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Informe valores entre 0 e 10."
+                )
+
+                OutlinedTextField(
+                    value = state.impacto,
+                    onValueChange = onImpactoChange,
+                    label = {
+                        Text("Impacto")
+                    },
+                    enabled = !state.isSaving,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = state.viabilidade,
+                    onValueChange = onViabilidadeChange,
+                    label = {
+                        Text("Viabilidade")
+                    },
+                    enabled = !state.isSaving,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                state.errorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = !state.isSaving
+            ) {
+                Text(
+                    if (state.isSaving) {
+                        "Salvando..."
+                    } else {
+                        "Salvar"
+                    }
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !state.isSaving
+            ) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+private fun AiAvaliacaoIdeiaDialog(
+    state: AiAvaliacaoIdeiaUiState,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = {
+            if (!state.isLoading) {
+                onDismiss()
+            }
+        },
+        title = {
+            Text("Avaliação por IA")
+        },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (state.tituloIdeia.isNotBlank()) {
+                    Text(
+                        text = state.tituloIdeia,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
+
+                when {
+                    state.isLoading -> {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(28.dp),
+                                strokeWidth = 3.dp
+                            )
+                            Text("Analisando a ideia...")
+                        }
+                    }
+
+                    state.errorMessage != null -> {
+                        Text(
+                            text = state.errorMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    state.resultado != null -> {
+                        val result = state.resultado
+
+                        AiScoreRow(
+                            label = "Alinhamento estratégico",
+                            value = "${result.strategicAlignment}/10"
+                        )
+                        AiScoreRow(
+                            label = "Impacto",
+                            value = "${result.impact}/10"
+                        )
+                        AiScoreRow(
+                            label = "Viabilidade",
+                            value = "${result.feasibility}/10"
+                        )
+                        AiScoreRow(
+                            label = "Inovação",
+                            value = "${result.innovation}/10"
+                        )
+                        AiScoreRow(
+                            label = "Pontuação geral",
+                            value = "${result.overallScore.toPlainString()}/10"
+                        )
+
+                        Text(
+                            text = "Resumo",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = result.summary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "Esta análise apoia a decisão do gestor e não altera o status da ideia.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            when {
+                state.isLoading -> {
+                    TextButton(
+                        onClick = {},
+                        enabled = false
+                    ) {
+                        Text("Aguarde")
+                    }
+                }
+
+                state.errorMessage != null -> {
+                    Button(onClick = onRetry) {
+                        Text("Tentar novamente")
+                    }
+                }
+
+                else -> {
+                    Button(onClick = onDismiss) {
+                        Text("Fechar")
+                    }
+                }
+            }
+        },
+        dismissButton = {
+            if (state.errorMessage != null) {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancelar")
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun AiScoreRow(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
 private fun InfoText(
     label: String,
     value: String
@@ -499,5 +837,3 @@ private fun formatarStatusIdeia(status: String): String {
         else -> status
     }
 }
-
-

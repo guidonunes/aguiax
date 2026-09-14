@@ -1,6 +1,8 @@
 package br.com.fiap.aguiaexpress.data.remote.api
 
+import br.com.fiap.aguiaexpress.data.dto.AtualizarAvaliacaoIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.AtualizarStatusIdeiaRequestDto
+import br.com.fiap.aguiaexpress.data.dto.AiIdeaEvaluationDto
 import br.com.fiap.aguiaexpress.data.dto.CriarIdeiaRequestDto
 import br.com.fiap.aguiaexpress.data.dto.IdeiaDto
 import retrofit2.http.Body
@@ -42,4 +44,15 @@ interface IdeiaApi {
         @Path("id") id: Long,
         @Body request: CriarIdeiaRequestDto
     ): IdeiaDto
+
+    @PATCH("ideias/{id}/avaliacao")
+    suspend fun atualizarAvaliacaoIdeia(
+        @Path("id") id: Long,
+        @Body request: AtualizarAvaliacaoIdeiaRequestDto
+    ): IdeiaDto
+
+    @POST("api/ideas/{id}/ai-evaluation")
+    suspend fun avaliarIdeiaComIa(
+        @Path("id") id: Long
+    ): AiIdeaEvaluationDto
 }

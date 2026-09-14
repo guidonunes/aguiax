@@ -1,7 +1,9 @@
 package br.com.fiap.aguiaexpress.data.dto
 
 import com.google.gson.Gson
+import java.math.BigDecimal
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -48,7 +50,48 @@ class IdeiaDtoContractTest {
         )
     }
 
-    private fun ideaJson(statusField: String): String {
+    @Test
+    fun `maps persisted manager scores and decimal priority`() {
+        val dto = gson.fromJson(
+            ideaJson(
+                statusField = "\"statusIdeia\": \"EM_ANALISE\",",
+                impacto = "8",
+                viabilidade = "7",
+                prioridade = "4.35"
+            ),
+            IdeiaDto::class.java
+        )
+
+        val ideia = dto.toDomain()
+
+        assertEquals(8, ideia.impacto)
+        assertEquals(7, ideia.viabilidade)
+        assertEquals(BigDecimal("4.35"), ideia.prioridade)
+    }
+
+    @Test
+    fun `keeps legacy missing manager scores nullable`() {
+        val dto = gson.fromJson(
+            ideaJson(
+                statusField = "\"statusIdeia\": \"NOVA\",",
+                impacto = "null",
+                viabilidade = "null"
+            ),
+            IdeiaDto::class.java
+        )
+
+        val ideia = dto.toDomain()
+
+        assertNull(ideia.impacto)
+        assertNull(ideia.viabilidade)
+    }
+
+    private fun ideaJson(
+        statusField: String,
+        impacto: String = "8",
+        viabilidade: String = "7",
+        prioridade: String = "4.35"
+    ): String {
         return """
             {
               "id": 42,
@@ -59,6 +102,9 @@ class IdeiaDtoContractTest {
               "descricao": "Descrição",
               "problema": "Problema",
               "solucaoProposta": "Solução",
+              "impacto": $impacto,
+              "viabilidade": $viabilidade,
+              "prioridade": $prioridade,
               $statusField
               "nomeUsuario": "Usuário",
               "nomeCategoria": "Tecnologia",

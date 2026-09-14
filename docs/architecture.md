@@ -879,6 +879,16 @@ these human signals; Task 8.3 subsequently connected the centralized determinist
 formula so manager review also recalculates `prioridade` without duplicating the
 scoring rule.
 
+Task 9.1 connects this contract to Android. `IdeiaDto` and the domain model retain
+the two manager inputs and decimal priority returned by the backend.
+`IdeiaRepository` sends the dedicated review request, while `IdeiaViewModel` owns
+the dialog state, validates both inclusive ranges before the network call, and
+updates the displayed idea from the persisted response. `IdeiasScreen` exposes the
+review dialog only when `SessionManager.podeAvaliarIdeia()` identifies a `GESTOR`.
+This visibility rule is a convenience boundary; Spring Security remains
+authoritative and rejects other roles. Reopening the application reloads the
+scores from MySQL through the normal idea-list request rather than local storage.
+
 The scoring architecture should separate four signals:
 
 ```text
@@ -1340,6 +1350,15 @@ idea ID with a validated result through `AiIdeaEvaluationResponse.from(...)`.
 Provider-specific request and response envelopes remain internal to the Task 7.3
 Gemini client and must not leak into this contract.
 
+Task 9.2 consumes this application contract in Android through
+`AiIdeaEvaluationDto` and maps it to the provider-independent
+`AiIdeaEvaluation` UI model. The mapper independently enforces the positive idea
+ID, every required `0..10` score, decimal overall score, and nonblank trimmed
+summary. It also verifies that the response idea ID matches the idea requested.
+The expanded idea detail presents the six result fields in a bounded dialog with
+loading, failure/retry, and success states. Android calls only the Spring Boot
+endpoint; the Gemini key and provider schema never enter the mobile application.
+
 ---
 
 ## 17.5 AI persistence
@@ -1451,6 +1470,14 @@ The adapter logs safe structural diagnostics such as `finishReason=MAX_TOKENS` o
 the validation exception type, but never logs the prompt, generated content, or
 API key.
 
+Task 9.2 gives the Android caller controlled messages for authentication,
+authorization, missing ideas, invalid provider output, unavailable service, and
+backend/client timeouts without rendering raw exception or provider content. The
+result dialog can be retried after a failure and cannot be dismissed while the
+request is in flight. Its 30-second HTTP read timeout exceeds the backend's
+default 15-second AI read timeout, preserving the backend's controlled response
+whenever that timeout is reached.
+
 ---
 
 ## 17.8 Human decision boundary
@@ -1558,8 +1585,9 @@ The status keys are the existing enum names `PLANEJADO`, `EM_ANDAMENTO`,
 `CONCLUIDO`, and `CANCELADO`. The DTO validates structural consistency but does
 not calculate business values. Aggregation formulas remain the responsibility of
 the dashboard service introduced by Task 6.2. Task 6.4 confirmed the existing
-project-detail contract for project-specific visualization; Android summary
-integration remains Task 9.3. The dashboard controller is leader-only through a
+project-detail contract for project-specific visualization. Task 9.3 now maps this
+contract in Android without converting its decimal values to `Double` or
+recalculating its metrics. The dashboard controller is leader-only through a
 class-level authorization rule, verified by Task 6.5.
 
 ## 18.2 Global aggregation rules
@@ -1630,6 +1658,24 @@ without valid authentication receive `401`, authenticated `OPERACIONAL` and
 The policy applies equally when `orientationId` is omitted or supplied. The
 existing `/projetos/{id}` contract reused by Task 6.4 remains governed by the
 separate project-read policy and is not a dashboard endpoint.
+
+## 18.6 Android dashboard consumption
+
+Task 9.3 introduces an Android `DashboardApi`, validated `DashboardSummaryDto`,
+provider-independent `DashboardSummary` model, and `DashboardRepository`.
+`DashboardViewModel` now stores the returned summary directly: it contains no
+sum, average, ROI, estimated-result, or project-status grouping formula. The UI
+reads `EM_ANDAMENTO` directly from `projectsByStatus` and formats the backend's
+`BigDecimal` metrics only for display.
+
+The first request omits `orientationId` for the global view. The leader can select
+any active or inactive strategic orientation from the complete authenticated
+catalog; the selected ID is then forwarded to
+`GET /api/dashboard/summary?orientationId={id}`. A sequence guard prevents a
+slower earlier response from replacing a newer selection. A known orientation
+with no projects renders an empty filtered state, while an unknown ID uses the
+backend's controlled `404` response. Project-specific visualization remains the
+existing `GET /projetos/{projectId}` flow and is not recomputed in this screen.
 
 ---
 
@@ -1954,7 +2000,8 @@ the authorization matrix and the logging restrictions in section 20.2.
 ## Idea prioritization
 
 - backend manager review now persists validated impact and viability scores;
-- Android manager-review controls remain pending;
+- Android manager review now sends and reloads those persisted scores through the
+  real backend API;
 - backend priority combines capped votes, manager scores, and the latest AI score
   through the documented deterministic formula;
 - Android prioritization presentation remains pending.
@@ -1973,9 +2020,11 @@ the authorization matrix and the logging restrictions in section 20.2.
 
 ## Dashboard
 
-- dashboard aggregation currently belongs too heavily to Android;
-- Task 5.2 corrected the current Android card to count only `EM_ANDAMENTO`;
-- Phase 6 must still make the backend status aggregation authoritative.
+- Tasks 6.1–6.5 make backend aggregation and dashboard authorization
+  authoritative;
+- Task 9.3 consumes the global and orientation-filtered summaries in Android;
+- Android formats the returned metrics but owns no dashboard calculation formula;
+- project-specific results continue through the existing project-detail contract.
 
 ## Badges
 

@@ -3,6 +3,7 @@ package br.com.fiap.aguiaexpress.data.remote
 import br.com.fiap.aguiaexpress.data.remote.api.AuthApi
 import br.com.fiap.aguiaexpress.data.remote.api.BadgeApi
 import br.com.fiap.aguiaexpress.data.remote.api.CategoriaApi
+import br.com.fiap.aguiaexpress.data.remote.api.DashboardApi
 import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
 import br.com.fiap.aguiaexpress.data.remote.api.OrientacaoApi
 import br.com.fiap.aguiaexpress.data.remote.api.ProjetoApi
@@ -12,6 +13,7 @@ import br.com.fiap.aguiaexpress.data.remote.interceptor.AuthInterceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
@@ -19,6 +21,9 @@ object RetrofitClient {
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor())
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
     private val retrofit: Retrofit = Retrofit.Builder()
@@ -37,6 +42,10 @@ object RetrofitClient {
 
     val categoriaApi: CategoriaApi by lazy {
         retrofit.create(CategoriaApi::class.java)
+    }
+
+    val dashboardApi: DashboardApi by lazy {
+        retrofit.create(DashboardApi::class.java)
     }
 
     val ideiaApi: IdeiaApi by lazy {
