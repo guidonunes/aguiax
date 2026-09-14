@@ -1429,10 +1429,11 @@ Task 7.3 implements this boundary with `AiIdeaEvaluationClient` and
 the key only through `x-goog-api-key`, applies JDK HTTP connection and read
 timeouts, requests `application/json` with `responseJsonSchema`, and converts the
 provider envelope into `AiIdeaEvaluationResult`. For the bounded evaluation, the
-request uses `thinkingLevel=low` and a 4096-token maximum covering both thinking
-and visible output. This prevents the model's default thinking from consuming the
-former 512-token ceiling before emitting JSON while retaining some contextual
-reasoning. Provider envelopes remain private to the adapter. Task 7.4 registers
+request uses `thinkingLevel=medium` and a 4096-token maximum covering both thinking
+and visible output. The medium level is a deliberate product choice so the
+evaluation can reason more fully about the idea and strategic context while the
+explicit output limit prevents unbounded generation. Provider envelopes remain
+private to the adapter. Task 7.4 registers
 the adapter conditionally: no AI client bean exists when `AI_ENABLED=false`, while
 enabled configuration validates the provider, key, model, HTTPS base URL, and
 positive timeouts before startup completes.
@@ -2039,6 +2040,29 @@ Mock or stub the AI client boundary.
 
 Use Testcontainers for database-sensitive integration tests where practical.
 
+## 26.1 Phase 11 verification baseline
+
+Phase 11 completed the risk-focused backend suite on 2026-09-14. The standard
+`./mvnw test` run passes **208 of 208 tests** and covers:
+
+- authentication failures, expired JWTs, role authorization, and idea ownership;
+- idea creation defaults, duplicate rejection, vote uniqueness/removal, manager
+  review, controlled transitions, and deterministic priority calculation;
+- project eligibility, one-project-per-idea, transactional idea conversion, and
+  validation of all non-negative financial inputs;
+- exact global and orientation-filtered dashboard aggregates from known fixtures;
+- mocked Gemini success/failure contracts, MongoDB evaluation history, and the
+  invariant that AI never changes workflow status;
+- critical audit creation, write ordering, and suppression of false success
+  events after rejected or failed operations.
+
+The regular suite never calls the real Gemini service. Its adapter contract uses
+the documented `thinkingLevel=medium` choice and a bounded structured response.
+The application-context smoke test supplies isolated repository doubles and
+disables external persistence auto-configuration, so it does not depend on the
+`main` method's `.env` bootstrap. MongoDB repository integration remains a
+separate explicit test and uses a test-only database.
+
 ---
 
 # 27. Current known architectural gaps
@@ -2089,7 +2113,10 @@ the authorization matrix and the logging restrictions in section 20.2.
 
 ## Testing
 
-- current automated backend verification is too limited for Sprint 2 security and business behavior.
+- Phase 11 provides the required backend regression coverage for Sprint 2
+  security, ideas, projects, dashboard, AI, and audit behavior;
+- Android Compose instrumentation and final real-device role journeys remain
+  delivery work rather than backend Phase 11 gaps.
 
 These should be treated as existing technical debt, not as evidence that the whole application needs to be redesigned.
 

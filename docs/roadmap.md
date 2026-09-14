@@ -1049,10 +1049,10 @@ complete backend run passed 130 of 131 tests; only the pre-existing `contextLoad
 
 A real Task 8.2 endpoint request exposed `INVALID_RESPONSE` because the Gemini 3.6
 Flash request capped combined thinking and visible output at 512 tokens. The
-client now requests `thinkingLevel=low` for this bounded structured-evaluation use
-case and raises `maxOutputTokens` to 4096. The ceiling does not force consumption
-of 4096 tokens; it prevents default reasoning from exhausting the response budget
-before the small JSON result is produced.
+client now requests `thinkingLevel=medium`, a deliberate product choice that gives
+the idea evaluation more reasoning room, and raises `maxOutputTokens` to 4096.
+The ceiling does not force consumption of 4096 tokens; it prevents reasoning from
+exhausting the response budget before the small JSON result is produced.
 
 Provider-response rejection logs now contain only safe structural diagnostics:
 finish reason, missing response section, or validation exception type. They never
@@ -1611,7 +1611,8 @@ The complete backend run executed 197 tests: 195 passed, while the two previousl
 documented unrelated baseline defects remained (`contextLoads` does not load
 `.env`, leaving `${DB_URL}` unresolved, and the Gemini request test expects
 `thinkingLevel=low` while the implementation sends `medium`). No Task 10.3
-regression appeared outside the focused selection.
+regression appeared outside the focused selection. Both defects were subsequently
+resolved as part of Phase 11.
 
 ---
 
@@ -1629,6 +1630,14 @@ Cover:
 ### Exit criterion
 
 Critical role/ownership rules are automatically verified.
+
+### Task 11.1 implementation record — 2026-09-14
+
+Implemented and verified by Codex. Existing secured MVC suites cover missing
+authentication (`401`), authenticated callers with the wrong role (`403`), and
+successful calls by permitted roles. The JWT integration suite now also covers a
+correctly signed but expired token. Service tests prove that an `OPERACIONAL`
+owner can update/delete their idea while another operational user cannot.
 
 ---
 
@@ -1648,6 +1657,15 @@ Cover:
 
 Core idea lifecycle is regression-tested.
 
+### Task 11.2 implementation record — 2026-09-14
+
+Implemented and verified by Codex. The idea suites now assert the complete
+creation defaults and response, reject a duplicate title before loading related
+entities, reject a second vote, reject removal when the caller has no vote, and
+retain the existing coverage for manager scores, valid and invalid transitions,
+the deterministic priority formula, recalculation triggers, and status
+preservation.
+
 ---
 
 ## Task 11.3 — Project workflow tests
@@ -1663,6 +1681,15 @@ Cover:
 
 Project conversion rules are regression-tested.
 
+### Task 11.3 implementation record — 2026-09-14
+
+Implemented and verified by Codex. The existing conversion suite covers every
+ineligible idea status, the single-project invariant, transactional project/idea
+write ordering, the transition to `CONVERTIDA_EM_PROJETO`, and rollback-sensitive
+failure paths. Parameterized MVC tests now prove that each negative financial
+input (`investimento`, ROI, return, cost reduction, and productivity gain) is
+rejected with `400` before the service is invoked.
+
 ---
 
 ## Task 11.4 — Dashboard tests
@@ -1672,6 +1699,13 @@ Use known project fixtures and verify exact aggregates.
 ### Exit criterion
 
 Dashboard numbers are proven correct by automated tests.
+
+### Task 11.4 implementation record — 2026-09-14
+
+Verified by Codex. `DashboardServiceTest` uses known fixtures to assert exact
+project totals, status counts, investments, financial return, cost reduction,
+estimated result, average ROI, and average productivity gain for global and
+orientation-filtered summaries, including empty and legacy-null data.
 
 ---
 
@@ -1692,6 +1726,16 @@ Cover:
 
 AI integration failures are controlled and deterministic application behavior is tested.
 
+### Task 11.5 implementation record — 2026-09-14
+
+Implemented and verified by Codex without a real Gemini call. Mocked HTTP/client
+suites cover the structured success response, malformed JSON, out-of-range
+scores, incomplete output, timeout, rate limiting, and provider failure. MongoDB
+integration tests prove evaluation-history persistence and ordering. Service tests
+prove controlled persistence failures and that neither successful nor failed AI
+evaluation changes idea status. The request contract now asserts the selected
+`thinkingLevel=medium` behavior.
+
 ---
 
 ## Task 11.6 — Audit tests
@@ -1701,6 +1745,22 @@ Verify critical operations create the expected audit events.
 ### Exit criterion
 
 Governance behavior is covered by automated tests.
+
+### Task 11.6 implementation record — 2026-09-14
+
+Implemented and verified by Codex. Audit suites cover login, idea creation,
+update and deletion, orientation mutations, project creation/update/completion,
+and AI requested/completed/failed events. Ordering assertions ensure success
+events occur only after the relational write, while rejected or failed mutations
+do not emit false success events.
+
+### Phase 11 verification — 2026-09-14
+
+The standard backend command `./mvnw test` passes **208 of 208 tests** with local
+MongoDB available. The application context smoke test no longer depends on the
+`main` method's `.env` loader or external MySQL/MongoDB connections; persistence
+integration tests remain explicit and use a test-only MongoDB database. Phase 11
+is complete and all six exit criteria are satisfied.
 
 ---
 

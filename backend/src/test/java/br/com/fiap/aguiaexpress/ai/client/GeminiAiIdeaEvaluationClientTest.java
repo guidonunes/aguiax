@@ -102,7 +102,7 @@ class GeminiAiIdeaEvaluationClientTest {
                 .andExpect(
                         jsonPath(
                                 "$.generationConfig.thinkingConfig.thinkingLevel"
-                        ).value("low")
+                        ).value("medium")
                 )
                 .andRespond(withSuccess(
                         providerResponse(validEvaluationJson(), "STOP"),

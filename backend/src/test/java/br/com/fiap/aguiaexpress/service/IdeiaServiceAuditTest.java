@@ -5,7 +5,9 @@ import br.com.fiap.aguiaexpress.audit.model.AuditResourceType;
 import br.com.fiap.aguiaexpress.audit.service.AuditService;
 import br.com.fiap.aguiaexpress.config.observability.BusinessMetrics;
 import br.com.fiap.aguiaexpress.dto.ideia.AtualizarStatusIdeiaDTO;
+import br.com.fiap.aguiaexpress.dto.ideia.MostrarIdeiaDTO;
 import br.com.fiap.aguiaexpress.dto.ideia.RegistrarIdeiaDTO;
+import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
 import br.com.fiap.aguiaexpress.model.Categoria;
 import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.NomeStatusIdeia;
@@ -18,9 +20,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
@@ -79,7 +85,7 @@ class IdeiaServiceAuditTest {
             return ideia;
         });
 
-        ideiaService.criarIdeia(new RegistrarIdeiaDTO(
+        MostrarIdeiaDTO response = ideiaService.criarIdeia(new RegistrarIdeiaDTO(
                 3L,
                 4L,
                 "Ideia",
@@ -87,6 +93,20 @@ class IdeiaServiceAuditTest {
                 "Problema",
                 "Solução"
         ));
+
+        assertAll(
+                () -> assertEquals(42L, response.id()),
+                () -> assertEquals(17L, response.usuarioId()),
+                () -> assertEquals(3L, response.categoriaId()),
+                () -> assertEquals(4L, response.orientacaoId()),
+                () -> assertEquals(NomeStatusIdeia.NOVA, response.statusIdeia()),
+                () -> assertEquals(0, response.impacto()),
+                () -> assertEquals(0, response.viabilidade()),
+                () -> assertEquals(0, response.totalVotos()),
+                () -> assertEquals(new BigDecimal("0.00"), response.prioridade()),
+                () -> assertNotNull(response.dataCriacao()),
+                () -> assertNotNull(response.dataAtualizacao())
+        );
 
         InOrder order = inOrder(ideiaRepository, auditService);
         order.verify(ideiaRepository).save(any(Ideia.class));
@@ -100,6 +120,36 @@ class IdeiaServiceAuditTest {
                         "categoryId", 3L,
                         "orientationId", 4L
                 )
+        );
+    }
+
+    @Test
+    void shouldRejectDuplicateIdeaTitleBeforeLoadingRelationships() {
+        when(ideiaRepository.existsByTitulo("Ideia duplicada")).thenReturn(true);
+
+        DuplicateResourceException exception = assertThrows(
+                DuplicateResourceException.class,
+                () -> ideiaService.criarIdeia(new RegistrarIdeiaDTO(
+                        3L,
+                        4L,
+                        "Ideia duplicada",
+                        "Descrição",
+                        "Problema",
+                        "Solução"
+                ))
+        );
+
+        assertEquals(
+                "Já existe uma ideia cadastrada com esse título.",
+                exception.getMessage()
+        );
+        verify(ideiaRepository).existsByTitulo("Ideia duplicada");
+        verifyNoInteractions(
+                usuarioAutenticadoService,
+                categoriaService,
+                orientacaoService,
+                statusIdeiaService,
+                auditService
         );
     }
 
@@ -127,6 +177,62 @@ class IdeiaServiceAuditTest {
         );
 
         verifyNoInteractions(auditService);
+    }
+
+    @Test
+    void shouldAuditIdeaUpdateAfterRelationalSave() {
+        Ideia ideia = idea(42L, NomeStatusIdeia.NOVA);
+        Categoria newCategory = new Categoria(8L, "Operações", "Descrição");
+        OrientacaoEstrategica newOrientation = orientation(9L);
+        when(ideiaRepository.findById(42L)).thenReturn(Optional.of(ideia));
+        when(usuarioAutenticadoService.getUsuarioAutenticado())
+                .thenReturn(user(7L));
+        when(categoriaService.buscarEntidadePorId(8L)).thenReturn(newCategory);
+        when(orientacaoService.buscarEntidadePorId(9L))
+                .thenReturn(newOrientation);
+        when(ideiaRepository.save(ideia)).thenReturn(ideia);
+
+        ideiaService.atualizarIdeia(42L, new RegistrarIdeiaDTO(
+                8L,
+                9L,
+                "Ideia atualizada",
+                "Descrição atualizada",
+                "Problema atualizado",
+                "Solução atualizada"
+        ));
+
+        InOrder order = inOrder(ideiaRepository, auditService);
+        order.verify(ideiaRepository).save(ideia);
+        order.verify(auditService).registrarEvento(
+                AuditEventType.IDEA_UPDATED,
+                7L,
+                AuditResourceType.IDEA,
+                "42",
+                Map.of(
+                        "categoryId", 8L,
+                        "orientationId", 9L
+                )
+        );
+    }
+
+    @Test
+    void shouldAuditIdeaDeletionAfterRelationalDelete() {
+        Ideia ideia = idea(42L, NomeStatusIdeia.NOVA);
+        when(ideiaRepository.findById(42L)).thenReturn(Optional.of(ideia));
+        when(usuarioAutenticadoService.getUsuarioAutenticado())
+                .thenReturn(user(7L));
+
+        ideiaService.deletarIdeia(42L);
+
+        InOrder order = inOrder(ideiaRepository, auditService);
+        order.verify(ideiaRepository).delete(ideia);
+        order.verify(auditService).registrarEvento(
+                AuditEventType.IDEA_DELETED,
+                7L,
+                AuditResourceType.IDEA,
+                "42",
+                Map.of("previousStatus", "NOVA")
+        );
     }
 
     @Test

@@ -11,6 +11,8 @@ import br.com.fiap.aguiaexpress.service.IdeiaService;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -40,6 +43,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @Import({SecurityConfig.class, TokenVerification.class, TokenService.class})
 class IdeiaStatusJwtIntegrationTest {
+
+    private static final String JWT_TEST_SECRET =
+            "jwt-test-secret-with-sufficient-length";
 
     @Autowired
     private MockMvc mockMvc;
@@ -109,6 +115,29 @@ class IdeiaStatusJwtIntegrationTest {
         assertFalse(logs.contains("invalid-token"));
         assertFalse(logs.contains("Authorization"));
         assertFalse(logs.contains("Bearer"));
+    }
+
+    @Test
+    void expiredJwtReceives401BeforeRepositoryOrServiceAccess() throws Exception {
+        String expiredToken = JWT.create()
+                .withIssuer("aguiaexpress-api")
+                .withSubject("gestor@example.com")
+                .withExpiresAt(Instant.now().minusSeconds(60))
+                .sign(Algorithm.HMAC256(JWT_TEST_SECRET));
+
+        mockMvc.perform(patch("/ideias/{id}/status", 42L)
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + expiredToken
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status": "EM_ANALISE"}
+                                """))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(usuarioRepository, ideiaService);
+        assertFalse(capturedLogs().contains(expiredToken));
     }
 
     @Test

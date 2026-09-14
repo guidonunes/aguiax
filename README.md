@@ -155,6 +155,26 @@ cd backend
 ./mvnw -Dtest=ApplicationExceptionHandlerLoggingTest,AuthControllerLoggingTest,IdeiaStatusJwtIntegrationTest,AiIdeaEvaluationServiceTest test
 ```
 
+## Testes automatizados do backend
+
+A Phase 11 consolidou os testes de segurança, fluxo de ideias, conversão de
+projetos, dashboard, IA e auditoria. Com o MongoDB local ativo, execute a suíte
+padrão a partir de `backend/`:
+
+```bash
+./mvnw test
+```
+
+A verificação de 14/09/2026 passou **208 de 208 testes**. A suíte não chama a API
+real do Gemini: as respostas do provedor são simuladas. Os testes de persistência
+MongoDB usam um banco exclusivo de teste e limpam seus dados. O teste de contexto
+da aplicação também não depende do `.env`, do MySQL nem do MongoDB; para executá-lo
+isoladamente:
+
+```bash
+./mvnw -Dtest=AguiaexpressApplicationTests test
+```
+
 ## Configuração local dos bancos
 
 O MySQL continua sendo a fonte de verdade dos dados de negócio. O MongoDB é um
@@ -246,6 +266,8 @@ prioridade pertencem às Tasks 8.2 e 8.3, respectivamente. O histórico é grava
 em `idea_ai_evaluations`; cada solicitação bem-sucedida cria um novo documento.
 A prioridade decimal é recalculada depois de votos, avaliações do gestor e uma
 avaliação de IA bem-sucedida usando a avaliação de IA mais recente.
+O cliente usa `thinkingLevel=medium` como escolha deliberada para dar mais espaço
+de raciocínio à avaliação, mantendo a resposta estruturada limitada a 4096 tokens.
 Esse endpoint fornece apenas apoio à decisão: ele não aprova ou rejeita ideias,
 não altera o status do fluxo e não cria projetos. Essas ações continuam sendo
 comandos explícitos e separados do `GESTOR`.

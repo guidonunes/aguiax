@@ -4,6 +4,8 @@ import br.com.fiap.aguiaexpress.advice.ApplicationExceptionHandler;
 import br.com.fiap.aguiaexpress.service.OrientacaoEstrategicaService;
 import br.com.fiap.aguiaexpress.service.ProjetoService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -98,6 +100,35 @@ class ProjectOrientationControllerSecurityTest {
                 .andExpect(status().isCreated());
 
         verify(projetoService).criarProjeto(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "investimento",
+            "roi",
+            "retornoFinanceiro",
+            "reducaoCustos",
+            "ganhoProdutividade"
+    })
+    void managerCannotCreateProjectWithNegativeFinancialValue(
+            String financialField
+    ) throws Exception {
+        String invalidRequest = """
+                {
+                  "ideiaId": 11,
+                  "usuarioId": 7,
+                  "titulo": "Projeto de teste",
+                  "%s": -0.01
+                }
+                """.formatted(financialField);
+
+        mockMvc.perform(post("/projetos")
+                        .with(user("gestor").roles("GESTOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidRequest))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(projetoService);
     }
 
     @Test
