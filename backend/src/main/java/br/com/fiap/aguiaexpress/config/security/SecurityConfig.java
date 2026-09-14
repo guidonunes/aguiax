@@ -2,6 +2,8 @@ package br.com.fiap.aguiaexpress.config.security;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +23,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
+
     private final TokenVerification tokenVerification;
 
     @Bean
@@ -34,6 +38,13 @@ public class SecurityConfig {
 
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
+                            LOGGER.warn(
+                                    "Requisição não autenticada rejeitada: method={}, path={}, failureType={}",
+                                    request.getMethod(),
+                                    request.getRequestURI(),
+                                    authException.getClass().getSimpleName()
+                            );
+
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
                             response.getWriter().write("""
@@ -45,16 +56,23 @@ public class SecurityConfig {
                                     """);
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            LOGGER.warn(
+                                    "Acesso proibido: method={}, path={}, failureType={}",
+                                    request.getMethod(),
+                                    request.getRequestURI(),
+                                    accessDeniedException.getClass().getSimpleName()
+                            );
+
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType("application/json");
                             response.getWriter().write("""
-                                {
-                                  "status": 403,
-                                  "error": "Forbidden",
-                                  "message": "Usuário autenticado, mas sem permissão para acessar este recurso."
-                                }
-                                """);
-                            })
+                                    {
+                                      "status": 403,
+                                      "error": "Forbidden",
+                                      "message": "Usuário autenticado, mas sem permissão para acessar este recurso."
+                                    }
+                                    """);
+                        })
                 )
 
                 .authorizeHttpRequests(auth -> auth

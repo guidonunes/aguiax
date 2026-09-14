@@ -21,10 +21,14 @@ import br.com.fiap.aguiaexpress.model.Ideia;
 import br.com.fiap.aguiaexpress.model.OrientacaoEstrategica;
 import br.com.fiap.aguiaexpress.model.StatusIdeia;
 import br.com.fiap.aguiaexpress.model.Usuario;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataAccessResourceFailureException;
 
@@ -34,9 +38,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -283,6 +289,48 @@ class AiIdeaEvaluationServiceTest {
         ).atualizarPrioridadeComPontuacaoAi(any(), any());
         verify(ideiaService).buscarEntidadePorId(42L);
         verifyNoMoreInteractions(ideiaService);
+    }
+
+    @Test
+    void shouldLogProviderFailureContextWithoutProviderMessageOrSecrets() {
+        Ideia ideia = ideia();
+        AiProviderException providerException = new AiProviderException(
+                AiProviderFailure.TIMEOUT,
+                "x-goog-api-key=never-log-this-key"
+        );
+        when(ideiaService.buscarEntidadePorId(42L)).thenReturn(ideia);
+        when(usuarioAutenticadoService.getUsuarioAutenticado())
+                .thenReturn(usuario(17L));
+        when(clientProvider.getIfAvailable()).thenReturn(client);
+        when(client.evaluate(any())).thenThrow(providerException);
+
+        Logger logger = (Logger) LoggerFactory.getLogger(
+                AiIdeaEvaluationService.class
+        );
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            assertThrows(
+                    AiProviderException.class,
+                    () -> service.avaliarIdeia(42L)
+            );
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+
+        String logs = appender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .reduce("", (left, right) -> left + "\n" + right);
+
+        assertTrue(logs.contains(
+                "Falha na avaliação de IA: ideaId=42, provider=gemini, "
+                        + "failureType=TIMEOUT"
+        ));
+        assertFalse(logs.contains("never-log-this-key"));
+        assertFalse(logs.contains("x-goog-api-key"));
     }
 
     @Test

@@ -1547,6 +1547,30 @@ Prefer structured parameterized logging.
 
 A developer can diagnose a failed request from logs without seeing sensitive credentials.
 
+### Task 10.2 implementation record — 2026-09-14
+
+Implemented by the developer and reviewed/fixed by Codex. Spring Security now
+records rejected unauthenticated and forbidden requests with HTTP method, path,
+and controlled failure type. The centralized exception handler records rejected
+login attempts, service-level authorization failures, invalid workflow attempts,
+unexpected Spring data-access failures, and priority persistence/calculation
+failures. Database responses remain generic and logs use parameterized SLF4J
+messages without raw exception text.
+
+The existing AI orchestration log remains the owner of provider-failure context:
+it records idea ID, configured provider, and a controlled failure classification.
+Existing audit persistence logs continue to identify event/resource context. No
+password, JWT value, Authorization header, database connection detail, AI API
+key, prompt, raw provider body, or generated summary is logged.
+
+Sixteen focused tests passed. They include real JWT-filter `401`/`403` requests,
+a real rejected login request through MVC, direct status/response verification
+for invalid workflow and database failures, and AI failure classification. The
+log-capture assertions also inject secret marker values and prove that none are
+present in the formatted application messages. The combined observability,
+authorization, authentication, AI, and controller regression selection passed
+70 of 70 tests. The exit criterion is satisfied.
+
 ---
 
 ## Task 10.3 — Optional custom metrics

@@ -8,7 +8,13 @@ import br.com.fiap.aguiaexpress.model.TipoPerfil;
 import br.com.fiap.aguiaexpress.model.Usuario;
 import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import br.com.fiap.aguiaexpress.service.IdeiaService;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -19,6 +25,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -44,6 +52,23 @@ class IdeiaStatusJwtIntegrationTest {
 
     @MockitoBean
     private IdeiaService ideiaService;
+
+    private Logger securityLogger;
+    private ListAppender<ILoggingEvent> logAppender;
+
+    @BeforeEach
+    void captureSecurityLogs() {
+        securityLogger = (Logger) LoggerFactory.getLogger(SecurityConfig.class);
+        logAppender = new ListAppender<>();
+        logAppender.start();
+        securityLogger.addAppender(logAppender);
+    }
+
+    @AfterEach
+    void stopCapturingSecurityLogs() {
+        securityLogger.detachAppender(logAppender);
+        logAppender.stop();
+    }
 
     @Test
     void validManagerJwtCanChangeIdeaStatus() throws Exception {
@@ -75,6 +100,50 @@ class IdeiaStatusJwtIntegrationTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(ideiaService);
+
+        String logs = capturedLogs();
+        assertTrue(logs.contains(
+                "Requisição não autenticada rejeitada: method=PATCH, "
+                        + "path=/ideias/42/status"
+        ));
+        assertFalse(logs.contains("invalid-token"));
+        assertFalse(logs.contains("Authorization"));
+        assertFalse(logs.contains("Bearer"));
+    }
+
+    @Test
+    void operationalUserReceives403AndAuthorizationLogContainsNoJwt() throws Exception {
+        Usuario operacional = user(
+                18L,
+                "operacional@example.com",
+                NomePerfil.OPERACIONAL
+        );
+        String token = tokenService.gerarToken(operacional);
+        when(usuarioRepository.findByEmail(operacional.getEmail()))
+                .thenReturn(Optional.of(operacional));
+
+        mockMvc.perform(patch("/ideias/{id}/status", 42L)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status": "EM_ANALISE"}
+                                """))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(ideiaService);
+
+        String logs = capturedLogs();
+        assertTrue(logs.contains(
+                "Acesso proibido: method=PATCH, path=/ideias/42/status"
+        ));
+        assertFalse(logs.contains(token));
+        assertFalse(logs.contains("Authorization: Bearer"));
+    }
+
+    private String capturedLogs() {
+        return logAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .reduce("", (left, right) -> left + "\n" + right);
     }
 
     private Usuario user(Long id, String email, NomePerfil profile) {

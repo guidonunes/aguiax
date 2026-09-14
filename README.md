@@ -122,6 +122,20 @@ cd backend
 ./mvnw -Dtest=ActuatorEndpointSecurityTest test
 ```
 
+Os logs operacionais usam SLF4J parametrizado. Rejeições de autenticação,
+autorização e fluxo são registradas em `WARN`; falhas de acesso a dados e de
+persistência da prioridade usam `ERROR`. Os eventos incluem somente contexto
+seguro, como método, rota, identificador do recurso, provedor e classificação da
+falha. Senhas, JWTs, cabeçalhos Authorization, URLs/senhas de banco, chaves de IA,
+prompts e corpos/resumos do provedor não são registrados.
+
+Para executar a verificação focada de logs:
+
+```bash
+cd backend
+./mvnw -Dtest=ApplicationExceptionHandlerLoggingTest,AuthControllerLoggingTest,IdeiaStatusJwtIntegrationTest,AiIdeaEvaluationServiceTest test
+```
+
 ## Configuração local dos bancos
 
 O MySQL continua sendo a fonte de verdade dos dados de negócio. O MongoDB é um

@@ -1768,6 +1768,23 @@ System.out.println(...)
 
 Use parameterized application logging.
 
+Task 10.2 implements the operational failure boundary as follows:
+
+- the Spring Security entry point and access-denied handler log HTTP method,
+  request path, and controlled exception type for `401` and `403` responses;
+- the centralized exception handler logs rejected login, service authorization,
+  invalid workflow, generic Spring data-access, and priority persistence failures;
+- AI orchestration logs idea ID, provider, and controlled provider-failure type;
+- audit persistence logs event type and resource identifiers.
+
+Known rejections use `WARN`; database and priority persistence failures use
+`ERROR`. Raw exception text from authentication and database failures is not
+logged because it can contain submitted credentials, connection information, or
+driver diagnostics. Requests are diagnosed through method, path, safe business
+reason where the message is application-controlled, resource identifiers, and
+failure classification. Focused log-capture tests verify that JWTs, Authorization
+headers, passwords, database URLs/passwords, and AI API keys are absent.
+
 ---
 
 ## 20.3 Metrics

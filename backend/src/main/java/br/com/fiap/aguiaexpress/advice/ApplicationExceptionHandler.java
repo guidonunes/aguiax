@@ -10,8 +10,12 @@ import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableExceptio
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
 import br.com.fiap.aguiaexpress.exception.UnauthorizedActionException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -19,6 +23,10 @@ import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class ApplicationExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(
+            ApplicationExceptionHandler.class
+    );
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErroRespostaDTO> handleResourceNotFound(
@@ -59,6 +67,13 @@ public class ApplicationExceptionHandler {
             UnauthorizedActionException exception,
             HttpServletRequest request
     ) {
+        LOGGER.warn(
+                "Operação proibida rejeitada: method={}, path={}, reason={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getMessage()
+        );
+
         ErroRespostaDTO erro = new ErroRespostaDTO(
                 LocalDateTime.now(),
                 HttpStatus.FORBIDDEN.value(),
@@ -76,6 +91,13 @@ public class ApplicationExceptionHandler {
             InvalidRequestException exception,
             HttpServletRequest request
     ) {
+        LOGGER.warn(
+                "Operação inválida rejeitada: method={}, path={}, reason={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getMessage()
+        );
+
         ErroRespostaDTO erro = new ErroRespostaDTO(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
@@ -149,9 +171,54 @@ public class ApplicationExceptionHandler {
             PriorityCalculationUnavailableException exception,
             HttpServletRequest request
     ) {
+        LOGGER.error(
+                "Falha ao calcular ou persistir prioridade: method={}, path={}, failureType={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName()
+        );
+
         return criarRespostaDeErro(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErroRespostaDTO> handleAuthenticationFailure(
+            AuthenticationException exception,
+            HttpServletRequest request
+    ) {
+        LOGGER.warn(
+                "Falha de autenticação: method={}, path={}, failureType={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName()
+        );
+
+        return criarRespostaDeErro(
+                HttpStatus.UNAUTHORIZED,
+                "Credenciais inválidas.",
+                request
+        );
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErroRespostaDTO> handleDataAccessFailure(
+            DataAccessException exception,
+            HttpServletRequest request
+    ) {
+        LOGGER.error(
+                "Falha de acesso ao banco: method={}, path={}, failureType={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName()
+        );
+
+        return criarRespostaDeErro(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Não foi possível acessar os dados neste momento.",
                 request
         );
     }

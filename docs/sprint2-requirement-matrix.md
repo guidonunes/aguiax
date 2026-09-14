@@ -104,7 +104,7 @@ their owning implementation tasks and tests are complete.
 | Requirement | Backend feature / endpoint | Role | Android location | Persistence | Current state | Verification / roadmap |
 |---|---|---|---|---|---|---|
 | Actuator health/info/metrics | `/actuator/health`, `/actuator/info`, `/actuator/metrics`, and individual metric reads | Public aggregate health; `LIDER` for sanitized info/metrics | None required | Runtime metrics | **Implemented.** Only the three endpoint families are exposed over HTTP; discovery and JMX are disabled, health details are hidden, and component health paths are denied. | Five isolated real-endpoint/JWT integration tests verify sanitized public health, `401`, wrong-role `403`, leader `200`, built-in JVM metrics, and unexposed `404`; Task 10.1 complete. |
-| Meaningful backend logs | SLF4J parameterized logs around security, workflows, AI, and DB failures | Internal operators | Android has separate client logs | Log stream | **Partial.** Audit persistence and AI orchestration log classified failures; the Gemini adapter also logs safe finish-reason/structure diagnostics without prompts, credentials, raw bodies, or generated summaries. Broader workflow logging remains pending. | Exercise failure paths and inspect contextual logs with no secrets; Task 10.2. |
+| Meaningful backend logs | SLF4J parameterized logs around security, workflows, AI, and DB failures | Internal operators | Android has separate client logs | Log stream | **Implemented.** Security logs safe `401`/`403` context; centralized handling logs rejected login, service authorization, invalid workflow, data-access, and priority failures; AI and audit retain resource-aware classified logs. Raw authentication/database exception messages, JWTs, headers, credentials, AI prompts/bodies/summaries, and keys are excluded. | Sixteen focused request/handler/service tests capture formatted logs, inject secret markers, and verify context, level, status, and redaction; the combined regression selection passes 70/70; Task 10.2 complete. |
 | Custom metrics | Micrometer counters/timers for AI, approvals, and project creation | Internal operators | None | Metrics registry | **Optional/missing.** | Counters/timers change on controlled operations; Task 10.3. |
 | Backend automated tests | Security, ideas, projects, dashboard, AI, and audit suites | Test identities for all roles | N/A | Isolated test DBs | **Partial.** Authorization, ownership, MongoDB, audit, JWT-filter, manager-review, idea-transition, deterministic priority, human-controlled AI governance, transactional project-conversion, dashboard, and AI coverage now exist. The focused Task 8.4 governance suite passes 54 of 54 tests. The 2026-09-12 complete run passed 175 of 177 tests; the unrelated Gemini thinking-level expectation mismatch produced one failure and the documented unresolved `${DB_URL}` `contextLoads` defect produced one error. | Resolve the Gemini source/test expectation and make `./mvnw test` independent of the `main` `.env` bootstrap, then add remaining Phase 11 scenarios. |
 | Android automated tests | ViewModel/DTO/UI role and integration-sensitive tests | Test identities | Android test source sets | Test fixtures | **Partial.** Auth-interceptor, manager review, AI, dashboard, badge, complete role policy, protected-route, and ownership-control tests provide meaningful unit coverage; Compose instrumentation and real-device journeys remain. The 2026-09-14 unit run passed 56 of 56 tests and debug assembly passed. | Extend `connectedDebugAndroidTest` through Task 11.6 and Phase 13 journeys. |
@@ -132,9 +132,10 @@ their owning implementation tasks and tests are complete.
    belongs to the backend.
 8. **Resolved in Task 5.3:** earned active badges are excluded from the available
    catalog and the progress totals retain active-catalog semantics.
-9. **Resolved in Task 10.1:** Actuator exposes sanitized public health and
-   leader-only application info and built-in metrics; purposeful broader logs,
-   optional custom metrics, and broader automated coverage remain Sprint 2 targets.
+9. **Resolved in Tasks 10.1–10.2:** Actuator exposes sanitized public health and
+   leader-only application info/metrics, while purposeful parameterized logs cover
+   security, workflow, database, AI, and audit failures without secrets. Optional
+   custom metrics and broader automated coverage remain Sprint 2 targets.
 
 ## Task 0.1 conclusion
 
