@@ -263,10 +263,11 @@ private fun IdeiaList(
                 quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
                 usuarioJaVotou = votosUsuario.contains(ideia.id),
                 podeVotarEmIdeia = podeVotarEmIdeia,
-                podeEditarExcluirIdeia =
-                    podeEditarExcluirIdeia &&
-                            usuarioIdLogado != null &&
-                            ideia.usuarioId == usuarioIdLogado,
+                podeEditarExcluirIdeia = podeEditarIdeiaNoApp(
+                    roleAllowsEdit = podeEditarExcluirIdeia,
+                    loggedUserId = usuarioIdLogado,
+                    ideaOwnerId = ideia.usuarioId
+                ),
                 podeAtualizarStatusIdeia =
                     podeAtualizarStatusIdeia,
                 podeAvaliarIdeia = podeAvaliarIdeia,
@@ -281,6 +282,16 @@ private fun IdeiaList(
 
         }
     }
+}
+
+internal fun podeEditarIdeiaNoApp(
+    roleAllowsEdit: Boolean,
+    loggedUserId: Long?,
+    ideaOwnerId: Long
+): Boolean {
+    return roleAllowsEdit &&
+        loggedUserId != null &&
+        loggedUserId == ideaOwnerId
 }
 
 @Composable

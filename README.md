@@ -73,6 +73,18 @@ obter o mesmo resumo filtrado, enquanto “Todas as orientações” usa a consu
 global. A visualização individual continua usando o contrato existente
 `GET /projetos/{projectId}`.
 
+A navegação Android segue a mesma matriz de autorização do backend:
+
+- `OPERACIONAL`: inicia em Ideias, cria ideias e edita/exclui somente ideias próprias;
+- `GESTOR`: inicia em Projetos, avalia/prioriza ideias e gerencia projetos;
+- `LIDER`: inicia no Dashboard e gerencia orientações estratégicas.
+
+Todos os três perfis autenticados podem consultar orientações, ideias, projetos e
+medalhas, além de votar. Rotas privilegiadas também são protegidas no cliente e
+perfis desconhecidos falham de forma fechada. Essas restrições melhoram a
+experiência, mas não substituem Spring Security: chamadas sem autenticação ou com
+papel inadequado continuam recebendo `401` ou `403` do backend.
+
 ## Configuração local dos bancos
 
 O MySQL continua sendo a fonte de verdade dos dados de negócio. O MongoDB é um

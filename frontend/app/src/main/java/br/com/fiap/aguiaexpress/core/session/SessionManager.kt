@@ -56,50 +56,65 @@ object SessionManager {
     }
 
     fun podeCadastrarIdeia(): Boolean {
-        return isOperacional()
+        return uiPolicy().canCreateIdeas
     }
 
     fun podeVotarEmIdeia(): Boolean {
-        return estaLogado()
+        return uiPolicy().canVote
     }
 
     fun podeEditarExcluirIdeia(): Boolean {
-        return isOperacional()
+        return uiPolicy().canEditOwnIdeas
     }
 
     fun podeAtualizarStatusIdeia(): Boolean {
-        return isGestor()
+        return uiPolicy().canReviewIdeas
     }
 
     fun podeGerenciarProjetos(): Boolean {
-        return isGestor()
+        return uiPolicy().canManageProjects
     }
 
     fun podeGerenciarOrientacoes(): Boolean {
-        return isLider()
+        return uiPolicy().canManageOrientations
     }
 
     fun podeAcessarDashboard(): Boolean {
-        return isLider()
+        return uiPolicy().canViewDashboard
+    }
+
+    fun podeConsultarCategorias(): Boolean {
+        return uiPolicy().canViewCategories
     }
 
     fun podeConsultarOrientacoes(): Boolean {
-        return estaLogado()
+        return uiPolicy().canViewOrientations
+    }
+
+    fun podeConsultarIdeias(): Boolean {
+        return uiPolicy().canViewIdeas
     }
 
     fun podeConsultarProjetos(): Boolean {
-        return estaLogado()
+        return uiPolicy().canViewProjects
     }
 
     fun podeConsultarMedalhas(): Boolean {
-        return estaLogado()
+        return uiPolicy().canViewBadges
     }
 
     fun podeAvaliarIdeia(): Boolean {
-        return isGestor()
+        return uiPolicy().canReviewIdeas
     }
 
     fun podeSolicitarAvaliacaoIa(): Boolean {
-        return isGestor()
+        return uiPolicy().canRequestAiEvaluation
+    }
+
+    internal fun uiPolicy(): RoleUiPolicy {
+        return roleUiPolicy(
+            profile = perfil,
+            isAuthenticated = estaLogado()
+        )
     }
 }

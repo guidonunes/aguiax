@@ -1,12 +1,12 @@
 package br.com.fiap.aguiaexpress.ui.navigation
 
-import androidx.benchmark.traceprocessor.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -23,6 +23,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -30,31 +31,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import br.com.fiap.aguiaexpress.core.session.RoleUiPolicy
+import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.ui.screens.IdeiasScreen
+import br.com.fiap.aguiaexpress.ui.screens.auth.LoginScreen
 import br.com.fiap.aguiaexpress.ui.screens.categorias.CategoriasScreen
+import br.com.fiap.aguiaexpress.ui.screens.dashboard.DashboardScreen
 import br.com.fiap.aguiaexpress.ui.screens.ideias.CriarIdeiaScreen
-import br.com.fiap.aguiaexpress.ui.screens.medalhas.MedalhasScreen
-import br.com.fiap.aguiaexpress.ui.screens.orientacoes.OrientacoesScreen
-import br.com.fiap.aguiaexpress.ui.screens.projetos.ProjetosScreen
-import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
+import br.com.fiap.aguiaexpress.ui.screens.medalhas.MedalhasScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.CriarOrientacaoScreen
 import br.com.fiap.aguiaexpress.ui.screens.orientacoes.EditarOrientacaoScreen
-import br.com.fiap.aguiaexpress.core.session.SessionManager
-import br.com.fiap.aguiaexpress.ui.screens.dashboard.DashboardScreen
+import br.com.fiap.aguiaexpress.ui.screens.orientacoes.OrientacoesScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.CriarProjetoScreen
 import br.com.fiap.aguiaexpress.ui.screens.projetos.EditarProjetoScreen
-import br.com.fiap.aguiaexpress.ui.screens.auth.LoginScreen
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material3.IconButton
+import br.com.fiap.aguiaexpress.ui.screens.projetos.ProjetosScreen
+import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
 
 
 private data class BottomNavItem(
@@ -63,53 +61,22 @@ private data class BottomNavItem(
     val icon: ImageVector
 )
 
+private fun bottomNavItem(route: String): BottomNavItem {
+    return when (route) {
+        Routes.ORIENTACOES -> BottomNavItem(route, "Orientações", Icons.Default.Flag)
+        Routes.IDEIAS -> BottomNavItem(route, "Ideias", Icons.Default.Lightbulb)
+        Routes.PROJETOS -> BottomNavItem(route, "Projetos", Icons.Default.Work)
+        Routes.DASHBOARD -> BottomNavItem(route, "Dashboard", Icons.Default.Dashboard)
+        Routes.MEDALHAS -> BottomNavItem(route, "Medalhas", Icons.Default.EmojiEvents)
+        else -> error("Unsupported bottom navigation route: $route")
+    }
+}
+
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-
-    val bottomNavItems = buildList {
-        add(
-            BottomNavItem(
-                route = Routes.ORIENTACOES,
-                label = "Orientações",
-                icon = Icons.Default.Flag
-            )
-        )
-
-        add(
-            BottomNavItem(
-                route = Routes.IDEIAS,
-                label = "Ideias",
-                icon = Icons.Default.Lightbulb
-            )
-        )
-
-        add(
-            BottomNavItem(
-                route = Routes.PROJETOS,
-                label = "Projetos",
-                icon = Icons.Default.Work
-            )
-        )
-
-        if (SessionManager.podeAcessarDashboard()) {
-            add(
-                BottomNavItem(
-                    route = Routes.DASHBOARD,
-                    label = "Dashboard",
-                    icon = Icons.Default.Dashboard
-                )
-            )
-        }
-
-        add(
-            BottomNavItem(
-                route = Routes.MEDALHAS,
-                label = "Medalhas",
-                icon = Icons.Default.EmojiEvents
-            )
-        )
-    }
+    val rolePolicy = SessionManager.uiPolicy()
+    val bottomNavItems = visibleMainRoutes(rolePolicy).map(::bottomNavItem)
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -175,7 +142,7 @@ fun AppNavigation() {
         floatingActionButton = {
             when (currentRoute) {
                 Routes.IDEIAS -> {
-                    if (SessionManager.podeCadastrarIdeia()) {
+                    if (rolePolicy.canCreateIdeas) {
                         FloatingActionButton(
                             onClick = {
                                 navController.navigate(Routes.CRIAR_IDEIA)
@@ -192,7 +159,7 @@ fun AppNavigation() {
                 }
 
                 Routes.ORIENTACOES -> {
-                    if (SessionManager.podeGerenciarOrientacoes()) {
+                    if (rolePolicy.canManageOrientations) {
                         FloatingActionButton(
                             onClick = {
                                 navController.navigate(Routes.CRIAR_ORIENTACAO)
@@ -208,7 +175,7 @@ fun AppNavigation() {
                     }
                 }
                 Routes.PROJETOS -> {
-                    if (SessionManager.podeGerenciarProjetos()) {
+                    if (rolePolicy.canManageProjects) {
                         FloatingActionButton(
                             onClick = {
                                 navController.navigate(Routes.CRIAR_PROJETO)
@@ -235,7 +202,7 @@ fun AppNavigation() {
             composable(Routes.LOGIN) {
                 LoginScreen(
                     onLoginSuccess = { perfil ->
-                        val startRoute = getStartRouteByPerfil(perfil)
+                        val startRoute = startRouteForRole(perfil)
 
                         navController.navigate(startRoute) {
                             popUpTo(Routes.LOGIN) {
@@ -247,73 +214,101 @@ fun AppNavigation() {
             }
 
             composable(Routes.CATEGORIAS) {
-                CategoriasScreen()
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.CATEGORIAS, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    CategoriasScreen()
+                }
             }
 
             composable(Routes.ORIENTACOES) {
-                OrientacoesScreen(
-                    podeGerenciarOrientacoes = SessionManager.podeGerenciarOrientacoes(),
-                    onCriarOrientacaoClick = {
-                        navController.navigate(Routes.CRIAR_ORIENTACAO)
-                    },
-                    onEditarOrientacaoClick = { orientacaoId ->
-                        navController.navigate(Routes.editarOrientacaoRoute(orientacaoId))
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.ORIENTACOES, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    OrientacoesScreen(
+                        podeGerenciarOrientacoes = rolePolicy.canManageOrientations,
+                        onCriarOrientacaoClick = {
+                            navController.navigate(Routes.CRIAR_ORIENTACAO)
+                        },
+                        onEditarOrientacaoClick = { orientacaoId ->
+                            navController.navigate(
+                                Routes.editarOrientacaoRoute(orientacaoId)
+                            )
+                        }
+                    )
+                }
             }
 
             composable(Routes.IDEIAS) {
-                IdeiasScreen(
-                    podeEditarExcluirIdeia =
-                        SessionManager.podeEditarExcluirIdeia(),
-                    podeAtualizarStatusIdeia =
-                        SessionManager.podeAtualizarStatusIdeia(),
-                    podeAvaliarIdeia =
-                        SessionManager.podeAvaliarIdeia(),
-                    podeSolicitarAvaliacaoIa =
-                        SessionManager.podeSolicitarAvaliacaoIa(),
-                    podeVotarEmIdeia =
-                        SessionManager.podeVotarEmIdeia(),
-                    usuarioIdLogado = SessionManager.usuarioId,
-                    onCriarIdeiaClick = {
-                        navController.navigate(Routes.CRIAR_IDEIA)
-                    },
-                    onEditarIdeiaClick = { ideiaId ->
-                        navController.navigate(
-                            Routes.editarIdeiaRoute(ideiaId)
-                        )
-                    }
-                )
-
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.IDEIAS, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    IdeiasScreen(
+                        podeEditarExcluirIdeia = rolePolicy.canEditOwnIdeas,
+                        podeAtualizarStatusIdeia = rolePolicy.canReviewIdeas,
+                        podeAvaliarIdeia = rolePolicy.canReviewIdeas,
+                        podeSolicitarAvaliacaoIa =
+                            rolePolicy.canRequestAiEvaluation,
+                        podeVotarEmIdeia = rolePolicy.canVote,
+                        usuarioIdLogado = SessionManager.usuarioId,
+                        onCriarIdeiaClick = {
+                            navController.navigate(Routes.CRIAR_IDEIA)
+                        },
+                        onEditarIdeiaClick = { ideiaId ->
+                            navController.navigate(
+                                Routes.editarIdeiaRoute(ideiaId)
+                            )
+                        }
+                    )
+                }
             }
 
             composable(Routes.CRIAR_IDEIA) {
-                CriarIdeiaScreen(
-                    onVoltarClick = {
-                        navController.popBackStack()
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.CRIAR_IDEIA, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    CriarIdeiaScreen(onVoltarClick = navController::popBackStack)
+                }
             }
 
             composable(Routes.PROJETOS) {
-                ProjetosScreen(
-                    podeGerenciarProjetos = SessionManager.podeGerenciarProjetos(),
-                    onEditarProjetoClick = { projetoId ->
-                        navController.navigate(Routes.editarProjetoRoute(projetoId))
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.PROJETOS, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    ProjetosScreen(
+                        podeGerenciarProjetos = rolePolicy.canManageProjects,
+                        onEditarProjetoClick = { projetoId ->
+                            navController.navigate(
+                                Routes.editarProjetoRoute(projetoId)
+                            )
+                        }
+                    )
+                }
             }
 
             composable(Routes.MEDALHAS) {
-                MedalhasScreen()
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.MEDALHAS, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    MedalhasScreen()
+                }
             }
 
             composable(Routes.CRIAR_ORIENTACAO) {
-                CriarOrientacaoScreen(
-                    onVoltarClick = {
-                        navController.popBackStack()
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.CRIAR_ORIENTACAO, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    CriarOrientacaoScreen(
+                        onVoltarClick = navController::popBackStack
+                    )
+                }
             }
 
             composable(
@@ -326,12 +321,15 @@ fun AppNavigation() {
             ) { backStackEntry ->
                 val orientacaoId = backStackEntry.arguments?.getLong("orientacaoId") ?: return@composable
 
-                EditarOrientacaoScreen(
-                    orientacaoId = orientacaoId,
-                    onVoltarClick = {
-                        navController.popBackStack()
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.EDITAR_ORIENTACAO, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    EditarOrientacaoScreen(
+                        orientacaoId = orientacaoId,
+                        onVoltarClick = navController::popBackStack
+                    )
+                }
             }
 
             composable(
@@ -345,20 +343,24 @@ fun AppNavigation() {
             ) { backStackEntry ->
                 val ideiaId = backStackEntry.arguments?.getLong("ideiaId") ?: return@composable
 
-                EditarIdeiaScreen(
-                    ideiaId = ideiaId,
-                    onVoltarClick = {
-                        navController.popBackStack()
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.EDITAR_IDEIA, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    EditarIdeiaScreen(
+                        ideiaId = ideiaId,
+                        onVoltarClick = navController::popBackStack
+                    )
+                }
             }
 
             composable(Routes.CRIAR_PROJETO) {
-                CriarProjetoScreen(
-                    onVoltarClick = {
-                        navController.popBackStack()
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.CRIAR_PROJETO, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    CriarProjetoScreen(onVoltarClick = navController::popBackStack)
+                }
             }
 
             composable(
@@ -371,31 +373,63 @@ fun AppNavigation() {
             ) { backStackEntry ->
                 val projetoId = backStackEntry.arguments?.getLong("projetoId") ?: return@composable
 
-                EditarProjetoScreen(
-                    projetoId = projetoId,
-                    onVoltarClick = {
-                        navController.popBackStack()
-                    }
-                )
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.EDITAR_PROJETO, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    EditarProjetoScreen(
+                        projetoId = projetoId,
+                        onVoltarClick = navController::popBackStack
+                    )
+                }
             }
 
             composable(Routes.DASHBOARD) {
-                if (SessionManager.podeAcessarDashboard()) {
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.DASHBOARD, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
                     DashboardScreen()
-                } else {
-                    Text(text = "Acesso restrito ao perfil Líder.")
                 }
             }
         }
     }
 }
 
-private fun getStartRouteByPerfil(perfil: String?): String {
-    return when (perfil) {
-        "OPERACIONAL" -> Routes.IDEIAS
-        "GESTOR" -> Routes.PROJETOS
-        "LIDER" -> Routes.DASHBOARD
-        else -> Routes.ORIENTACOES
+@Composable
+private fun RoleProtectedContent(
+    allowed: Boolean,
+    onBack: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    if (allowed) {
+        content()
+        return
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Acesso restrito",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.error
+        )
+        Text(
+            text = "Seu perfil não possui permissão para acessar esta funcionalidade.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("Voltar")
+        }
     }
 }
 
@@ -435,7 +469,7 @@ private fun AppTopBar(
             onClick = onLogoutClick
         ) {
             Icon(
-                imageVector = Icons.Default.Logout,
+                imageVector = Icons.AutoMirrored.Filled.Logout,
                 contentDescription = "Sair",
                 tint = MaterialTheme.colorScheme.primary
             )

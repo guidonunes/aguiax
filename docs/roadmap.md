@@ -1463,6 +1463,33 @@ Remember: UI restrictions are convenience only; backend remains authoritative.
 
 Each role sees an appropriate experience and forbidden API calls still fail server-side.
 
+### Task 9.4 implementation record — 2026-09-14
+
+Implemented by Codex. Android now derives navigation and visible controls from one
+fail-closed `RoleUiPolicy` instead of repeating independent role comparisons.
+Every authenticated role can view orientations, ideas, projects, badges, and vote.
+`OPERACIONAL` alone can create ideas and receives edit/delete controls only for
+its own ideas; `GESTOR` alone receives idea review, status, AI-evaluation, and
+project-management controls; `LIDER` alone receives orientation-management and
+executive-dashboard controls. Login starts each role in its primary workflow.
+Unknown roles and sessions without a token receive no protected capability.
+
+The same policy now guards the actual Compose destinations for idea,
+orientation, and project creation/editing and for the dashboard. A forbidden
+destination does not instantiate its screen or ViewModel, so hidden buttons are
+not the sole client-side restriction. These guards remain usability controls:
+Spring Security and ownership checks continue to be authoritative.
+
+Fourteen new Android tests cover the three complete role policies, shared
+navigation, primary start routes, privileged destination denial,
+unauthenticated/unknown-role fail-closed behavior, and own-idea controls. The
+complete Android suite passed 56 of 56 tests and `assembleDebug` succeeded. The
+focused backend authorization suites passed 47 of 47 checks, including real MVC
+`401`, `403`, and allowed responses for project and strategic-orientation routes,
+plus the existing idea, AI, dashboard, catalog, user, category, and badge
+boundaries. The exit criterion and Phase 9 implementation are complete; physical
+device journeys remain in Phases 13 and 14.
+
 ---
 
 # Phase 10 — Observability

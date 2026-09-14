@@ -753,11 +753,21 @@ user-administration API client. The idea menu now compares the authenticated use
 ID with the idea owner ID; server checks remain authoritative. New admin UI is not
 required.
 
-Task 1.1 verification is an inventory/document consistency check. Runtime
-authorization verification remains pending; the Task 0.2 `${DB_URL}` backend test
-configuration failure is recorded in [the regression baseline](sprint2-regression-baseline.md)
-and must be addressed before the security integration suite can pass. A completed
-policy document is not evidence that Phase 1 is secure or complete.
+Task 9.4 centralizes these client decisions in a fail-closed `RoleUiPolicy`.
+Authenticated roles share orientation, idea, project, badge, and voting access.
+The operational, manager, and leader mutation capabilities exactly match the
+matrix above. Unknown roles and missing-token sessions receive no protected
+capabilities. `AppNavigation` uses the policy both to build its bottom navigation
+and to guard every privileged create/edit/dashboard destination before the screen
+and its ViewModel are instantiated. The own-idea action additionally compares the
+session user ID with the response owner ID.
+
+Client guards are never security evidence by themselves. The focused Task 9.4
+server verification executes MVC authorization for project/orientation reads and
+mutations and reruns the established idea, AI, dashboard, catalog, user, category,
+and badge security suites. Wrong roles receive `403`, missing authentication
+receives `401`, and allowed roles retain their documented success responses. The
+remaining full real-user/device journeys belong to Phases 13 and 14.
 
 ---
 
