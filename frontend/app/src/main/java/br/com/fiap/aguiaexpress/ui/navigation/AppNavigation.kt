@@ -515,7 +515,7 @@ internal fun AppTopBar(
             Image(
                 painter = painterResource(R.drawable.aguiax_title),
                 contentDescription = "AguiaExpress",
-                modifier = Modifier.width(180.dp).height(48.dp),
+                modifier = Modifier.width(90.dp).height(24.dp),
                 // The square asset has transparent space above/below the centered wordmark.
                 contentScale = ContentScale.Crop
             )
