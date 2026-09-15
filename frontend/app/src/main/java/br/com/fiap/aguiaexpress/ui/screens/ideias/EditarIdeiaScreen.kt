@@ -1,6 +1,5 @@
 package br.com.fiap.aguiaexpress.ui.screens.ideias
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,7 +40,6 @@ import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
 import br.com.fiap.aguiaexpress.viewmodel.IdeiaViewModel
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.ui.draw.clip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -369,35 +366,6 @@ private fun FormTextField(
         },
         modifier = Modifier.fillMaxWidth(),
         minLines = minLines
-    )
-}
-
-@Composable
-private fun FeedbackMessage(
-    message: String,
-    isError: Boolean
-) {
-    val backgroundColor = if (isError) {
-        MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
-    } else {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-    }
-
-    val textColor = if (isError) {
-        MaterialTheme.colorScheme.error
-    } else {
-        MaterialTheme.colorScheme.primary
-    }
-
-    Text(
-        text = message,
-        color = textColor,
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .padding(12.dp)
     )
 }
 

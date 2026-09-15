@@ -17,5 +17,6 @@ data class Ideia(
     val orientacaoId: Long,
     val nomeUsuario: String,
     val nomeCategoria: String,
-    val tituloOrientacao: String
+    val tituloOrientacao: String,
+    val dataCriacao: String? = null
 )

@@ -43,6 +43,7 @@ fun IdeiaDto.toDomain(): Ideia {
         orientacaoId = orientacaoId,
         nomeUsuario = nomeUsuario ?: "Usuário não informado",
         nomeCategoria = nomeCategoria ?: "Categoria não informada",
-        tituloOrientacao = tituloOrientacao ?: "Orientação não informada"
+        tituloOrientacao = tituloOrientacao ?: "Orientação não informada",
+        dataCriacao = dataCriacao
     )
 }

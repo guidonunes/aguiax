@@ -12,6 +12,16 @@ class IdeiaDtoContractTest {
     private val gson = Gson()
 
     @Test
+    fun `preserves creation time for newest first feed ordering`() {
+        val dto = gson.fromJson(
+            ideaJson(statusField = "\"statusIdeia\": \"NOVA\",")
+                .replace("\"id\": 42,", "\"id\": 42, \"dataCriacao\": \"2026-09-15T12:00:00\","),
+            IdeiaDto::class.java
+        )
+        assertEquals("2026-09-15T12:00:00", dto.toDomain().dataCriacao)
+    }
+
+    @Test
     fun `maps every backend idea status without falling back to NOVA`() {
         val backendStatuses = listOf(
             "NOVA",

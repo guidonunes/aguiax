@@ -198,7 +198,7 @@ class IdeiaViewModel : ViewModel() {
 
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        ideias = ideias,
+                        ideias = ordenarIdeiasMaisRecentes(ideias),
                         votosPorIdeia = votosPorIdeia,
                         ideiasVotadasPeloUsuario = ideiasVotadasPeloUsuario,
                         errorMessage = null

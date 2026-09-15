@@ -257,7 +257,7 @@ private fun IdeiaList(
         contentPadding = PaddingValues(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(ideias) { ideia ->
+        items(ideias, key = { it.id }) { ideia ->
             IdeiaCard(
                 ideia = ideia,
                 quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
@@ -406,8 +406,38 @@ private fun IdeiaCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (podeVotarEmIdeia) {
+                        IconButton(onClick = { onAlternarVotoClick(ideia.id) }) {
+                            Icon(
+                                imageVector = Icons.Default.ThumbUp,
+                                contentDescription = if (usuarioJaVotou) "Remover voto" else "Votar",
+                                tint = if (usuarioJaVotou) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp,
+                            contentDescription = "Votos",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Text(
+                        text = quantidadeVotos.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
                 TextButton(
                     onClick = {
                         detalhesExpanded = !detalhesExpanded
@@ -510,54 +540,13 @@ private fun IdeiaCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            if (podeAtualizarStatusIdeia) {
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (podeVotarEmIdeia) {
-                        IconButton(
-                            onClick = {
-                                onAlternarVotoClick(ideia.id)
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ThumbUp,
-                                contentDescription = if (usuarioJaVotou) {
-                                    "Remover voto"
-                                } else {
-                                    "Votar"
-                                },
-                                tint = if (usuarioJaVotou) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                modifier = Modifier.size(26.dp)
-                            )
-                        }
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.ThumbUp,
-                            contentDescription = "Votos",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Text(
-                        text = quantidadeVotos.toString(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                if (podeAtualizarStatusIdeia) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
