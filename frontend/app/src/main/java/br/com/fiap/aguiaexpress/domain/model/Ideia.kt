@@ -18,5 +18,7 @@ data class Ideia(
     val nomeUsuario: String,
     val nomeCategoria: String,
     val tituloOrientacao: String,
-    val dataCriacao: String? = null
+    val dataCriacao: String? = null,
+    val dataAtualizacao: String? = null,
+    val totalVotos: Int? = null
 )

@@ -18,5 +18,7 @@ data class Projeto(
     val ganhoProdutividade: Double,
     val dataInicio: String,
     val dataPrevisaoFim: String,
-    val dataConclusao: String?
+    val dataConclusao: String?,
+    val dataCriacao: String? = null,
+    val dataAtualizacao: String? = null
 )

@@ -10,7 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import br.com.fiap.aguiaexpress.ui.theme.SemanticTone
+import br.com.fiap.aguiaexpress.ui.theme.toneColors
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -20,24 +21,17 @@ fun PerfilTag(
 ) {
     val normalizedPerfil = perfil.uppercase()
 
-    val backgroundColor = when (normalizedPerfil) {
-        "LIDER", "LÍDER" -> Color(0xFFEDE7F6)
-        "GESTOR", "GESTÃO", "GESTAO" -> Color(0xFFE3F2FD)
-        "OPERACIONAL" -> Color(0xFFE8F5E9)
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val textColor = when (normalizedPerfil) {
-        "LIDER", "LÍDER" -> Color(0xFF5E35B1)
-        "GESTOR", "GESTÃO", "GESTAO" -> Color(0xFF1565C0)
-        "OPERACIONAL" -> Color(0xFF2E7D32)
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val colors = toneColors(when (normalizedPerfil) {
+        "LIDER", "LÍDER" -> SemanticTone.ACHIEVEMENT
+        "GESTOR", "GESTÃO", "GESTAO" -> SemanticTone.INFO
+        "OPERACIONAL" -> SemanticTone.SUCCESS
+        else -> SemanticTone.NEUTRAL
+    })
 
     Box(
         modifier = modifier
             .background(
-                color = backgroundColor,
+                color = colors.container,
                 shape = RoundedCornerShape(50)
             )
             .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -45,7 +39,7 @@ fun PerfilTag(
         Text(
             text = formatarPerfil(perfil),
             style = MaterialTheme.typography.labelSmall,
-            color = textColor
+            color = colors.content
         )
     }
 }

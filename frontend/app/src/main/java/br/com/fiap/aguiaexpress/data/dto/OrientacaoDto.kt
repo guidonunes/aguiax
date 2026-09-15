@@ -23,6 +23,8 @@ fun OrientacaoDto.toDomain(): Orientacao {
         descricao = descricao ?: "Sem descrição",
         areaEstrategica = areaEstrategica,
         nomeUsuario = nomeUsuario,
-        perfilUsuario = perfilUsuario
+        perfilUsuario = perfilUsuario,
+        dataCriacao = dataCriacao,
+        dataAtualizacao = dataAtualizacao
     )
 }

@@ -4,19 +4,17 @@ import br.com.fiap.aguiaexpress.core.session.RoleUiPolicy
 
 internal fun visibleMainRoutes(policy: RoleUiPolicy): List<String> {
     return buildList {
+        if (policy.isAuthenticated) add(Routes.HOME)
         if (policy.canViewOrientations) add(Routes.ORIENTACOES)
         if (policy.canViewIdeas) add(Routes.IDEIAS)
         if (policy.canViewProjects) add(Routes.PROJETOS)
-        if (policy.canViewDashboard) add(Routes.DASHBOARD)
         if (policy.canViewBadges) add(Routes.MEDALHAS)
     }
 }
 
 internal fun startRouteForRole(profile: String?): String {
     return when (profile?.trim()?.uppercase()) {
-        "OPERACIONAL" -> Routes.IDEIAS
-        "GESTOR" -> Routes.PROJETOS
-        "LIDER" -> Routes.DASHBOARD
+        "OPERACIONAL", "GESTOR", "LIDER" -> Routes.HOME
         else -> Routes.LOGIN
     }
 }
@@ -27,6 +25,7 @@ internal fun canAccessRoute(
 ): Boolean {
     return when (route) {
         Routes.LOGIN -> true
+        Routes.HOME -> policy.isAuthenticated
         Routes.CATEGORIAS -> policy.canViewCategories
         Routes.ORIENTACOES -> policy.canViewOrientations
         Routes.IDEIAS -> policy.canViewIdeas

@@ -13,12 +13,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import br.com.fiap.aguiaexpress.ui.components.AguiaButton as Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import br.com.fiap.aguiaexpress.ui.theme.semanticColors
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -131,9 +132,9 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .height(52.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
+                containerColor = MaterialTheme.semanticColors.primaryAction,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
@@ -156,12 +157,12 @@ private fun LoginErrorMessage(
 ) {
     Text(
         text = message,
-        color = MaterialTheme.colorScheme.error,
+        color = MaterialTheme.colorScheme.onErrorContainer,
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f))
+            .background(MaterialTheme.colorScheme.errorContainer)
             .padding(12.dp)
     )
 }

@@ -6,5 +6,7 @@ data class Orientacao(
     val descricao: String,
     val areaEstrategica: String,
     val nomeUsuario: String,
-    val perfilUsuario: String
+    val perfilUsuario: String,
+    val dataCriacao: String? = null,
+    val dataAtualizacao: String? = null
 )

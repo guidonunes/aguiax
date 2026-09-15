@@ -9,6 +9,7 @@ import org.junit.Test
 class RoleNavigationPolicyTest {
 
     private val commonRoutes = listOf(
+        Routes.HOME,
         Routes.ORIENTACOES,
         Routes.IDEIAS,
         Routes.PROJETOS,
@@ -16,7 +17,7 @@ class RoleNavigationPolicyTest {
     )
 
     @Test
-    fun `main navigation exposes shared views and leader-only dashboard`() {
+    fun `all roles share five main destinations with a shared home`() {
         assertEquals(
             commonRoutes,
             visibleMainRoutes(roleUiPolicy("OPERACIONAL", true))
@@ -26,22 +27,17 @@ class RoleNavigationPolicyTest {
             visibleMainRoutes(roleUiPolicy("GESTOR", true))
         )
         assertEquals(
-            listOf(
-                Routes.ORIENTACOES,
-                Routes.IDEIAS,
-                Routes.PROJETOS,
-                Routes.DASHBOARD,
-                Routes.MEDALHAS
-            ),
+            commonRoutes,
             visibleMainRoutes(roleUiPolicy("LIDER", true))
         )
     }
 
     @Test
-    fun `each role starts in its primary workflow`() {
-        assertEquals(Routes.IDEIAS, startRouteForRole("OPERACIONAL"))
-        assertEquals(Routes.PROJETOS, startRouteForRole("GESTOR"))
-        assertEquals(Routes.DASHBOARD, startRouteForRole("LIDER"))
+    fun `each role starts in the shared home`() {
+        assertEquals(Routes.HOME, startRouteForRole("OPERACIONAL"))
+        assertEquals(Routes.HOME, startRouteForRole("GESTOR"))
+        assertEquals(Routes.HOME, startRouteForRole("LIDER"))
+        assertEquals(Routes.HOME, startRouteForRole(" lider "))
         assertEquals(Routes.LOGIN, startRouteForRole("ADMIN"))
         assertEquals(Routes.LOGIN, startRouteForRole(null))
     }
@@ -97,6 +93,15 @@ class RoleNavigationPolicyTest {
         assertTrue(visibleMainRoutes(policy).isEmpty())
         assertTrue(canAccessRoute(Routes.LOGIN, policy))
         assertFalse(canAccessRoute(Routes.IDEIAS, policy))
+        assertFalse(canAccessRoute(Routes.DASHBOARD, policy))
+        assertFalse(canAccessRoute(Routes.HOME, policy))
+    }
+
+    @Test
+    fun `unknown role cannot access home or any main route`() {
+        val policy = roleUiPolicy("ADMIN", true)
+        assertTrue(visibleMainRoutes(policy).isEmpty())
+        assertFalse(canAccessRoute(Routes.HOME, policy))
         assertFalse(canAccessRoute(Routes.DASHBOARD, policy))
     }
 }

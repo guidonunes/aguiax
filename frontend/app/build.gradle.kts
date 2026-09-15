@@ -77,6 +77,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
 
+    // One app-wide persisted Light / Dark / System setting.
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
+
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.7")
 

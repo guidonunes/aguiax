@@ -1471,7 +1471,8 @@ Every authenticated role can view orientations, ideas, projects, badges, and vot
 `OPERACIONAL` alone can create ideas and receives edit/delete controls only for
 its own ideas; `GESTOR` alone receives idea review, status, AI-evaluation, and
 project-management controls; `LIDER` alone receives orientation-management and
-executive-dashboard controls. Login starts each role in its primary workflow.
+executive-dashboard controls. Login now opens the shared role-adaptive Home
+(the follow-up below replaces the original workflow-specific start routes).
 Unknown roles and sessions without a token receive no protected capability.
 
 The same policy now guards the actual Compose destinations for idea,
@@ -1489,6 +1490,54 @@ focused backend authorization suites passed 47 of 47 checks, including real MVC
 plus the existing idea, AI, dashboard, catalog, user, category, and badge
 boundaries. The exit criterion and Phase 9 implementation are complete; physical
 device journeys remain in Phases 13 and 14.
+
+### Role-adaptive Home follow-up — 2026-09-15
+
+Implemented by Codex at the developer's request. A shared Home destination now
+provides personalized greetings, real role-specific metrics, bounded recent-record
+updates, operational idea submission, manager review/project shortcuts, and a
+leader executive snapshot linking to the existing full Dashboard. The shared
+bottom bar has five destinations; Dashboard remains an independently guarded
+leader-only destination accessible from Home. Existing CRUD workflows and backend
+authorization are unchanged. Definitions, data sources, unavailable-value policy,
+and the current-record activity limitation are documented in architecture section
+9.4. This addition does not mark Phase 13's real-backend journeys complete.
+
+Verification: the complete Android unit suite passed **87/87**, the eight Home
+Compose tests passed **8/8** on the connected Pixel 6 / Android 12 emulator,
+and `assembleDebug` succeeded. Coverage includes personal ownership filtering,
+real versus unavailable/empty values, manager counts and attention ordering,
+backend-owned executive decimals, role-scoped API requests, expired sessions,
+cancellation, five-item timestamp ordering, guarded navigation, role shortcuts,
+loading/retry/partial states, and narrow/large-font metric layouts. Generated
+operational, manager, and leader layouts were visually inspected. The test APKs
+are temporary; the debug app is reinstalled after emulator verification.
+
+### Android appearance follow-up — 2026-09-15
+
+Implemented by Codex at the developer's request. The existing Material 3 theme
+now provides the supplied coral/blue/gold light and dark palettes, layered
+surfaces, and shared success/warning/information tokens. Home metrics, actions,
+status/profile tags, medals, feedback, buttons, and bottom navigation use these
+tokens rather than light-only colors. Home's business structure, API data sources,
+and role permissions remain unchanged. The metric grid also checks rendered value
+width before using two columns, preventing long financial values from splitting
+between digits. Medal progress/earned accents are gold, with mostly neutral
+available cards and explicit earned/available labels.
+
+An app-level Claro/Escuro/Sistema menu is available in the shared top bar and
+login bar. Preferences DataStore persists the choice across activity recreation
+and app restart; explicit choices override Android's system mode. The accessible
+darker light-mode coral action tone and theme architecture are documented in
+architecture section 9.4 and the README.
+
+Verification: **96/96** Android unit tests and **19/19** connected Compose/device
+tests passed on Pixel 6 / Android 12; `assembleDebug` succeeded. Coverage includes
+reopening the preference file, explicit/system modes, actual app-bar switching,
+activity recreation and system-bar appearance, semantic mappings, text contrast, medal progress bounds,
+and Home/medal/status/feedback rendering. Generated layouts were visually reviewed
+in both themes. The debug app is reinstalled after test-runner cleanup. This UI
+follow-up does not substitute for Phase 13's real-backend device journeys.
 
 ---
 
@@ -1926,6 +1975,13 @@ device journeys remain the separate Phase 13 verification gate.
 # Phase 13 — Final end-to-end verification
 
 Test these scenarios manually.
+
+For each real role, also verify that login opens Home, the greeting uses the
+session name, metrics match the API/database, and shortcuts reach the existing
+screens. Check refresh after idea creation/editing, partial API failures, empty
+accounts, dark theme, narrow screens, and large system text. Verify that Dashboard
+remains accessible only to `LIDER`; record snapshots must not claim to be a full
+audit history or invent vote/status events.
 
 ## OPERACIONAL
 

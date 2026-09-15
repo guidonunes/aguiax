@@ -11,13 +11,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import br.com.fiap.aguiaexpress.ui.components.AguiaButton as Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import br.com.fiap.aguiaexpress.ui.theme.semanticColors
+import br.com.fiap.aguiaexpress.ui.components.AguiaOutlinedButton as OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -259,9 +260,9 @@ fun EditarProjetoScreen(
                         .fillMaxWidth()
                         .height(52.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.semanticColors.primaryAction,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                         disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
@@ -333,15 +334,15 @@ private fun FeedbackMessage(
     isError: Boolean
 ) {
     val backgroundColor = if (isError) {
-        MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+        MaterialTheme.colorScheme.errorContainer
     } else {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        MaterialTheme.semanticColors.successContainer
     }
 
     val textColor = if (isError) {
-        MaterialTheme.colorScheme.error
+        MaterialTheme.colorScheme.onErrorContainer
     } else {
-        MaterialTheme.colorScheme.primary
+        MaterialTheme.semanticColors.onSuccessContainer
     }
 
     Text(

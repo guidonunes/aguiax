@@ -27,8 +27,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedButton
+import br.com.fiap.aguiaexpress.ui.components.AguiaOutlinedButton as OutlinedButton
 import androidx.compose.ui.Alignment
+import br.com.fiap.aguiaexpress.ui.theme.semanticColors
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.mutableStateOf
@@ -457,7 +458,7 @@ private fun FinancialInfoRow(
                 )
             },
             color = if (isHighlighted) {
-                Color(0xFF2E7D32)
+                MaterialTheme.semanticColors.success
             } else {
                 MaterialTheme.colorScheme.onSurface
             }

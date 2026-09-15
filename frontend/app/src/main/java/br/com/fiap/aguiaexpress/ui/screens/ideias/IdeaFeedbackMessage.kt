@@ -10,23 +10,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
+import br.com.fiap.aguiaexpress.ui.theme.semanticColors
+import br.com.fiap.aguiaexpress.ui.theme.semanticColorsFor
 import androidx.compose.ui.unit.dp
 
-internal fun ideaSuccessColors(darkTheme: Boolean): Pair<Color, Color> =
-    if (darkTheme) {
-        Color(0xFF163C23) to Color(0xFFB9F6CA)
-    } else {
-        Color(0xFFE8F5E9) to Color(0xFF1B5E20)
-    }
+internal fun ideaSuccessColors(darkTheme: Boolean): Pair<Color, Color> = semanticColorsFor(darkTheme).let {
+    it.successContainer to it.onSuccessContainer
+}
 
 @Composable
 internal fun FeedbackMessage(message: String, isError: Boolean) {
     val (backgroundColor, textColor) = if (isError) {
-        MaterialTheme.colorScheme.error.copy(alpha = 0.12f) to
-            MaterialTheme.colorScheme.error
+        MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
     } else {
-        ideaSuccessColors(MaterialTheme.colorScheme.surface.luminance() < 0.5f)
+        MaterialTheme.semanticColors.successContainer to MaterialTheme.semanticColors.onSuccessContainer
     }
 
     Text(

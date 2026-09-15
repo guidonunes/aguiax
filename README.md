@@ -287,6 +287,19 @@ nunca deve chegar ao Android ou à coleção Postman.
 
 ## Android
 
+Após o login, todos os perfis abrem a mesma tela **Início**, com conteúdo conforme
+o papel: contribuição pessoal para `OPERACIONAL`, pendências e atalhos para
+`GESTOR`, e resumo executivo para `LIDER`. O dashboard completo continua exclusivo
+do líder, acessível pelo atalho na Home. Os indicadores usam APIs reais; dados
+indisponíveis não são apresentados como zero. “Atualizações recentes” resume os
+registros atuais e conquistas, não o histórico completo de auditoria.
+
+O ícone de aparência na barra superior (também disponível no login) permite
+selecionar **Claro**, **Escuro** ou **Sistema**. A preferência fica salva localmente
+com Preferences DataStore e permanece após reiniciar o app ou sair da sessão.
+“Sistema” acompanha a aparência do Android. O tema usa a paleta coral/azul/dourado
+e cores semânticas para informação, conquistas, aprovação, pendências e erros.
+
 O Retrofit está configurado em
 [`RetrofitClient.kt`](frontend/app/src/main/java/br/com/fiap/aguiaexpress/data/remote/RetrofitClient.kt)
 com:

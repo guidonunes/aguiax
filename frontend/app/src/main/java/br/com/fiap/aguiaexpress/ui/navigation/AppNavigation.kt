@@ -1,16 +1,21 @@
 package br.com.fiap.aguiaexpress.ui.navigation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.FabPosition
@@ -22,13 +27,22 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import br.com.fiap.aguiaexpress.ui.components.AguiaTextButton as TextButton
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import br.com.fiap.aguiaexpress.core.settings.ThemeMode
+import br.com.fiap.aguiaexpress.ui.components.ThemeModeSelector
+import br.com.fiap.aguiaexpress.ui.theme.semanticColors
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
@@ -38,11 +52,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import br.com.fiap.aguiaexpress.core.session.RoleUiPolicy
+import br.com.fiap.aguiaexpress.R
 import br.com.fiap.aguiaexpress.core.session.SessionManager
 import br.com.fiap.aguiaexpress.ui.screens.IdeiasScreen
 import br.com.fiap.aguiaexpress.ui.screens.auth.LoginScreen
 import br.com.fiap.aguiaexpress.ui.screens.categorias.CategoriasScreen
 import br.com.fiap.aguiaexpress.ui.screens.dashboard.DashboardScreen
+import br.com.fiap.aguiaexpress.ui.screens.home.HomeDestination
+import br.com.fiap.aguiaexpress.ui.screens.home.HomeScreen
 import br.com.fiap.aguiaexpress.ui.screens.ideias.CriarIdeiaScreen
 import br.com.fiap.aguiaexpress.ui.screens.ideias.EditarIdeiaScreen
 import br.com.fiap.aguiaexpress.ui.screens.medalhas.MedalhasScreen
@@ -63,6 +80,7 @@ private data class BottomNavItem(
 
 private fun bottomNavItem(route: String): BottomNavItem {
     return when (route) {
+        Routes.HOME -> BottomNavItem(route, "Início", Icons.Default.Home)
         Routes.ORIENTACOES -> BottomNavItem(route, "Orientações", Icons.Default.Flag)
         Routes.IDEIAS -> BottomNavItem(route, "Ideias", Icons.Default.Lightbulb)
         Routes.PROJETOS -> BottomNavItem(route, "Projetos", Icons.Default.Work)
@@ -73,7 +91,13 @@ private fun bottomNavItem(route: String): BottomNavItem {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    isThemeSaving: Boolean = false,
+    themeError: String? = null,
+    onThemeModeChange: (ThemeMode) -> Unit = {},
+    onThemeErrorDismiss: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val rolePolicy = SessionManager.uiPolicy()
     val bottomNavItems = visibleMainRoutes(rolePolicy).map(::bottomNavItem)
@@ -81,12 +105,21 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val shouldShowBottomBar = currentRoute in bottomNavItems.map { it.route }
+    val isDashboard = currentRoute == Routes.DASHBOARD && rolePolicy.canViewDashboard
+    val shouldShowBottomBar = currentRoute in bottomNavItems.map { it.route } || isDashboard
+    val snackbarHost = remember { SnackbarHostState() }
+    LaunchedEffect(themeError) {
+        if (themeError != null) { snackbarHost.showSnackbar(themeError); onThemeErrorDismiss() }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHost) },
         topBar = {
             if (shouldShowBottomBar) {
                 AppTopBar(
+                    themeMode = themeMode,
+                    isThemeSaving = isThemeSaving,
+                    onThemeModeChange = onThemeModeChange,
                     onLogoutClick = {
                         SessionManager.limparSessao()
 
@@ -97,20 +130,25 @@ fun AppNavigation() {
                         }
                     }
                 )
+            } else if (currentRoute == Routes.LOGIN) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.End) {
+                    ThemeModeSelector(themeMode, onThemeModeChange, enabled = !isThemeSaving)
+                }
             }
         },
         bottomBar = {
             if (shouldShowBottomBar) {
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ) {
                     bottomNavItems.forEach { item ->
                         NavigationBarItem(
-                            selected = currentRoute == item.route,
+                            selected = currentRoute == item.route || isDashboard && item.route == Routes.HOME,
                             onClick = {
                                 navController.navigate(item.route) {
-                                    popUpTo(Routes.IDEIAS) {
+                                    popUpTo(Routes.HOME) {
                                         saveState = true
                                     }
                                     launchSingleTop = true
@@ -128,7 +166,7 @@ fun AppNavigation() {
                             },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.semanticColors.primaryAction,
                                 indicatorColor = MaterialTheme.colorScheme.primaryContainer,
 
                                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -211,6 +249,27 @@ fun AppNavigation() {
                         }
                     }
                 )
+            }
+
+            composable(Routes.HOME) {
+                RoleProtectedContent(
+                    allowed = canAccessRoute(Routes.HOME, rolePolicy),
+                    onBack = navController::popBackStack
+                ) {
+                    HomeScreen(onNavigate = { destination ->
+                        val route = when (destination) {
+                            HomeDestination.IDEAS -> Routes.IDEIAS
+                            HomeDestination.PROJECTS -> Routes.PROJETOS
+                            HomeDestination.BADGES -> Routes.MEDALHAS
+                            HomeDestination.ORIENTATIONS -> Routes.ORIENTACOES
+                            HomeDestination.DASHBOARD -> Routes.DASHBOARD
+                            HomeDestination.CREATE_IDEA -> Routes.CRIAR_IDEIA
+                        }
+                        if (canAccessRoute(route, rolePolicy)) {
+                            navController.navigate(route) { launchSingleTop = true }
+                        }
+                    })
+                }
             }
 
             composable(Routes.CATEGORIAS) {
@@ -434,11 +493,12 @@ private fun RoleProtectedContent(
 }
 
 @Composable
-private fun AppTopBar(
+internal fun AppTopBar(
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    isThemeSaving: Boolean = false,
+    onThemeModeChange: (ThemeMode) -> Unit = {},
     onLogoutClick: () -> Unit
 ) {
-    val nomeUsuario = SessionManager.nome ?: "usuário"
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -451,20 +511,17 @@ private fun AppTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text(
-                text = "Bem-vindo,",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = nomeUsuario,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            Image(
+                painter = painterResource(R.drawable.aguiax_title),
+                contentDescription = "AguiaExpress",
+                modifier = Modifier.width(180.dp).height(48.dp),
+                // The square asset has transparent space above/below the centered wordmark.
+                contentScale = ContentScale.Crop
             )
         }
 
+        ThemeModeSelector(themeMode, onThemeModeChange, enabled = !isThemeSaving)
         IconButton(
             onClick = onLogoutClick
         ) {

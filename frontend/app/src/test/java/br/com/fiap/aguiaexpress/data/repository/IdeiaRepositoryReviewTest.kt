@@ -93,6 +93,9 @@ class IdeiaRepositoryReviewTest {
         override suspend fun listarIdeias(): List<IdeiaDto> =
             error("Unexpected call")
 
+        override suspend fun listarIdeiasPorUsuario(usuarioId: Long): List<IdeiaDto> =
+            error("Unexpected call")
+
         override suspend fun buscarIdeiaPorId(id: Long): IdeiaDto =
             error("Unexpected call")
 

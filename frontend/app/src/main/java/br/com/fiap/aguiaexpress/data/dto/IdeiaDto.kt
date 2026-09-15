@@ -20,7 +20,8 @@ data class IdeiaDto(
     val nomeCategoria: String? = null,
     val tituloOrientacao: String? = null,
     val dataCriacao: String? = null,
-    val dataAtualizacao: String? = null
+    val dataAtualizacao: String? = null,
+    val totalVotos: Int? = null
 )
 
 fun IdeiaDto.toDomain(): Ideia {
@@ -44,6 +45,8 @@ fun IdeiaDto.toDomain(): Ideia {
         nomeUsuario = nomeUsuario ?: "Usuário não informado",
         nomeCategoria = nomeCategoria ?: "Categoria não informada",
         tituloOrientacao = tituloOrientacao ?: "Orientação não informada",
-        dataCriacao = dataCriacao
+        dataCriacao = dataCriacao,
+        dataAtualizacao = dataAtualizacao,
+        totalVotos = totalVotos
     )
 }

@@ -766,6 +766,108 @@ and to guard every privileged create/edit/dashboard destination before the scree
 and its ViewModel are instantiated. The own-idea action additionally compares the
 session user ID with the response owner ID.
 
+### Shared Android Home — 2026-09-15
+
+All three known authenticated roles now start at the same `Routes.HOME`
+destination. `HomeScreen` selects `OperationalHomeContent`, `ManagerHomeContent`,
+or `LeaderHomeContent`; this is one application and one navigation graph.
+The five shared bottom destinations are Home, orientations, ideas, projects,
+and medals. The leader-only full Dashboard is reached through an explicit Home
+shortcut and retains the shared bottom bar; its route guard and backend policy
+remain leader-only. Unknown roles and unauthenticated sessions cannot instantiate
+Home or its ViewModel. Home shortcuts are checked against the same route policy.
+
+`HomeViewModel` refreshes on destination resume and explicit retry/refresh.
+Requests are cancelled when superseded, and results are published only while
+the captured token, user ID, and role still match the session. Section failures
+produce an availability notice and missing values, never fabricated zero metrics;
+HTTP `401` is surfaced as an expired-session error. No authentication secrets
+are logged or displayed.
+
+Data ownership and Home metric definitions:
+
+- **OPERACIONAL:** personal ideas use the existing `GET /ideias/usuario/{usuarioId}`
+  and are additionally filtered by session user ID. Earned medals use the existing
+  user-badge endpoint, filtered by the same ID and counted by distinct badge ID.
+  Votes received are the sum of actual `totalVotos`, without the prioritization
+  formula's cap. Missing/invalid vote totals are unavailable, not zero. Approved
+  ideas include `APROVADA` and `CONVERTIDA_EM_PROJETO`, explicitly labelled.
+  The pipeline shows current statuses, and project updates are restricted to
+  projects linked to the user's own ideas.
+- **GESTOR:** shared ideas/projects supply review counts (`NOVA`/`EM_ANALISE`),
+  current prioritized/approved counts, and active projects (`PLANEJADO` plus
+  `EM_ANDAMENTO`). A bounded three-idea attention list directs the user to the
+  existing Ideas screen; Home performs no review/status/project mutation.
+- **LIDER:** investment, financial return, estimated result, ROI, productivity,
+  and `EM_ANDAMENTO` count come directly from the existing backend Dashboard
+  summary, preserving `BigDecimal` through formatting. Up to three alphabetically
+  ordered strategic orientations use filtered backend summaries for exact project
+  counts. Home never downloads projects to recompute executive financial metrics
+  and does not replace the full Dashboard or its filters.
+
+Recent updates contain at most five timestamp-sorted current records, plus actual
+medal awards for the operational user. There is no Android-readable audit-event
+feed: the UI explicitly identifies this as a record snapshot, not a complete event
+history. It does not invent new-vote events or infer historical status transitions.
+Invalid/missing timestamps are omitted; valid creation time is the fallback for
+missing update time. Offset timestamps retain their instant; backend timestamps
+without an offset are interpreted in the device's local time zone and displayed
+with Portuguese date/time formatting. Leader updates come from orientations.
+
+Home reuses the existing Material 3 palette, typography, rounded cards, status
+tags, and loading/error/empty states. Metric grids fall back to one column on
+narrow screens or with large font scaling. Sample values are preview/test-only.
+
+### Android appearance and semantic color contract — 2026-09-15
+
+The existing `AguiaExpressTheme` is the single Material 3 theme boundary. It now
+uses the supplied coral/blue/gold light and dark palettes, with explicit foreground
+roles and layered `surfaceContainer*` roles supported by the installed Material 3
+version. Wallpaper-derived dynamic colors are intentionally disabled so brand and
+semantic accents remain consistent. Raw color literals are centralized in
+`ui/theme/Color.kt`, not screen components.
+
+`MaterialTheme.semanticColors` provides success, warning, information, their
+container/foreground pairs, and an accessible primary-action tone through a Compose
+CompositionLocal. Status tags use information for new/planned records, warning for
+analysis/in-progress records, gold for prioritized ideas, success for approved,
+completed, and converted records, and Material error for rejected/cancelled records.
+Profile tags and success/error feedback also use theme-aware shared tokens.
+Neutral Home cards use blue idea/analytics icon containers, gold medals, warm votes,
+and green approvals. The idea-submission CTA is a prominent primary action.
+Medal progress and earned chips use gold; earned cards have a gold accent border,
+while available cards remain neutral with softly tinted gold icon containers and
+explicit availability labels.
+Medal sections share one scrolling layout so enlarged text does not hide awards.
+Progress uses the existing active-catalog counts and is not displayed before a
+successful load; no gamification or award-assignment behavior is added.
+
+The supplied light primary `#E84C3D` with white has less than 4.5:1 contrast for
+normal text. The base Material palette is preserved, while small action text,
+filled buttons, primary CTAs, and selected navigation text use the darker coral
+`#B83226` in light mode. Dark mode uses the supplied brighter coral and its dark
+`onPrimary`. Container text uses explicit high-contrast foregrounds rather than
+the bright gold/amber accent itself. Thin Material 3 button wrappers centralize
+accessible defaults, retaining native button behavior and validation state.
+
+`ThemeMode.SYSTEM`, `LIGHT`, and `DARK` are owned by an activity-scoped
+`ThemeViewModel`, not individual screens. `MainActivity` collects this state
+lifecycle-aware and passes the resolved darkness to `AguiaExpressTheme`;
+`SYSTEM` reads `isSystemInDarkTheme()`, while explicit choices override it.
+One application-context Preferences DataStore (`appearance`, key `theme_mode`)
+persists the choice independently of authentication/logout. The navigation tree is
+created after the initial preference load to avoid an incorrect-theme flash.
+Missing/unknown modes and corrupt preference files fall back to System; IO load
+and save failures produce safe user-facing messages, and failed writes retain the
+last selected mode. The shared app bar and login bar expose a sun/moon/system menu
+with the selected mode indicated. Switching themes does not replace the navigation
+graph or change role permissions. No backend configuration is involved.
+The authenticated shared top bar displays `drawable/aguiax_title.png` instead of
+text branding or the welcome/name block; personalized greetings remain on Home.
+Its theme and logout actions are retained.
+Android status/navigation bar icon appearance follows the resolved app theme,
+including explicit overrides of the device's light/dark setting.
+
 Client guards are never security evidence by themselves. The focused Task 9.4
 server verification executes MVC authorization for project/orientation reads and
 mutations and reruns the established idea, AI, dashboard, catalog, user, category,

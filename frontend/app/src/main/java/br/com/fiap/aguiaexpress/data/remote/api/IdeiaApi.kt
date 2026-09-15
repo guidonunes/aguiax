@@ -18,6 +18,9 @@ interface IdeiaApi {
     @GET("ideias")
     suspend fun listarIdeias(): List<IdeiaDto>
 
+    @GET("ideias/usuario/{usuarioId}")
+    suspend fun listarIdeiasPorUsuario(@Path("usuarioId") usuarioId: Long): List<IdeiaDto>
+
     @GET("ideias/{id}")
     suspend fun buscarIdeiaPorId(
         @Path("id") id: Long

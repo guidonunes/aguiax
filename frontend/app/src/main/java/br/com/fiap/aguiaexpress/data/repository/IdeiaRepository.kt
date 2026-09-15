@@ -7,10 +7,21 @@ import br.com.fiap.aguiaexpress.data.dto.toDomain
 import br.com.fiap.aguiaexpress.data.remote.api.IdeiaApi
 import br.com.fiap.aguiaexpress.domain.model.AiIdeaEvaluation
 import br.com.fiap.aguiaexpress.domain.model.Ideia
+import kotlinx.coroutines.CancellationException
 
 class IdeiaRepository(
     private val ideiaApi: IdeiaApi
 ) {
+
+    suspend fun listarIdeiasPorUsuario(usuarioId: Long): Result<List<Ideia>> {
+        return try {
+            Result.success(ideiaApi.listarIdeiasPorUsuario(usuarioId).map { it.toDomain() })
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            Result.failure(exception)
+        }
+    }
 
     suspend fun listarIdeias(): Result<List<Ideia>> {
         return try {

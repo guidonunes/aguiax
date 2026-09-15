@@ -44,6 +44,8 @@ fun ProjetoDto.toDomain(): Projeto {
         ganhoProdutividade = ganhoProdutividade,
         dataInicio = dataInicio,
         dataPrevisaoFim = dataPrevisaoFim,
-        dataConclusao = dataConclusao
+        dataConclusao = dataConclusao,
+        dataCriacao = dataCriacao,
+        dataAtualizacao = dataAtualizacao
     )
 }

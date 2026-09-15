@@ -12,6 +12,22 @@ class IdeiaDtoContractTest {
     private val gson = Gson()
 
     @Test
+    fun `maps actual vote totals and last update for home`() {
+        val json = ideaJson(statusField = "\"statusIdeia\": \"APROVADA\",")
+            .replace("\"id\": 42,", "\"id\": 42, \"totalVotos\": 24, \"dataAtualizacao\": \"2026-09-15T12:00:00\",")
+        val idea = gson.fromJson(json, IdeiaDto::class.java).toDomain()
+        assertEquals(24, idea.totalVotos)
+        assertEquals("2026-09-15T12:00:00", idea.dataAtualizacao)
+    }
+
+    @Test
+    fun `missing vote totals remain unavailable rather than invented zero`() {
+        val idea = gson.fromJson(ideaJson("\"statusIdeia\": \"NOVA\","), IdeiaDto::class.java).toDomain()
+        assertNull(idea.totalVotos)
+        assertNull(idea.dataAtualizacao)
+    }
+
+    @Test
     fun `preserves creation time for newest first feed ordering`() {
         val dto = gson.fromJson(
             ideaJson(statusField = "\"statusIdeia\": \"NOVA\",")
