@@ -23,7 +23,7 @@ internal class ThemeViewModel(application: Application) : AndroidViewModel(appli
             try {
                 preferences.mode.collect { mode -> _state.value = _state.value.copy(mode = mode) }
             } catch (error: IOException) {
-                _state.value = _state.value.copy(mode = ThemeMode.SYSTEM,
+                _state.value = _state.value.copy(mode = ThemeMode.DEFAULT,
                     errorMessage = "Não foi possível carregar a preferência de tema.")
             }
         }

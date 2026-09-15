@@ -857,8 +857,11 @@ lifecycle-aware and passes the resolved darkness to `AguiaExpressTheme`;
 One application-context Preferences DataStore (`appearance`, key `theme_mode`)
 persists the choice independently of authentication/logout. The navigation tree is
 created after the initial preference load to avoid an incorrect-theme flash.
-Missing/unknown modes and corrupt preference files fall back to System; IO load
-and save failures produce safe user-facing messages, and failed writes retain the
+Dark is the default for new/unset preferences and while preferences load. The
+native launch-window styling uses the same dark background instead of the legacy
+light platform theme. Existing explicit Light/Dark/System selections remain
+respected. Missing/unknown modes and corrupt preference files fall back to Dark;
+IO load and save failures produce safe user-facing messages, and failed writes retain the
 last selected mode. The shared app bar and login bar expose a sun/moon/system menu
 with the selected mode indicated. Switching themes does not replace the navigation
 graph or change role permissions. No backend configuration is involved.
@@ -867,6 +870,19 @@ text branding or the welcome/name block; personalized greetings remain on Home.
 Its theme and logout actions are retained.
 Android status/navigation bar icon appearance follows the resolved app theme,
 including explicit overrides of the device's light/dark setting.
+
+The login uses a restrained theme-token background tint, the existing AguiaX hero
+asset, pt-BR welcome copy, a rounded bordered surface card, and layered outlined
+fields with mail/lock icons. A local, non-persisted visibility flag toggles password
+masking using accessible "Mostrar senha"/"Ocultar senha" actions; recreating the
+screen restores masking without changing credentials. Its 56dp primary action
+reuses `LoginUiState.isLoading` (disabled button, progress, "Entrando...") and
+existing error state, announced with a polite live region. The UI preserves the
+required-credentials validation message and replaces raw exception/transport text
+with a controlled pt-BR fallback; repository errors and authentication behavior
+are not changed. Scroll/IME insets keep content reachable on short displays and
+with large text. API authentication,
+session state, role routing, and server behavior are unchanged.
 
 Client guards are never security evidence by themselves. The focused Task 9.4
 server verification executes MVC authorization for project/orientation reads and

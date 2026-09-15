@@ -14,8 +14,8 @@ class ThemeModeTest {
     }
 
     @Test
-    fun `persisted modes round trip and absent or unknown settings follow system`() {
+    fun `persisted modes round trip and absent or unknown settings default to dark`() {
         ThemeMode.entries.forEach { assertEquals(it, ThemeMode.fromStored(it.name)) }
-        listOf(null, "", "unknown").forEach { assertEquals(ThemeMode.SYSTEM, ThemeMode.fromStored(it)) }
+        listOf(null, "", "unknown").forEach { assertEquals(ThemeMode.DARK, ThemeMode.fromStored(it)) }
     }
 }

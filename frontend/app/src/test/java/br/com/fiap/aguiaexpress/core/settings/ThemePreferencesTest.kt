@@ -37,15 +37,15 @@ class ThemePreferencesTest {
     }
 
     @Test
-    fun `empty and unknown stored mode safely default to system`() = runBlocking {
+    fun `empty and unknown stored mode safely default to dark`() = runBlocking {
         val job = SupervisorJob()
         val store = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO),
             produceFile = { File(temporary.root, "appearance.preferences_pb") })
         try {
             val preferences = ThemePreferences(store)
-            assertEquals(ThemeMode.SYSTEM, preferences.mode.first())
+            assertEquals(ThemeMode.DARK, preferences.mode.first())
             store.edit { it[stringPreferencesKey("theme_mode")] = "future-mode" }
-            assertEquals(ThemeMode.SYSTEM, preferences.mode.first())
+            assertEquals(ThemeMode.DARK, preferences.mode.first())
         } finally { job.cancelAndJoin() }
     }
 }

@@ -295,10 +295,15 @@ indisponíveis não são apresentados como zero. “Atualizações recentes” r
 registros atuais e conquistas, não o histórico completo de auditoria.
 
 O ícone de aparência na barra superior (também disponível no login) permite
-selecionar **Claro**, **Escuro** ou **Sistema**. A preferência fica salva localmente
+selecionar **Claro**, **Escuro** ou **Sistema**. **Escuro** é o padrão quando ainda
+não existe uma seleção salva; escolhas anteriores continuam sendo respeitadas.
+A preferência fica salva localmente
 com Preferences DataStore e permanece após reiniciar o app ou sair da sessão.
 “Sistema” acompanha a aparência do Android. O tema usa a paleta coral/azul/dourado
 e cores semânticas para informação, conquistas, aprovação, pendências e erros.
+No login, o ícone de olho permite mostrar/ocultar a senha; ela começa oculta e
+volta a ficar oculta quando a tela é recriada. O botão exibe “Entrando...” e fica
+desabilitado durante a autenticação já existente.
 
 O Retrofit está configurado em
 [`RetrofitClient.kt`](frontend/app/src/main/java/br/com/fiap/aguiaexpress/data/remote/RetrofitClient.kt)

@@ -21,12 +21,14 @@ class ThemeSwitchTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val preferences get() = ThemePreferences(InstrumentationRegistry.getInstrumentation().targetContext)
 
-    @Before fun resetTheme() { runBlocking { preferences.setMode(ThemeMode.SYSTEM) } }
-    @After fun restoreSystemTheme() { runBlocking { preferences.setMode(ThemeMode.SYSTEM) } }
+    @Before fun resetTheme() { runBlocking { preferences.setMode(ThemeMode.DEFAULT) } }
+    @After fun restoreDefaultTheme() { runBlocking { preferences.setMode(ThemeMode.DEFAULT) } }
 
     @Test
     fun appBarThemeChoicePersistsAndSurvivesActivityRecreation() {
-        compose.onNodeWithContentDescription("Tema: Sistema").performClick()
+        compose.onNodeWithContentDescription("Tema: Escuro").performClick()
+        compose.onNodeWithText("Claro").performClick()
+        compose.onNodeWithContentDescription("Tema: Claro").performClick()
         compose.onNodeWithText("Escuro").performClick()
         compose.onNodeWithContentDescription("Tema: Escuro").assertIsDisplayed()
         assertSystemBarAppearance(false)
@@ -42,7 +44,7 @@ class ThemeSwitchTest {
 
     @Test
     fun explicitThemeCanReturnToSystemDefault() {
-        compose.onNodeWithContentDescription("Tema: Sistema").performClick()
+        compose.onNodeWithContentDescription("Tema: Escuro").performClick()
         compose.onNodeWithText("Claro").performClick()
         compose.onNodeWithContentDescription("Tema: Claro").performClick()
         compose.onNodeWithText("Sistema").performClick()

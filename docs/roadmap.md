@@ -1539,6 +1539,35 @@ and Home/medal/status/feedback rendering. Generated layouts were visually review
 in both themes. The debug app is reinstalled after test-runner cleanup. This UI
 follow-up does not substitute for Phase 13's real-backend device journeys.
 
+### Login visual refinement follow-up — 2026-09-15
+
+Implemented by Codex at the developer's request. Login keeps its existing
+authentication wiring while adding a balanced AguiaX hero/welcome area, restrained
+theme-token background tint, a 20dp bordered surface card, layered mail/lock
+fields, and a 56dp primary action. Password visibility is local/non-persisted,
+starts masked, and uses pt-BR accessibility descriptions. The existing loading
+state disables submission and displays a readable progress indicator with
+"Entrando..."; errors use a polite live region and a safe pt-BR presentation
+fallback rather than exposing raw HTTP/network exception messages. Scroll/IME
+insets preserve reachability on short screens and with enlarged text.
+
+Dark is now the centralized default for unset/unknown preferences, IO fallback,
+initial Compose rendering, and the native launch-window background. Persisted
+Light/Dark/System choices are still respected, and the existing theme menu remains
+available. No backend, authentication API, session, role, or navigation-flow
+changes are introduced. README and architecture section 9.4 describe the updated
+appearance contract. This refinement does not mark Phase 13 complete.
+
+Verification: **98/98** Android unit tests passed. The broader **29/29**
+Compose/device regression suite passed, followed by **11/11** final focused
+login/theme checks after the pt-BR error-presentation refinement. Coverage includes
+actual rendered password masking/revealing, masked recreation, credential
+callbacks/keyboard actions, loading submission guards, announced/localized errors,
+short-screen/large-font scrolling, both color schemes, persisted appearance
+choices, and actual app-bar switching/recreation. Dark and light login captures
+were visually inspected. `assembleDebug` succeeded; the verified debug app is
+reinstalled after emulator test cleanup.
+
 ---
 
 # Phase 10 — Observability

@@ -13,6 +13,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import br.com.fiap.aguiaexpress.viewmodel.ThemeViewModel
+import br.com.fiap.aguiaexpress.core.settings.ThemeMode
 import androidx.compose.ui.Modifier
 import br.com.fiap.aguiaexpress.ui.navigation.AppNavigation
 import br.com.fiap.aguiaexpress.ui.theme.AguiaExpressTheme
@@ -26,7 +27,7 @@ class MainActivity : ComponentActivity() {
             val state by themeViewModel.state.collectAsStateWithLifecycle()
             val mode = state.mode
             val systemDark = isSystemInDarkTheme()
-            val darkTheme = mode?.usesDarkTheme(systemDark) ?: systemDark
+            val darkTheme = (mode ?: ThemeMode.DEFAULT).usesDarkTheme(systemDark)
             SideEffect {
                 WindowCompat.getInsetsController(window, window.decorView).apply {
                     isAppearanceLightStatusBars = !darkTheme

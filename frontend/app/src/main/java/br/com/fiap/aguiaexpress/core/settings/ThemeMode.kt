@@ -10,6 +10,7 @@ enum class ThemeMode {
     }
 
     companion object {
-        fun fromStored(value: String?): ThemeMode = entries.firstOrNull { it.name == value } ?: SYSTEM
+        val DEFAULT = DARK
+        fun fromStored(value: String?): ThemeMode = entries.firstOrNull { it.name == value } ?: DEFAULT
     }
 }

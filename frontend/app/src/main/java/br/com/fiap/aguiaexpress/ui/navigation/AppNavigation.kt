@@ -92,7 +92,7 @@ private fun bottomNavItem(route: String): BottomNavItem {
 
 @Composable
 fun AppNavigation(
-    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    themeMode: ThemeMode = ThemeMode.DEFAULT,
     isThemeSaving: Boolean = false,
     themeError: String? = null,
     onThemeModeChange: (ThemeMode) -> Unit = {},
@@ -494,7 +494,7 @@ private fun RoleProtectedContent(
 
 @Composable
 internal fun AppTopBar(
-    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    themeMode: ThemeMode = ThemeMode.DEFAULT,
     isThemeSaving: Boolean = false,
     onThemeModeChange: (ThemeMode) -> Unit = {},
     onLogoutClick: () -> Unit
