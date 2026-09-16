@@ -19,6 +19,7 @@ import br.com.fiap.aguiaexpress.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -63,7 +64,9 @@ public class IdeiaService {
     private final UsuarioAutenticadoService usuarioAutenticadoService;
     private final IdeaPriorityService ideaPriorityService;
     private final BusinessMetrics businessMetrics;
+    private final MilestoneBadgeService milestoneBadgeService;
 
+    @Transactional
     public MostrarIdeiaDTO criarIdeia(RegistrarIdeiaDTO ideiaDTO) {
         if (ideiaRepository.existsByTitulo(ideiaDTO.titulo())) {
             throw new DuplicateResourceException("Já existe uma ideia cadastrada com esse título.");
@@ -100,6 +103,7 @@ public class IdeiaService {
         ideia.setDataAtualizacao(LocalDateTime.now());
 
         Ideia ideiaSalva = ideiaRepository.save(ideia);
+        milestoneBadgeService.awardForIdea(ideiaSalva);
 
         auditService.registrarEvento(
                 AuditEventType.IDEA_CREATED,
@@ -238,6 +242,7 @@ public class IdeiaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ideia não encontrada."));
     }
 
+    @Transactional
     public MostrarIdeiaDTO atualizarStatusIdeia(
             Long id,
             AtualizarStatusIdeiaDTO statusDTO
@@ -260,6 +265,8 @@ public class IdeiaService {
         ideia.setDataAtualizacao(LocalDateTime.now());
 
         Ideia ideiaAtualizada = ideiaRepository.save(ideia);
+
+        milestoneBadgeService.awardForIdea(ideiaAtualizada);
 
         auditService.registrarEvento(
                 eventTypeForIdeaStatus(newStatus),
@@ -304,6 +311,7 @@ public class IdeiaService {
         ideia.setStatusIdeia(convertedStatus);
         ideia.setDataAtualizacao(LocalDateTime.now());
         ideiaRepository.save(ideia);
+        milestoneBadgeService.awardForIdea(ideia);
     }
 
     public MostrarIdeiaDTO atualizarAvaliacaoIdeia(

@@ -70,6 +70,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import br.com.fiap.aguiaexpress.viewmodel.AvaliacaoIdeiaUiState
 import br.com.fiap.aguiaexpress.viewmodel.AiAvaliacaoIdeiaUiState
+import br.com.fiap.aguiaexpress.ui.screens.ideias.IdeaStatusActions
 
 @Composable
 fun IdeiasScreen(
@@ -149,6 +150,7 @@ fun IdeiasScreen(
                 else -> {
                     IdeiaList(
                         ideias = uiState.ideias,
+                        updatingStatusIds = uiState.updatingStatusIds,
                         quantidadeVotos = uiState.votosPorIdeia,
                         votosUsuario = uiState.ideiasVotadasPeloUsuario,
                         podeVotarEmIdeia = podeVotarEmIdeia,
@@ -237,6 +239,7 @@ fun IdeiasScreen(
 @Composable
 private fun IdeiaList(
     ideias: List<Ideia>,
+    updatingStatusIds: Set<Long>,
     quantidadeVotos: Map<Long, Int>,
     votosUsuario: Set<Long>,
     podeVotarEmIdeia: Boolean,
@@ -260,6 +263,7 @@ private fun IdeiaList(
         items(ideias, key = { it.id }) { ideia ->
             IdeiaCard(
                 ideia = ideia,
+                isStatusUpdating = ideia.id in updatingStatusIds,
                 quantidadeVotos = quantidadeVotos[ideia.id] ?: 0,
                 usuarioJaVotou = votosUsuario.contains(ideia.id),
                 podeVotarEmIdeia = podeVotarEmIdeia,
@@ -297,6 +301,7 @@ internal fun podeEditarIdeiaNoApp(
 @Composable
 private fun IdeiaCard(
     ideia: Ideia,
+    isStatusUpdating: Boolean,
     quantidadeVotos: Int,
     usuarioJaVotou: Boolean,
     podeVotarEmIdeia: Boolean,
@@ -542,32 +547,11 @@ private fun IdeiaCard(
 
             if (podeAtualizarStatusIdeia) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                onAtualizarStatus(ideia.id, StatusIdeia.PRIORIZADA)
-                            }
-                        ) {
-                            Text("Priorizar")
-                        }
-
-                        Button(
-                            onClick = {
-                                onAtualizarStatus(ideia.id, StatusIdeia.APROVADA)
-                            }
-                        ) {
-                            Text("Aprovar")
-                        }
-                    }
-                }
+                IdeaStatusActions(
+                    currentStatus = ideia.status,
+                    isUpdating = isStatusUpdating,
+                    onStatusSelected = { onAtualizarStatus(ideia.id, it) }
+                )
             }
         }
     }

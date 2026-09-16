@@ -44,6 +44,7 @@ class IdeiaServiceAuditTest {
     private CategoriaService categoriaService;
     private OrientacaoEstrategicaService orientacaoService;
     private IdeiaService ideiaService;
+    private MilestoneBadgeService milestoneBadgeService;
 
     @BeforeEach
     void setUp() {
@@ -53,6 +54,7 @@ class IdeiaServiceAuditTest {
         usuarioAutenticadoService = mock(UsuarioAutenticadoService.class);
         categoriaService = mock(CategoriaService.class);
         orientacaoService = mock(OrientacaoEstrategicaService.class);
+        milestoneBadgeService = mock(MilestoneBadgeService.class);
 
         ideiaService = new IdeiaService(
                 auditService,
@@ -63,7 +65,8 @@ class IdeiaServiceAuditTest {
                 orientacaoService,
                 usuarioAutenticadoService,
                 mock(IdeaPriorityService.class),
-                mock(BusinessMetrics.class)
+                mock(BusinessMetrics.class),
+                milestoneBadgeService
         );
     }
 
@@ -108,8 +111,9 @@ class IdeiaServiceAuditTest {
                 () -> assertNotNull(response.dataAtualizacao())
         );
 
-        InOrder order = inOrder(ideiaRepository, auditService);
+        InOrder order = inOrder(ideiaRepository, milestoneBadgeService, auditService);
         order.verify(ideiaRepository).save(any(Ideia.class));
+        order.verify(milestoneBadgeService).awardForIdea(any(Ideia.class));
         order.verify(auditService).registrarEvento(
                 AuditEventType.IDEA_CREATED,
                 17L,
@@ -176,7 +180,7 @@ class IdeiaServiceAuditTest {
                 ))
         );
 
-        verifyNoInteractions(auditService);
+        verifyNoInteractions(auditService, milestoneBadgeService);
     }
 
     @Test

@@ -22,12 +22,20 @@ import java.net.SocketTimeoutException
 
 private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
 
+internal fun ideaStatusUpdateErrorText(error: Throwable): String = when ((error as? HttpException)?.code()) {
+    400 -> "A ideia mudou ou esta transição não é permitida. Atualize a lista e tente novamente."
+    401 -> "Sua sessão expirou. Entre novamente."
+    403 -> "Você não tem permissão para alterar o status desta ideia."
+    else -> "Não foi possível atualizar o status da ideia. Tente novamente."
+}
+
 data class IdeiaUiState(
     val isLoading: Boolean = false,
     val ideias: List<Ideia> = emptyList(),
     val votosPorIdeia: Map<Long, Int> = emptyMap(),
     val ideiasVotadasPeloUsuario: Set<Long> = emptySet(),
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val updatingStatusIds: Set<Long> = emptySet()
 )
 
 data class CriarIdeiaUiState(
@@ -355,19 +363,28 @@ class IdeiaViewModel : ViewModel() {
         ideiaId: Long,
         status: StatusIdeia
     ) {
+        if (ideiaId in _uiState.value.updatingStatusIds) return
+        _uiState.value = _uiState.value.copy(
+            updatingStatusIds = _uiState.value.updatingStatusIds + ideiaId,
+            errorMessage = null
+        )
         viewModelScope.launch {
-            repository.atualizarStatus(
-                ideiaId = ideiaId,
-                status = status.name
-            )
-                .onSuccess {
-                    carregarIdeias()
-                }
-                .onFailure { error ->
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Erro ao atualizar status da ideia"
-                    )
-                }
+            try {
+                repository.atualizarStatus(ideiaId = ideiaId, status = status.name)
+                    .onSuccess { updated ->
+                        _uiState.value = _uiState.value.copy(
+                            ideias = _uiState.value.ideias.map { if (it.id == ideiaId) updated else it }
+                        )
+                        carregarIdeias()
+                    }
+                    .onFailure { error ->
+                        _uiState.value = _uiState.value.copy(errorMessage = ideaStatusUpdateErrorText(error))
+                    }
+            } finally {
+                _uiState.value = _uiState.value.copy(
+                    updatingStatusIds = _uiState.value.updatingStatusIds - ideiaId
+                )
+            }
         }
     }
 

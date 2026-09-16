@@ -11,6 +11,8 @@ import br.com.fiap.aguiaexpress.domain.model.UsuarioBadge
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 
 private const val ERRO_USUARIO_NAO_LOGADO = "Usuário logado não identificado."
 
@@ -29,25 +31,22 @@ internal data class ResumoCatalogoBadges(
     val totalBadgesAtivasConquistadas: Int
 )
 
-class BadgeViewModel : ViewModel() {
-
-    private val badgeRepository = BadgeRepository(
+class BadgeViewModel(
+    private val badgeRepository: BadgeRepository = BadgeRepository(
         badgeApi = RetrofitClient.badgeApi
-    )
-
-    private val usuarioBadgeRepository = UsuarioBadgeRepository(
+    ),
+    private val usuarioBadgeRepository: UsuarioBadgeRepository = UsuarioBadgeRepository(
         usuarioBadgeApi = RetrofitClient.usuarioBadgeApi
     )
+) : ViewModel() {
+    private var loadJob: Job? = null
 
     private val _uiState = MutableStateFlow(BadgeUiState())
     val uiState = _uiState.asStateFlow()
 
-    init {
-        carregarMedalhas()
-    }
-
     fun carregarMedalhas() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
                 errorMessage = null
@@ -67,6 +66,8 @@ class BadgeViewModel : ViewModel() {
             val usuarioBadgesResult = usuarioBadgeRepository.listarBadgesPorUsuario(
                 usuarioId = usuarioIdLogado
             )
+            // Repositories wrap failures in Result; never publish a cancelled refresh.
+            coroutineContext.ensureActive()
 
             val badgesAtivas = badgesResult.getOrElse {
                 emptyList()

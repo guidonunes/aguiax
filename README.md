@@ -260,6 +260,29 @@ APROVADA -> CONVERTIDA_EM_PROJETO
 A criação do projeto e a conversão da ideia são atômicas, e existe no máximo um
 projeto por ideia.
 
+## Medalhas por marcos
+
+O backend concede automaticamente ao autor `OPERACIONAL`:
+
+- `PRIMEIRA_IDEIA`: primeira ideia cadastrada com sucesso;
+- `IDEIA_APROVADA`: uma ideia aprovada (a conversão também preserva essa conquista);
+- `PROJETO_IMPLEMENTADO`: uma ideia convertida em projeto, conforme o critério do catálogo.
+
+Somente medalhas ativas são concedidas automaticamente. As concessões não se
+duplicam nem alteram a data original, e participam da transação da ideia/projeto.
+Reinicie o backend para aplicar a migração V13, que reconhece marcos já atingidos.
+A tela Medalhas atualiza as conquistas ao retornar a ela.
+`TOP_COLABORADOR` e `MESTRE_DA_INOVACAO` continuam com concessão manual pelo
+`GESTOR` até a definição dos seus limites numéricos. Nenhuma variável nova no
+`.env` é necessária para os três marcos definidos ou para `thinkingLevel=low`.
+
+O teste MySQL é opcional e usa um banco temporário separado dos dados da aplicação.
+Com MySQL ativo e o usuário do `.env` autorizado a criar bancos, execute em `backend/`:
+
+```bash
+bash ./mvnw -o -Dtest=MilestoneBadgeMySqlIntegrationTest -Dmysql.test.enabled=true test
+```
+
 ## Avaliação de ideias por IA
 
 O endpoint protegido do `GESTOR` é:
@@ -271,7 +294,7 @@ POST /api/ideas/{ideaId}/ai-evaluation
 O backend envia contexto estruturado ao Gemini e valida alinhamento estratégico,
 impacto, viabilidade, inovação, pontuação geral e resumo. A resposta é persistida
 no MongoDB e participa do cálculo determinístico de prioridade no MySQL. O cliente
-usa `thinkingLevel=medium` e saída JSON estruturada.
+usa `thinkingLevel=low` e saída JSON estruturada.
 
 A integração fica desabilitada por padrão. Sem uma chave, mantenha:
 

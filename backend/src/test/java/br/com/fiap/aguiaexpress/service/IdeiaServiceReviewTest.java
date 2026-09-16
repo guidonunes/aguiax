@@ -58,7 +58,8 @@ class IdeiaServiceReviewTest {
                 mock(OrientacaoEstrategicaService.class),
                 usuarioAutenticadoService,
                 ideaPriorityService,
-                mock(BusinessMetrics.class)
+                mock(BusinessMetrics.class),
+                mock(MilestoneBadgeService.class)
         );
     }
 

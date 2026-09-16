@@ -574,9 +574,10 @@ role. For previously unspecified operations, use these policies:
   cascading deletion of the user's ideas/projects.
 - **Categories:** all three roles can read; only `LIDER` can create/edit/delete.
   Categories are shared governance data, not manager-owned project data.
-- **Badge awards:** only `GESTOR` can grant/remove an award, including the grant-by-name
-  variant. This fits the manager's idea/project review responsibility. Awards remain
-  manual; automatic gamification is not introduced. `GESTOR` and `LIDER` can inspect
+- **Badge awards:** only `GESTOR` can manually grant/remove an award, including the
+  grant-by-name variant. As requested on 2026-09-15, defined milestones are also
+  awarded automatically by the backend to the idea's `OPERACIONAL` author (see
+  the milestone policy below); this introduces no self-grant endpoint. `GESTOR` and `LIDER` can inspect
   all awards; other users can inspect only their own awards. This also limits access
   to recipient emails currently included in `MostrarUsuarioBadgeDTO`.
 - **Badge definitions, role definitions, and idea/project status catalogs:** reads
@@ -776,6 +777,12 @@ and medals. The leader-only full Dashboard is reached through an explicit Home
 shortcut and retains the shared bottom bar; its route guard and backend policy
 remain leader-only. Unknown roles and unauthenticated sessions cannot instantiate
 Home or its ViewModel. Home shortcuts are checked against the same route policy.
+
+`navigateToMainRoute` retains Home as the back-stack anchor and saves/restores
+other tabs normally. Returning to Home deliberately disables saved-state
+restoration: restoring the Home alias can otherwise reopen the child tab just
+saved by `popUpTo(Home)`. The retained Home entry already owns its state. This
+applies to all roles, including manager returns from review/project shortcuts.
 
 `HomeViewModel` refreshes on destination resume and explicit retry/refresh.
 Requests are cancelled when superseded, and results are published only while
@@ -992,6 +999,17 @@ not a standalone manager decision: Task 4.3 owns `APROVADA ->
 CONVERTIDA_EM_PROJETO` as part of the same relational transaction that creates the
 single associated project. Invalid and repeated transitions produce the standard
 structured `400 Bad Request` contract and do not mutate or audit the idea.
+
+Android's existing manager decision controls now follow current-state availability:
+`NOVA` offers "Iniciar análise"; `EM_ANALISE` offers "Priorizar" and "Aprovar";
+`PRIORIZADA` offers only "Aprovar". Approved/rejected/converted and unknown states
+offer none of these actions. This is UI convenience, not relaxed server validation
+or an automatic intermediate transition. Pending status requests disable the
+affected idea's actions and reject duplicate taps; successful responses replace
+that idea with the persisted state before refreshing the list. A server `400`
+(including a stale decision after another manager's update) produces pt-BR
+guidance to refresh rather than raw HTTP text. The backend's existing rejection
+and project-conversion policies are unchanged.
 
 ---
 
@@ -1551,10 +1569,10 @@ Task 7.3 implements this boundary with `AiIdeaEvaluationClient` and
 the key only through `x-goog-api-key`, applies JDK HTTP connection and read
 timeouts, requests `application/json` with `responseJsonSchema`, and converts the
 provider envelope into `AiIdeaEvaluationResult`. For the bounded evaluation, the
-request uses `thinkingLevel=medium` and a 4096-token maximum covering both thinking
-and visible output. The medium level is a deliberate product choice so the
-evaluation can reason more fully about the idea and strategic context while the
-explicit output limit prevents unbounded generation. Provider envelopes remain
+request uses `thinkingLevel=low` and a 4096-token maximum covering both thinking
+and visible output. The low level is the developer's revised product choice
+(2026-09-15), superseding medium while retaining room for complete structured JSON
+and the existing incomplete-output validation. Provider envelopes remain
 private to the adapter. Task 7.4 registers
 the adapter conditionally: no AI client bean exists when `AI_ENABLED=false`, while
 enabled configuration validates the provider, key, model, HTTPS base URL, and
@@ -2219,7 +2237,7 @@ Phase 11 completed the risk-focused backend suite on 2026-09-14. The standard
   events after rejected or failed operations.
 
 The regular suite never calls the real Gemini service. Its adapter contract uses
-the documented `thinkingLevel=medium` choice and a bounded structured response.
+the documented `thinkingLevel=low` choice and a bounded structured response.
 The application-context smoke test supplies isolated repository doubles and
 disables external persistence auto-configuration, so it does not depend on the
 `main` method's `.env` bootstrap. MongoDB repository integration remains a
@@ -2272,6 +2290,35 @@ the authorization matrix and the logging restrictions in section 20.2.
 - progress uses earned active badges over the complete active catalog;
 - inactive historical awards remain visible as achievements without affecting
   active-catalog progress.
+
+### Automatic milestone policy — 2026-09-15
+
+`MilestoneBadgeService` runs after relational idea creation and valid status
+updates, including conversion inside `ProjetoService.criarProjeto`. Awards belong
+to the idea's `OPERACIONAL` author, never the reviewing manager or project owner.
+It requires the owning MySQL transaction; a failed idea/project/award write rolls
+back the associated relational changes. Existing role/ownership checks and
+manager-only manual grant/removal endpoints remain unchanged.
+
+The defined catalog milestones are:
+
+- `PRIMEIRA_IDEIA`: at least one successfully persisted idea.
+- `IDEIA_APROVADA`: an idea reaches `APROVADA`; `CONVERTIDA_EM_PROJETO` also
+  qualifies because conversion requires prior approval.
+- `PROJETO_IMPLEMENTADO`: an idea reaches `CONVERTIDA_EM_PROJETO`, matching its
+  existing catalog criterion (not project completion).
+
+Only active catalog definitions are automatically granted. MySQL's unique
+recipient/badge constraint and an atomic no-op upsert handle repeated/concurrent
+awards without resetting the original conquest date. Awards are retained after
+idea deletion or later evolution. A manager can still remove an award; a later
+qualifying workflow operation can grant it again. V13 backfills these milestones
+for existing eligible authors without replacing previously earned awards.
+`TOP_COLABORADOR` and `MESTRE_DA_INOVACAO` remain manual until the developer defines
+their numeric thresholds; no points/vote thresholds are inferred from free text.
+
+Android refreshes medals on destination resume, cancels superseded refreshes, and
+keeps earned/available sections disjoint. Home already refreshes awards on resume.
 
 ## Testing
 

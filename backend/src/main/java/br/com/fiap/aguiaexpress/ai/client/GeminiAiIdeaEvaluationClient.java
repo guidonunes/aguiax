@@ -31,7 +31,7 @@ public final class GeminiAiIdeaEvaluationClient implements AiIdeaEvaluationClien
             GeminiAiIdeaEvaluationClient.class
     );
     private static final String API_KEY_HEADER = "x-goog-api-key";
-    private static final String THINKING_LEVEL = "medium";
+    private static final String THINKING_LEVEL = "low";
     private static final int MAX_OUTPUT_TOKENS = 4096;
     private static final Pattern MODEL_NAME_PATTERN =
             Pattern.compile("[a-zA-Z0-9._-]+");

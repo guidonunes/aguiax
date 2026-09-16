@@ -36,6 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.fiap.aguiaexpress.domain.model.Badge
 import br.com.fiap.aguiaexpress.domain.model.UsuarioBadge
@@ -54,6 +56,7 @@ import java.util.Locale
 @Composable
 fun MedalhasScreen(viewModel: BadgeViewModel = viewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.carregarMedalhas() }
     MedalhasPage(state, viewModel::carregarMedalhas)
 }
 

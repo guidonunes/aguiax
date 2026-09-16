@@ -56,6 +56,7 @@ class ProjetoServiceConversionTest {
     private StatusProjetoService statusProjetoService;
     private BusinessMetrics businessMetrics;
     private ProjetoService projetoService;
+    private MilestoneBadgeService milestoneBadgeService;
 
     @BeforeEach
     void setUp() {
@@ -67,6 +68,7 @@ class ProjetoServiceConversionTest {
         statusIdeiaService = mock(StatusIdeiaService.class);
         statusProjetoService = mock(StatusProjetoService.class);
         businessMetrics = mock(BusinessMetrics.class);
+        milestoneBadgeService = mock(MilestoneBadgeService.class);
 
         IdeiaService ideiaService = new IdeiaService(
                 auditService,
@@ -77,7 +79,8 @@ class ProjetoServiceConversionTest {
                 mock(OrientacaoEstrategicaService.class),
                 usuarioAutenticadoService,
                 mock(IdeaPriorityService.class),
-                mock(BusinessMetrics.class)
+                mock(BusinessMetrics.class),
+                milestoneBadgeService
         );
 
         projetoService = new ProjetoService(
@@ -133,11 +136,13 @@ class ProjetoServiceConversionTest {
         InOrder order = inOrder(
                 projetoRepository,
                 ideiaRepository,
+                milestoneBadgeService,
                 auditService,
                 businessMetrics
         );
         order.verify(projetoRepository).save(any(Projeto.class));
         order.verify(ideiaRepository).save(ideia);
+        order.verify(milestoneBadgeService).awardForIdea(ideia);
         order.verify(projetoRepository).flush();
         order.verify(auditService).registrarEvento(
                 AuditEventType.PROJECT_CREATED,
@@ -183,7 +188,8 @@ class ProjetoServiceConversionTest {
                 statusProjetoService,
                 statusIdeiaService,
                 auditService,
-                businessMetrics
+                businessMetrics,
+                milestoneBadgeService
         );
     }
 

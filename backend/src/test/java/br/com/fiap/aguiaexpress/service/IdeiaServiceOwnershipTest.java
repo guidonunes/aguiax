@@ -60,7 +60,8 @@ class IdeiaServiceOwnershipTest {
                 orientacaoService,
                 usuarioAutenticadoService,
                 mock(IdeaPriorityService.class),
-                mock(BusinessMetrics.class)
+                mock(BusinessMetrics.class),
+                mock(MilestoneBadgeService.class)
         );
     }
 

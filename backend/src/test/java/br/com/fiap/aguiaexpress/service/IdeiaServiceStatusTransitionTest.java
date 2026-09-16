@@ -43,6 +43,7 @@ class IdeiaServiceStatusTransitionTest {
     private UsuarioAutenticadoService usuarioAutenticadoService;
     private BusinessMetrics businessMetrics;
     private IdeiaService ideiaService;
+    private MilestoneBadgeService milestoneBadgeService;
 
     @BeforeEach
     void setUp() {
@@ -52,6 +53,7 @@ class IdeiaServiceStatusTransitionTest {
         usuarioAutenticadoService = mock(UsuarioAutenticadoService.class);
         businessMetrics = mock(BusinessMetrics.class);
 
+        milestoneBadgeService = mock(MilestoneBadgeService.class);
         ideiaService = new IdeiaService(
                 auditService,
                 ideiaRepository,
@@ -61,7 +63,8 @@ class IdeiaServiceStatusTransitionTest {
                 mock(OrientacaoEstrategicaService.class),
                 usuarioAutenticadoService,
                 mock(IdeaPriorityService.class),
-                businessMetrics
+                businessMetrics,
+                milestoneBadgeService
         );
     }
 
@@ -88,6 +91,7 @@ class IdeiaServiceStatusTransitionTest {
         assertEquals(newStatus, result.statusIdeia());
         assertSame(targetStatus, ideia.getStatusIdeia());
         verify(ideiaRepository).save(ideia);
+        verify(milestoneBadgeService).awardForIdea(ideia);
         verify(auditService).registrarEvento(
                 expectedEventType,
                 17L,
@@ -135,7 +139,8 @@ class IdeiaServiceStatusTransitionTest {
                 statusIdeiaService,
                 usuarioAutenticadoService,
                 auditService,
-                businessMetrics
+                businessMetrics,
+                milestoneBadgeService
         );
     }
 

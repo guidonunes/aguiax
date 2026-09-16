@@ -147,13 +147,7 @@ fun AppNavigation(
                         NavigationBarItem(
                             selected = currentRoute == item.route || isDashboard && item.route == Routes.HOME,
                             onClick = {
-                                navController.navigate(item.route) {
-                                    popUpTo(Routes.HOME) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                                navController.navigateToMainRoute(item.route)
                             },
                             icon = {
                                 Icon(

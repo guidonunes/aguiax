@@ -1513,6 +1513,75 @@ loading/retry/partial states, and narrow/large-font metric layouts. Generated
 operational, manager, and leader layouts were visually inspected. The test APKs
 are temporary; the debug app is reinstalled after emulator verification.
 
+### AI thinking and operational milestone awards — 2026-09-15
+
+Implemented by Codex at the developer's request. The Gemini adapter now sends
+`thinkingLevel=low`, superseding the earlier medium product choice in Tasks 7.3
+and 11.5. The 4096-token ceiling, structured response, validation, timeout handling,
+and prohibition on AI status changes remain unchanged; no new environment key is
+needed.
+
+This request also revises the earlier manual-only award decision. The backend now
+automatically grants the three defined active catalog milestones to the idea's
+`OPERACIONAL` author: `PRIMEIRA_IDEIA`, `IDEIA_APROVADA`, and
+`PROJETO_IMPLEMENTADO`. Award writes share the successful idea/project transaction;
+an atomic MySQL upsert respects unique recipient/badge pairs and original dates.
+V13 backfills existing eligible authors without modifying applied migrations.
+Manual grants/removal remain `GESTOR`-only and reads retain recipient ownership.
+`TOP_COLABORADOR` and `MESTRE_DA_INOVACAO` are not automatically awarded until the
+developer supplies explicit numeric thresholds for their ambiguous catalog text.
+
+The retained Android Medals destination now loads on resume rather than only
+ViewModel creation. Superseded loads are cancelled and cannot overwrite newer
+awards. The existing earned/available filtering and Home refresh behavior remain.
+Architecture's badge policy and README record the revised behavior; this follow-up
+does not mark the final real-backend Android journeys complete.
+
+Verification: the focused AI/workflow/authorization selection passed 69 tests.
+`bash ./mvnw -o test` passed 218 tests with only the new opt-in MySQL test skipped;
+that test separately passed with `-Dtest=MilestoneBadgeMySqlIntegrationTest
+-Dmysql.test.enabled=true`. It migrated an isolated UUID-scoped MySQL 8 schema
+through V12, seeded existing milestones/manual awards, applied V13, and verified
+backfill, original dates, duplicate/concurrent grants, inactive/missing definitions,
+role filtering, and rollback. Only the newly created test schema was removed.
+Android's full unit suite passed 106 tests, `:app:assembleDebug` succeeded, and both
+`MedalhasRefreshTest` emulator tests passed (resume refresh and stale-load
+suppression). The debug app was reinstalled with `:app:installDebug --offline`.
+
+### Manager workflow/Home regression fix — 2026-09-15
+
+Implemented by Codex at the developer's request. The previous Android card
+offered approval/prioritization regardless of current status, even though Task
+4.2 correctly rejects direct `NOVA -> APROVADA/PRIORIZADA`. The card now offers
+"Iniciar análise" first, appropriate decision actions during analysis, only
+approval after prioritization, and no repeated/terminal decision actions.
+Per-idea pending state blocks duplicate updates, and the persisted response is
+applied before list refresh. Status failures have safe pt-BR feedback; backend
+authorization, allowed transitions, and audit behavior are not weakened.
+
+Shared tab navigation now avoids restoring saved child-tab state when Home is
+selected, while retaining state restoration for other tabs. This fixes manager
+returns from other main tabs and direct Home shortcuts without changing role
+policy or creating a separate navigation graph. Architecture sections 9.4 and 12
+record these constraints. This targeted regression fix does not mark Phase 13's
+real-backend device journeys complete.
+
+Verification: `bash ./gradlew :app:testDebugUnitTest :app:assembleDebug --offline`
+passed all 106 Android unit tests and built the debug APK. Eight targeted emulator
+tests (`MainRouteNavigationTest`, `IdeaStatusActionsUiTest`) passed on Pixel 6 /
+Android 12 via `:app:connectedDebugAndroidTest`. Navigation coverage reproduces
+the old failure after the manager's "Revisar ideias" Home shortcut, then verifies
+that the corrected options return to Home; other tabs and repeated switches are
+also covered. Idea coverage exercises the analysis/prioritization/approval
+pipeline, direct approval during analysis, unavailable terminal actions, and
+pending-button disabling. Retrofit contract tests preserve the documented PATCH
+payload and backend rejection of direct approval from `NOVA`. The existing
+backend `IdeiaServiceStatusTransitionTest` and `IdeiaStatusJwtIntegrationTest`
+passed all 20 service/JWT checks with
+`bash ./mvnw -o -Dtest=IdeiaServiceStatusTransitionTest,IdeiaStatusJwtIntegrationTest test`.
+The verified debug app was reinstalled on the emulator with
+`bash ./gradlew :app:installDebug --offline` after instrumentation cleanup.
+
 ### Android appearance follow-up — 2026-09-15
 
 Implemented by Codex at the developer's request. The existing Material 3 theme
