@@ -1,7 +1,9 @@
 package br.com.fiap.aguiaexpress.config.ai;
 
+import br.com.fiap.aguiaexpress.ai.client.AiDashboardInsightClient;
 import br.com.fiap.aguiaexpress.ai.client.AiIdeaEvaluationClient;
 import br.com.fiap.aguiaexpress.ai.client.GeminiAiIdeaEvaluationClient;
+import br.com.fiap.aguiaexpress.ai.client.GeminiDashboardInsightClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -34,6 +36,7 @@ class AiProviderConfigurationTest {
                 .run(context -> {
                     assertNull(context.getStartupFailure());
                     assertTrue(aiClients(context).isEmpty());
+                    assertTrue(dashboardInsightClients(context).isEmpty());
 
                     AiProviderProperties properties =
                             context.getBean(AiProviderProperties.class);
@@ -56,6 +59,7 @@ class AiProviderConfigurationTest {
                 .run(context -> {
                     assertNull(context.getStartupFailure());
                     assertTrue(aiClients(context).isEmpty());
+                    assertTrue(dashboardInsightClients(context).isEmpty());
                 });
     }
 
@@ -82,6 +86,15 @@ class AiProviderConfigurationTest {
                     assertInstanceOf(
                             GeminiAiIdeaEvaluationClient.class,
                             clients.values().iterator().next()
+                    );
+
+                    Map<String, AiDashboardInsightClient> insightClients =
+                            dashboardInsightClients(context);
+
+                    assertEquals(1, insightClients.size());
+                    assertInstanceOf(
+                            GeminiDashboardInsightClient.class,
+                            insightClients.values().iterator().next()
                     );
 
                     AiProviderProperties properties =
@@ -208,6 +221,12 @@ class AiProviderConfigurationTest {
             org.springframework.context.ApplicationContext context
     ) {
         return context.getBeansOfType(AiIdeaEvaluationClient.class);
+    }
+
+    private Map<String, AiDashboardInsightClient> dashboardInsightClients(
+            org.springframework.context.ApplicationContext context
+    ) {
+        return context.getBeansOfType(AiDashboardInsightClient.class);
     }
 
     private void assertAllDefaultValues(

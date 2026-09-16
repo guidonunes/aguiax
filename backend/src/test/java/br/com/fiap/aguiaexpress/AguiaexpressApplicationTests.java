@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress;
 
 import br.com.fiap.aguiaexpress.ai.repository.AiIdeaEvaluationRepository;
+import br.com.fiap.aguiaexpress.ai.repository.DashboardAiInsightRepository;
 import br.com.fiap.aguiaexpress.audit.repository.AuditEventRepository;
 import br.com.fiap.aguiaexpress.repository.BadgeRepository;
 import br.com.fiap.aguiaexpress.repository.CategoriaRepository;
@@ -41,6 +42,9 @@ class AguiaexpressApplicationTests {
 
     @MockitoBean
     private AiIdeaEvaluationRepository aiIdeaEvaluationRepository;
+
+    @MockitoBean
+    private DashboardAiInsightRepository dashboardAiInsightRepository;
 
     @MockitoBean
     private AuditEventRepository auditEventRepository;

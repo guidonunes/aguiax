@@ -5,5 +5,6 @@ public enum AuditResourceType {
     IDEA,
     PROJECT,
     ORIENTATION,
-    AI_EVALUATION
+    AI_EVALUATION,
+    DASHBOARD_INSIGHT
 }

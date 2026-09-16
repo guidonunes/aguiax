@@ -1,6 +1,7 @@
 package br.com.fiap.aguiaexpress.config.openapi;
 
 import br.com.fiap.aguiaexpress.ai.repository.AiIdeaEvaluationRepository;
+import br.com.fiap.aguiaexpress.ai.repository.DashboardAiInsightRepository;
 import br.com.fiap.aguiaexpress.audit.repository.AuditEventRepository;
 import br.com.fiap.aguiaexpress.repository.BadgeRepository;
 import br.com.fiap.aguiaexpress.repository.CategoriaRepository;
@@ -44,6 +45,9 @@ class OpenApiDocumentationIntegrationTest {
 
     @MockitoBean
     private AiIdeaEvaluationRepository aiIdeaEvaluationRepository;
+
+    @MockitoBean
+    private DashboardAiInsightRepository dashboardAiInsightRepository;
 
     @MockitoBean
     private AuditEventRepository auditEventRepository;
@@ -107,6 +111,16 @@ class OpenApiDocumentationIntegrationTest {
                 .andExpect(jsonPath("$['paths']['/projetos']['post']['responses']['409']")
                         .exists())
                 .andExpect(jsonPath("$['paths']['/api/dashboard/summary']['get']['responses']['403']")
+                        .exists())
+                .andExpect(jsonPath("$['paths']['/api/dashboard/insights']['post']['responses']['400']")
+                        .exists())
+                .andExpect(jsonPath("$['paths']['/api/dashboard/insights']['post']['responses']['403']")
+                        .exists())
+                .andExpect(jsonPath("$['paths']['/api/dashboard/insights']['post']['responses']['502']")
+                        .exists())
+                .andExpect(jsonPath("$['paths']['/api/dashboard/insights']['post']['responses']['503']")
+                        .exists())
+                .andExpect(jsonPath("$['paths']['/api/dashboard/insights']['post']['responses']['504']")
                         .exists())
                 .andExpect(jsonPath("$.components.schemas.AtualizarAvaliacaoIdeiaDTO.properties.impacto.minimum")
                         .value(0))

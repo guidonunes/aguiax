@@ -5,6 +5,8 @@ import br.com.fiap.aguiaexpress.dto.ErroRespostaDTO;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationPersistenceException;
 import br.com.fiap.aguiaexpress.exception.AiEvaluationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.DuplicateResourceException;
+import br.com.fiap.aguiaexpress.exception.DashboardInsightPersistenceException;
+import br.com.fiap.aguiaexpress.exception.DashboardInsightUnavailableException;
 import br.com.fiap.aguiaexpress.exception.InvalidRequestException;
 import br.com.fiap.aguiaexpress.exception.PriorityCalculationUnavailableException;
 import br.com.fiap.aguiaexpress.exception.ResourceNotFoundException;
@@ -125,6 +127,30 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(AiEvaluationPersistenceException.class)
     public ResponseEntity<ErroRespostaDTO> handleAiEvaluationPersistence(
             AiEvaluationPersistenceException exception,
+            HttpServletRequest request
+    ) {
+        return criarRespostaDeErro(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(DashboardInsightUnavailableException.class)
+    public ResponseEntity<ErroRespostaDTO> handleDashboardInsightUnavailable(
+            DashboardInsightUnavailableException exception,
+            HttpServletRequest request
+    ) {
+        return criarRespostaDeErro(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    @ExceptionHandler(DashboardInsightPersistenceException.class)
+    public ResponseEntity<ErroRespostaDTO> handleDashboardInsightPersistence(
+            DashboardInsightPersistenceException exception,
             HttpServletRequest request
     ) {
         return criarRespostaDeErro(

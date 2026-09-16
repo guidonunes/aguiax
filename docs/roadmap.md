@@ -1099,7 +1099,7 @@ pre-existing `contextLoads` `${DB_URL}` configuration error remains.
 
 ---
 
-# Phase 8 — AI-assisted idea prioritization
+# Phase 8 — AI-assisted analysis and idea prioritization
 
 ## Task 8.1 — Add AI evaluation endpoint
 
@@ -1145,8 +1145,8 @@ audit metadata contain only idea/provider/model/failure classification data; the
 API key and raw provider body are not exposed. Neither success nor failure changes
 the idea status or creates a project.
 
-The behavior list above spans the whole Phase 8 pipeline. MongoDB evaluation
-history is owned by Task 8.2 and was subsequently connected to this orchestration;
+The behavior list above spans the Tasks 8.1–8.4 idea-evaluation pipeline. MongoDB
+evaluation history is owned by Task 8.2 and was subsequently connected to this orchestration;
 calculation/persistence of the deterministic application priority was subsequently
 implemented by Task 8.3. Keeping score calculation in its dedicated task avoided
 storing an undocumented formula. The Task 8.1 exit criterion is met by the endpoint and
@@ -1309,6 +1309,112 @@ path. The MVC contract test also proves that governance and project fields are n
 returned by the AI endpoint. Existing idea-transition and project-conversion tests
 continue to verify that those decisions occur through their explicit manager
 workflows. The focused Task 8.4 verification passed 54 of 54 tests.
+
+---
+
+## Task 8.5 — Generate executive dashboard insights with AI
+
+Add a leader-only, non-chatbot endpoint:
+
+```http
+POST /api/dashboard/insights[?orientationId={id}]
+```
+
+The request has no body. The backend must load the authoritative global or
+orientation-filtered `DashboardSummaryResponse`, reject a zero-project snapshot,
+ask the configured Gemini adapter for structured pt-BR analysis, validate the
+result, and return the exact metrics snapshot alongside:
+
+- executive summary;
+- one to three highlights;
+- zero to three attention points;
+- one to three actionable improvement suggestions;
+- application-owned scope and generation timestamp.
+
+Persist every successful result in MongoDB collection
+`dashboard_ai_insights`, including requester, scope/filter, complete metrics
+snapshot, validated output, provider/model, and UTC timestamp. Audit requested,
+completed, and failed outcomes without storing prompts, provider bodies,
+generated text, credentials, or authorization headers. Reuse the existing AI
+configuration and `thinkingLevel=low`; do not add a second provider key.
+
+The AI is advisory. It must not update ideas, projects, orientations, users,
+scores, or statuses. It must use only backend-supplied metrics, identify missing
+business context as something to investigate, and never invent causal
+explanations or forecasts. The controlled error contract is `400` for an empty
+snapshot, `404` for an unknown orientation, `502` for rejected/malformed output,
+`503` for disabled/rate-limited/unavailable provider or MongoDB failure, and
+`504` for provider timeout; normal security behavior remains `401`/`403`.
+
+### Exit criterion
+
+A `LIDER` can request a validated, persisted, traceable pt-BR executive analysis
+of the exact backend dashboard snapshot. Other roles are denied, failure paths
+are controlled, and no business state is changed.
+
+### Task 8.5 contract record — 2026-09-16
+
+Contract documented in architecture section 17.9.
+
+### Task 8.5 contract-model implementation record — 2026-09-16
+
+Implemented the provider-independent backend foundation: validated global and
+orientation contexts, the exact `pt-BR` structured result with bounded immutable
+lists, the application-owned HTTP response with its trusted metrics snapshot, and
+the traceable `DashboardAiInsight` MongoDB document/repository for collection
+`dashboard_ai_insights`. Nine focused tests verify scope invariants, zero-project
+rejection, normalization, size/length limits, defensive copies, stable response
+serialization, traceability fields, and the collection name.
+
+After this contract-model step, Task 8.5 remained incomplete. The provider
+adapter, orchestration service, secured endpoint, audit integration, controlled
+provider/persistence failures, and broader integration tests were still pending.
+
+### Task 8.5 provider-client implementation record — 2026-09-16
+
+Implemented `AiDashboardInsightClient` and its Gemini adapter. The adapter sends
+only the validated dashboard context, requests the documented structured JSON,
+uses `thinkingLevel=low`, validates the application result, and classifies
+malformed/incomplete output, rate limits, outages, rejected requests, and timeouts.
+It reuses a new internal `GeminiStructuredOutputClient` with the existing idea
+adapter, preserving the idea-evaluation contract while removing duplicate Gemini
+transport and envelope parsing. Both adapters are conditionally registered from
+the same `AI_*` configuration; no new environment variable was introduced.
+
+The provider schema uses only supported JSON Schema keywords for enum and array
+bounds. The application record remains authoritative for the 800/300-character
+limits. Thirty focused contract, configuration, existing idea-client regression,
+and dashboard-client tests pass. The complete backend suite passes 235 tests with
+the opt-in MySQL milestone test skipped. At this provider-client step, Task 8.5
+was still partial: service orchestration, the secured endpoint, persistence
+execution, audit events, HTTP error mapping, and integration tests remained.
+
+### Task 8.5 backend-orchestration implementation record — 2026-09-16
+
+Implemented `DashboardInsightService` and the LIDER-only
+`POST /api/dashboard/insights[?orientationId={id}]` route. The service always
+loads `DashboardService.buscarResumo(orientationId)`, rejects a zero-project
+snapshot before authentication/provider work, sends the trusted snapshot to the
+conditional dashboard AI client, persists the validated result in
+`dashboard_ai_insights`, and only then returns the application-owned response.
+The operation is read-only with respect to MySQL business state.
+
+Added typed requested/completed/failed audit events using one analysis UUID and
+safe scope/provider metadata. Disabled AI and MongoDB history failures map to
+controlled `503`; the shared provider classification preserves `502`, `503`, and
+`504`, while unknown orientations remain `404`. No prompt, provider body,
+generated text, credential, JWT, or authorization header is placed in logs or
+audit metadata.
+
+Seven service tests, six new MVC/security cases, the enhanced OpenAPI contract
+test, and one real MongoDB repository integration test verify trusted context,
+persistence/audit ordering, global and filtered responses, role enforcement,
+empty/unknown filters, controlled failures, safe diagnostics, collection naming,
+and complete history data. The 37-test focused contract/client/service/MVC/OpenAPI
+suite and the isolated MongoDB persistence test pass. The Task 8.5 backend exit
+criterion is satisfied; the complete backend suite passes 249 tests with the
+existing opt-in MySQL milestone test skipped. Android presentation remains Task
+9.5.
 
 ---
 
@@ -1488,8 +1594,37 @@ complete Android suite passed 56 of 56 tests and `assembleDebug` succeeded. The
 focused backend authorization suites passed 47 of 47 checks, including real MVC
 `401`, `403`, and allowed responses for project and strategic-orientation routes,
 plus the existing idea, AI, dashboard, catalog, user, category, and badge
-boundaries. The exit criterion and Phase 9 implementation are complete; physical
-device journeys remain in Phases 13 and 14.
+boundaries. The Task 9.4 exit criterion and the previously scoped Phase 9 work are
+complete; the newly documented Task 9.5 remains unimplemented, and physical device
+journeys remain in Phases 13 and 14.
+
+## Task 9.5 — Display executive dashboard insights
+
+Extend the existing leader Dashboard with a reusable **"Análise executiva com
+IA"** card. A deliberate **"Gerar análise"** action invokes Task 8.5 for the
+current global/orientation scope. Display its structured fields under **"Resumo
+executivo"**, **"Destaques"**, **"Pontos de atenção"**, and **"Sugestões de
+melhoria"**; do not add a prompt field, messages, or chat history.
+
+Keep dashboard-summary loading separate from insight loading/error state. Adopt
+the response `metricsSnapshot` as the visible summary, clear a generated insight
+when the orientation changes, and prevent stale responses from a prior filter
+from replacing current state. Errors, retry labels, loading text, and content
+descriptions must be in pt-BR. Continue to guard the destination and controls with
+the centralized `LIDER` role policy while treating backend authorization as
+authoritative.
+
+### Exit criterion
+
+On the existing Dashboard, a `LIDER` can explicitly generate and read an insight
+that matches the displayed metrics and selected orientation. Loading, retry,
+filter changes, stale responses, and forbidden roles behave safely without
+turning the feature into a chatbot.
+
+### Task 9.5 contract record — 2026-09-16
+
+Android behavior is documented in architecture section 18.7. Implementation and
+tests have not started.
 
 ### Role-adaptive Home follow-up — 2026-09-15
 

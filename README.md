@@ -308,6 +308,34 @@ da aplicação continua funcionando. Para uma demonstração real, configure a c
 somente no `.env` local, altere `AI_ENABLED=true` e reinicie o backend. A chave
 nunca deve chegar ao Android ou à coleção Postman.
 
+### Análise executiva do dashboard por IA
+
+O backend disponibiliza o endpoint exclusivo do `LIDER`:
+
+```http
+POST /api/dashboard/insights
+POST /api/dashboard/insights?orientationId={id}
+```
+
+A requisição não tem corpo. O backend obtém o resumo global ou filtrado pelo
+próprio `DashboardService`; o cliente não envia contagens, valores financeiros
+ou outras métricas. A resposta devolve esse mesmo retrato de métricas junto de
+uma análise estruturada em pt-BR: resumo executivo, destaques, pontos de atenção e
+sugestões de melhoria. Uma seleção sem projetos será rejeitada com `400`, e uma
+orientação inexistente continuará retornando `404`.
+
+No Android, a tela Dashboard existente ainda receberá o cartão **Análise executiva com IA**
+e o botão **Gerar análise**. Não haverá campo de texto, conversa nem histórico de
+chat: a geração será manual e baseada somente nos indicadores atuais. Ao trocar o
+filtro de orientação, a análise anterior será descartada para não misturar
+contextos.
+
+Resultados válidos são registrados no MongoDB em `dashboard_ai_insights`, com
+o usuário solicitante, filtro, retrato completo das métricas, resultado validado,
+provedor/modelo e data UTC. A integração reutiliza as variáveis `AI_*` e o
+`thinkingLevel=low` já configurados; não é necessária uma nova chave. Falhas são
+controladas sem alterar projetos, ideias, orientações, pontuações ou status.
+
 ## Android
 
 Após o login, todos os perfis abrem a mesma tela **Início**, com conteúdo conforme

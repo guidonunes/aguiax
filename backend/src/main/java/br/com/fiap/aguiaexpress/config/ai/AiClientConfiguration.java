@@ -1,7 +1,9 @@
 package br.com.fiap.aguiaexpress.config.ai;
 
+import br.com.fiap.aguiaexpress.ai.client.AiDashboardInsightClient;
 import br.com.fiap.aguiaexpress.ai.client.AiIdeaEvaluationClient;
 import br.com.fiap.aguiaexpress.ai.client.GeminiAiIdeaEvaluationClient;
+import br.com.fiap.aguiaexpress.ai.client.GeminiDashboardInsightClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +29,28 @@ public class AiClientConfiguration {
         validateEnabledConfiguration(properties);
 
         return new GeminiAiIdeaEvaluationClient(
+                properties.baseUrl(),
+                properties.apiKey(),
+                properties.model(),
+                properties.connectTimeout(),
+                properties.readTimeout(),
+                objectMapper
+        );
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            prefix = "app.ai",
+            name = "enabled",
+            havingValue = "true"
+    )
+    public AiDashboardInsightClient aiDashboardInsightClient(
+            AiProviderProperties properties,
+            ObjectMapper objectMapper
+    ) {
+        validateEnabledConfiguration(properties);
+
+        return new GeminiDashboardInsightClient(
                 properties.baseUrl(),
                 properties.apiKey(),
                 properties.model(),

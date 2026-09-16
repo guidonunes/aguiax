@@ -706,6 +706,7 @@ mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/agui
 | StatusProjetoController | `GET /status-projetos` | Authenticated | Implemented | Auth; 1.4 |
 | StatusProjetoController | `GET /status-projetos/{id}` | Authenticated | Implemented | Auth; 1.4 |
 | DashboardController | `GET /api/dashboard/summary[?orientationId={id}]` | LIDER | Implemented | Controller-wide role policy plus global and filtered `401`/`403`/`200` behavior verified; 6.2–6.5 |
+| DashboardController | `POST /api/dashboard/insights[?orientationId={id}]` | LIDER | Implemented | Trusted backend snapshot, structured Gemini analysis, MongoDB history, audit, and controlled `400`/`404`/`502`/`503`/`504` behavior verified; 8.5 |
 | HelloWorldController | `GET /api/english` | Authenticated | Implemented | Auth; legacy diagnostic, no new privilege; 1.2 |
 | HelloWorldController | `GET /api/deutsch` | Authenticated | Implemented | Auth; legacy diagnostic, no new privilege; 1.2 |
 
@@ -718,7 +719,7 @@ rows when their owning roadmap tasks introduce the controllers.
 |---|---|---|---|
 | `POST /api/ideas/{ideaId}/ai-evaluation` | GESTOR | Implemented; `401`/`403`/`200` and controlled failure behavior verified | 8.1 |
 | AI history read endpoint, if exposed | GESTOR only; internal scoring service may read persisted results | No HTTP route exposed; internal Mongo repository implemented | 8.2 |
-| Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain and AI-evaluation operations | 3.1–3.2, 8.1 |
+| Audit events | Internal service writes only; no client read/write API in Sprint 2 | Implemented for current domain, AI-evaluation, and dashboard-insight operations | 3.1–3.2, 8.1, 8.5 |
 | `GET /actuator/health` | Public, overall status only; no component details | Implemented and integration-tested | 10.1 |
 | `GET /actuator/info`, `GET /actuator/metrics`, `GET /actuator/metrics/{name}` | LIDER, sanitized metadata/metrics only | Implemented and integration-tested | 10.1 |
 
@@ -1339,9 +1340,16 @@ provider responses.
 
 # 17. AI architecture
 
-Sprint 2 uses AI for **idea evaluation and prioritization support**.
+Sprint 2 uses AI for two bounded decision-support operations:
 
-This is intentionally not a chatbot.
+- idea evaluation and prioritization support for `GESTOR`;
+- concise executive interpretation of existing dashboard metrics for `LIDER`.
+
+Neither operation is a chatbot. There is no conversational input, dialogue
+history, autonomous tool use, MCP server/client, or knowledge-retrieval/RAG
+pipeline. Each operation receives application-owned structured context and returns
+a validated structured result. AI remains advisory and cannot mutate workflow or
+dashboard business state.
 
 ## 17.1 Selected provider
 
@@ -1558,6 +1566,14 @@ Conceptually:
 AiIdeaEvaluationClient
         |
         +------ GeminiAiIdeaEvaluationClient
+
+AiDashboardInsightClient
+        |
+        +------ GeminiDashboardInsightClient
+
+Both Gemini adapters
+        |
+        +------ GeminiStructuredOutputClient (internal transport)
 ```
 
 This avoids coupling service logic to one provider's HTTP schema.
@@ -1577,6 +1593,24 @@ private to the adapter. Task 7.4 registers
 the adapter conditionally: no AI client bean exists when `AI_ENABLED=false`, while
 enabled configuration validates the provider, key, model, HTTPS base URL, and
 positive timeouts before startup completes.
+
+The Task 8.5 provider step adds the independent `AiDashboardInsightClient` and
+`GeminiDashboardInsightClient` without coupling dashboard orchestration to the
+Gemini envelope. Both domain adapters reuse the package-private
+`GeminiStructuredOutputClient` for authenticated HTTPS transport, timeout and
+HTTP-failure classification, `STOP` completion checks, safe envelope extraction,
+`thinkingLevel=low`, and JSON mapping. Their prompts and response schemas remain
+separate because idea scoring and executive interpretation have different
+business contracts.
+
+The dashboard schema uses Gemini-supported `enum`, `minItems`, and `maxItems`.
+String length limits are stated in the prompt and descriptions, then enforced
+authoritatively by `DashboardInsightResult`; unsupported JSON Schema string-length
+keywords are not sent. Malformed JSON, wrong language, invalid list counts,
+overlong text, incomplete generation, rate limiting, provider errors, and timeouts
+become classified `AiProviderException` failures without logging provider content.
+`AiClientConfiguration` creates both adapters from the same `AI_*` settings only
+when AI is enabled; there is still no extra credential or Android provider access.
 
 ---
 
@@ -1659,6 +1693,122 @@ provider-failure, MongoDB-failure, and priority-persistence-failure tests preser
 the idea's status; the AI orchestration tests also allow-list its only interactions
 with `IdeiaService` as idea lookup and, after successful persistence, priority
 update.
+
+---
+
+## 17.9 Executive dashboard insight contract
+
+Task 8.5 implements a second, independent, non-chatbot AI use case. A `LIDER`
+explicitly requests analysis of the global dashboard or of the
+currently selected strategic orientation:
+
+```http
+POST /api/dashboard/insights
+POST /api/dashboard/insights?orientationId={id}
+```
+
+The request has no body. `DashboardInsightService` calls the existing
+`DashboardService.buscarResumo(orientationId)` and builds the AI context from that
+trusted backend result. Android must never submit project counts, monetary values,
+averages, status totals, actor identity, or provider configuration. This prevents
+a caller from asking the model to analyze values different from the authoritative
+dashboard. Unknown orientations retain the existing `404` behavior. A snapshot
+with zero projects returns controlled `400 Bad Request` before any provider call.
+
+The provider-independent input contains only:
+
+```text
+scope: GLOBAL | ORIENTATION
+orientationId: null for GLOBAL, otherwise the selected positive ID
+orientationTitle: optional trusted title for the selected orientation
+metrics: DashboardSummaryResponse
+```
+
+The provider result is structured JSON with this exact semantic contract:
+
+```json
+{
+  "language": "pt-BR",
+  "executiveSummary": "Síntese curta baseada exclusivamente nos indicadores.",
+  "highlights": ["De um a três destaques objetivos."],
+  "attentionPoints": ["De zero a três pontos que merecem investigação."],
+  "recommendations": ["De uma a três sugestões acionáveis para a liderança."]
+}
+```
+
+`language` must equal `pt-BR`. Required strings are trimmed and nonblank;
+`executiveSummary` is limited to 800 characters and each list item to 300
+characters. `highlights` and `recommendations` contain `1..3` items;
+`attentionPoints` contains `0..3`. Lists are defensively copied and immutable.
+The provider is instructed to use only the supplied metrics, avoid invented causes
+or forecasts, distinguish observations from recommendations, and describe missing
+context as something to investigate. Output remains advisory and must not contain
+commands that update projects, orientations, users, ideas, scores, or statuses.
+
+The application, not Gemini, assembles the HTTP response:
+
+```json
+{
+  "scope": "GLOBAL",
+  "orientationId": null,
+  "metricsSnapshot": {
+    "totalProjects": 12,
+    "projectsByStatus": {
+      "PLANEJADO": 3,
+      "EM_ANDAMENTO": 5,
+      "CONCLUIDO": 3,
+      "CANCELADO": 1
+    },
+    "totalInvestment": 850000.00,
+    "totalFinancialReturn": 1200000.00,
+    "totalCostReduction": 210000.00,
+    "estimatedResult": 560000.00,
+    "averageRoi": 32.70,
+    "averageProductivityGain": 11.40
+  },
+  "executiveSummary": "O portfólio apresenta resultado estimado positivo...",
+  "highlights": ["O retorno e a redução de custos superam o investimento."],
+  "attentionPoints": ["Cinco projetos ainda estão em andamento."],
+  "recommendations": ["Acompanhar a realização do retorno nos projetos em andamento."],
+  "generatedAt": "2026-09-16T15:00:00Z"
+}
+```
+
+`scope`, `orientationId`, `metricsSnapshot`, and `generatedAt` are trusted
+application fields and never accepted from provider output. Returning the snapshot
+lets Android replace its displayed summary with the analyzed snapshot, guaranteeing
+that the visible figures correspond to the generated interpretation even if data
+changed between the earlier summary GET and this POST.
+
+Successful analyses are persisted in MongoDB collection
+`dashboard_ai_insights` with an application UUID, authenticated requester ID,
+scope/orientation, complete metrics snapshot, validated insight, provider/model,
+and UTC creation time. Persistence occurs before HTTP success; a persistence
+failure returns controlled `503` and no false completed audit. There is no public
+history endpoint in this task. New audit events are
+`DASHBOARD_INSIGHT_REQUESTED`, `DASHBOARD_INSIGHT_COMPLETED`, and
+`DASHBOARD_INSIGHT_FAILED`, using resource type `DASHBOARD_INSIGHT`. Logs and
+audit failure metadata may contain scope, orientation ID, provider/model, and a
+safe failure classification, but never the prompt, provider body, generated text,
+API key, JWT, or authorization header.
+
+The route inherits `DashboardController`'s class-level `LIDER` restriction:
+unauthenticated callers receive `401`, authenticated `OPERACIONAL`/`GESTOR`
+callers receive `403`, and only `LIDER` reaches orchestration. The existing Gemini
+configuration, timeouts, structured-output handling, `thinkingLevel=low`, and
+provider failure mapping are reused; no new environment variable or Android-held
+provider credential is introduced. Provider timeout maps to `504`, rate limit,
+outage, disabled AI, or MongoDB failure to `503`, and rejected/malformed output to
+`502`. All such failures leave MySQL and workflow state unchanged.
+
+The implemented orchestration generates one application UUID for the whole
+request trace, records `DASHBOARD_INSIGHT_REQUESTED`, calls the conditional AI
+client, stores the validated result before returning success, and records
+`DASHBOARD_INSIGHT_COMPLETED` only after persistence. Disabled AI, classified
+provider failures, and MongoDB failures record `DASHBOARD_INSIGHT_FAILED` with a
+safe classification. Unit, MVC/security, OpenAPI, and real MongoDB repository
+tests cover the complete backend flow. Android consumption remains assigned to
+Task 9.5.
 
 ---
 
@@ -1827,6 +1977,30 @@ slower earlier response from replacing a newer selection. A known orientation
 with no projects renders an empty filtered state, while an unknown ID uses the
 backend's controlled `404` response. Project-specific visualization remains the
 existing `GET /projetos/{projectId}` flow and is not recomputed in this screen.
+
+## 18.7 Android executive insight consumption
+
+Task 9.5 will add one leader-only card to the existing Dashboard rather than a
+chat screen or a second dashboard. The card title is **"Análise executiva com
+IA"** and generation is an explicit **"Gerar análise"** action; opening or
+filtering the Dashboard must not automatically consume the external provider.
+The structured result is rendered in the pt-BR sections **"Resumo executivo"**,
+**"Destaques"**, **"Pontos de atenção"**, and **"Sugestões de melhoria"**.
+There is no free-text input, conversation history, or chatbot interaction.
+
+Android sends only the selected `orientationId`, when present. It adopts the
+`metricsSnapshot` returned by the insight endpoint as the currently displayed
+summary so the analysis and visible metrics always refer to the same snapshot.
+Summary loading and insight generation use independent UI states: generating an
+insight must not hide an already loaded dashboard, and a failed generation keeps
+the last valid summary visible with a controlled pt-BR retry message.
+
+Changing the orientation clears the previous insight immediately. A request
+sequence (or equivalent cancellation guard) must prevent a late response for an
+older filter from being shown under the current filter. Logging out or losing the
+`LIDER` capability clears the insight state, and the existing centralized role
+policy remains the navigation guard. Android never receives Gemini credentials,
+provider envelopes, prompts, or raw provider errors.
 
 ---
 
