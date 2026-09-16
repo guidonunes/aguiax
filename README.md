@@ -324,11 +324,14 @@ uma análise estruturada em pt-BR: resumo executivo, destaques, pontos de atenç
 sugestões de melhoria. Uma seleção sem projetos será rejeitada com `400`, e uma
 orientação inexistente continuará retornando `404`.
 
-No Android, a tela Dashboard existente ainda receberá o cartão **Análise executiva com IA**
-e o botão **Gerar análise**. Não haverá campo de texto, conversa nem histórico de
-chat: a geração será manual e baseada somente nos indicadores atuais. Ao trocar o
-filtro de orientação, a análise anterior será descartada para não misturar
-contextos.
+No Android, a tela Dashboard existente apresenta o cartão **Análise executiva
+com IA** e o botão **Gerar análise**. Não há campo de texto, conversa nem
+histórico de chat: a geração é manual e baseada somente nos indicadores atuais.
+O retrato devolvido pelo endpoint passa a ser o resumo visível, mantendo métricas
+e análise no mesmo instante de referência. Ao trocar o filtro de orientação, a
+análise anterior é descartada, e respostas atrasadas de outro filtro são
+ignoradas para não misturar contextos. Falhas preservam o último dashboard válido
+e oferecem nova tentativa em pt-BR.
 
 Resultados válidos são registrados no MongoDB em `dashboard_ai_insights`, com
 o usuário solicitante, filtro, retrato completo das métricas, resultado validado,

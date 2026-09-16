@@ -1,5 +1,6 @@
 package br.com.fiap.aguiaexpress.ui.screens.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,10 +24,20 @@ import br.com.fiap.aguiaexpress.viewmodel.DashboardViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.WarningAmber
+import br.com.fiap.aguiaexpress.ui.components.AguiaButton as Button
 import br.com.fiap.aguiaexpress.ui.components.AguiaOutlinedButton as OutlinedButton
 import androidx.compose.ui.Alignment
 import br.com.fiap.aguiaexpress.ui.theme.semanticColors
@@ -36,13 +47,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import br.com.fiap.aguiaexpress.domain.model.Orientacao
+import br.com.fiap.aguiaexpress.domain.model.DashboardInsight
+import br.com.fiap.aguiaexpress.viewmodel.DashboardInsightUiState
 import java.math.BigDecimal
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val insightUiState by viewModel.insightUiState.collectAsState()
     val summary = uiState.summary
 
     Column(
@@ -129,9 +146,234 @@ fun DashboardScreen(
                 ProjetosPorStatusSection(
                     projetosPorStatus = summary.projectsByStatus
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                DashboardInsightCard(
+                    state = insightUiState,
+                    onGenerate = viewModel::gerarInsight
+                )
             }
         }
     }
+}
+
+@Composable
+internal fun DashboardInsightCard(
+    state: DashboardInsightUiState,
+    onGenerate: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.semanticColors.info.copy(alpha = 0.35f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.semanticColors.infoContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = "Análise executiva com IA",
+                        tint = MaterialTheme.semanticColors.info,
+                        modifier = Modifier.padding(10.dp).size(24.dp)
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = "Análise executiva com IA",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Interpretação consultiva dos indicadores exibidos.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            when {
+                state.isLoading -> {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(28.dp),
+                            strokeWidth = 3.dp
+                        )
+                        Text(
+                            text = "Gerando análise executiva...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                state.errorMessage != null -> {
+                    Text(
+                        text = state.errorMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                state.insight != null -> {
+                    DashboardInsightContent(insight = state.insight)
+                }
+
+                else -> {
+                    Text(
+                        text = "Gere uma leitura objetiva do cenário atual, com destaques, pontos de atenção e sugestões de melhoria.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Button(
+                onClick = onGenerate,
+                enabled = !state.isLoading,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = when {
+                        state.isLoading -> "Gerando análise..."
+                        state.insight != null -> "Gerar novamente"
+                        state.errorMessage != null -> "Tentar novamente"
+                        else -> "Gerar análise"
+                    }
+                )
+            }
+
+            Text(
+                text = "A análise apoia a liderança e não altera projetos, ideias ou status.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun DashboardInsightContent(insight: DashboardInsight) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        InsightTextSection(
+            title = "Resumo executivo",
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.semanticColors.info
+                )
+            },
+            items = listOf(insight.executiveSummary),
+            useBullets = false
+        )
+        InsightTextSection(
+            title = "Destaques",
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.semanticColors.success
+                )
+            },
+            items = insight.highlights
+        )
+        val hasAttentionPoints = insight.attentionPoints.isNotEmpty()
+        InsightTextSection(
+            title = "Pontos de atenção",
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.WarningAmber,
+                    contentDescription = null,
+                    tint = MaterialTheme.semanticColors.warning
+                )
+            },
+            items = insight.attentionPoints.ifEmpty {
+                listOf("Nenhum ponto de atenção foi indicado para este recorte.")
+            },
+            useBullets = hasAttentionPoints
+        )
+        InsightTextSection(
+            title = "Sugestões de melhoria",
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Lightbulb,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+            },
+            items = insight.recommendations
+        )
+
+        Text(
+            text = "Gerada em ${formatarDataInsight(insight)}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun InsightTextSection(
+    title: String,
+    icon: @Composable () -> Unit,
+    items: List<String>,
+    useBullets: Boolean = true
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.size(20.dp)) {
+                icon()
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        items.forEach { item ->
+            Text(
+                text = if (useBullets) "• $item" else item,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private fun formatarDataInsight(insight: DashboardInsight): String {
+    val formatter = DateTimeFormatter.ofPattern(
+        "dd/MM/yyyy 'às' HH:mm",
+        Locale.forLanguageTag("pt-BR")
+    )
+    return formatter.format(
+        insight.generatedAt.atZone(ZoneId.systemDefault())
+    )
 }
 
 @Composable

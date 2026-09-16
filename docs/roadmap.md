@@ -1594,9 +1594,9 @@ complete Android suite passed 56 of 56 tests and `assembleDebug` succeeded. The
 focused backend authorization suites passed 47 of 47 checks, including real MVC
 `401`, `403`, and allowed responses for project and strategic-orientation routes,
 plus the existing idea, AI, dashboard, catalog, user, category, and badge
-boundaries. The Task 9.4 exit criterion and the previously scoped Phase 9 work are
-complete; the newly documented Task 9.5 remains unimplemented, and physical device
-journeys remain in Phases 13 and 14.
+boundaries. The Task 9.4 exit criterion and the previously scoped Phase 9 work
+were complete at this review point. Task 9.5 was implemented in the later record
+below, while the broader real-backend device journeys remain in Phases 13 and 14.
 
 ## Task 9.5 — Display executive dashboard insights
 
@@ -1623,8 +1623,31 @@ turning the feature into a chatbot.
 
 ### Task 9.5 contract record — 2026-09-16
 
-Android behavior is documented in architecture section 18.7. Implementation and
-tests have not started.
+Implemented by Codex. The existing leader Dashboard now has a reusable
+**"Análise executiva com IA"** card backed by
+`POST /api/dashboard/insights[?orientationId={id}]`. Generation is deliberate,
+uses the current global/orientation scope, and renders only the structured pt-BR
+summary, highlights, attention points, and recommendations; no prompt, messages,
+or chat history were introduced.
+
+`DashboardViewModel` keeps summary and insight state independent. A generated
+response replaces the visible summary with its authoritative `metricsSnapshot`;
+provider/application failures preserve the last valid summary. Filter changes
+clear the previous insight immediately, and a sequence guard prevents a response
+from an older scope from replacing the current selection. The existing
+centralized leader policy is checked before the request and remains subordinate
+to backend authorization.
+
+The Android client validates scope, orientation identity, complete metrics,
+bounded structured text, list sizes, and the generation timestamp before showing
+the result. Controlled pt-BR messages cover validation, authorization, empty
+scope, provider, availability, and timeout failures, with retry available in the
+same card.
+
+Verification on 2026-09-16: the complete Android unit suite passed **124/124**,
+the debug APK assembled successfully, Android instrumentation tests compiled,
+and the three focused Compose states passed **3/3** on the connected Pixel 6 /
+Android 12 emulator. The Task 9.5 exit criterion is satisfied.
 
 ### Role-adaptive Home follow-up — 2026-09-15
 

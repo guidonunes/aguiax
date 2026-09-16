@@ -1980,27 +1980,32 @@ existing `GET /projetos/{projectId}` flow and is not recomputed in this screen.
 
 ## 18.7 Android executive insight consumption
 
-Task 9.5 will add one leader-only card to the existing Dashboard rather than a
-chat screen or a second dashboard. The card title is **"Análise executiva com
+Task 9.5 adds one leader-only card to the existing Dashboard rather than a chat
+screen or a second dashboard. The card title is **"Análise executiva com
 IA"** and generation is an explicit **"Gerar análise"** action; opening or
 filtering the Dashboard must not automatically consume the external provider.
 The structured result is rendered in the pt-BR sections **"Resumo executivo"**,
 **"Destaques"**, **"Pontos de atenção"**, and **"Sugestões de melhoria"**.
 There is no free-text input, conversation history, or chatbot interaction.
 
-Android sends only the selected `orientationId`, when present. It adopts the
+`DashboardApi` sends only the selected `orientationId`, when present, and
+`DashboardRepository` validates that the returned scope and orientation match
+the request. `DashboardInsightDto` additionally validates the complete metrics
+snapshot, bounded structured fields and UTC generation timestamp before mapping
+to the provider-independent domain model. Android adopts the
 `metricsSnapshot` returned by the insight endpoint as the currently displayed
 summary so the analysis and visible metrics always refer to the same snapshot.
-Summary loading and insight generation use independent UI states: generating an
-insight must not hide an already loaded dashboard, and a failed generation keeps
+`DashboardViewModel` uses independent summary and insight state: generating an
+insight does not hide an already loaded dashboard, and a failed generation keeps
 the last valid summary visible with a controlled pt-BR retry message.
 
 Changing the orientation clears the previous insight immediately. A request
-sequence (or equivalent cancellation guard) must prevent a late response for an
-older filter from being shown under the current filter. Logging out or losing the
-`LIDER` capability clears the insight state, and the existing centralized role
-policy remains the navigation guard. Android never receives Gemini credentials,
-provider envelopes, prompts, or raw provider errors.
+sequence prevents a late response for an older filter from being shown under the
+current filter. The ViewModel rechecks the centralized `LIDER` capability before
+requesting or publishing a result; logout removes the guarded Dashboard
+destination and its state. Backend authorization remains authoritative. Android
+never receives Gemini credentials, provider envelopes, prompts, or raw provider
+errors.
 
 ---
 
