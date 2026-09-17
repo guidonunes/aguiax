@@ -52,18 +52,9 @@ da Sprint 2.
 
 ## Pré-requisitos
 
-Para executar o backend:
-
-- Java 21;
-- MySQL instalado e acessível;
-- MongoDB instalado e acessível;
-- `mongosh` e o cliente `mysql` para os testes de conectividade;
-- `curl` para validar a API;
-- uma chave Google AI Studio somente para testar a avaliação real por IA.
-
-Maven não precisa ser instalado globalmente: o repositório inclui `backend/mvnw`.
-Não há Docker Compose neste projeto; os exemplos abaixo usam serviços instalados
-localmente.
+Para a forma recomendada de executar o backend, instale Docker com o comando
+`docker compose` disponível. Essa opção não exige instalações locais de Java,
+MySQL ou MongoDB.
 
 Para executar o aplicativo:
 
@@ -71,7 +62,87 @@ Para executar o aplicativo:
 - Android SDK 36;
 - emulador ou aparelho com Android 9/API 28 ou superior.
 
-## Início rápido do backend
+## Início rápido com Docker Compose
+
+Esta é a forma recomendada de iniciar o backend completo para desenvolvimento ou
+avaliação. Na raiz do projeto, crie o arquivo local de configuração e suba a
+stack:
+
+```bash
+cp .env.docker.example .env.docker
+docker compose --env-file .env.docker up --build -d
+docker compose --env-file .env.docker ps
+```
+
+Antes de iniciar, abra `.env.docker` e substitua as senhas e o `JWT_SECRET` de
+exemplo. A chave Gemini é opcional: mantenha `AI_ENABLED=false` para executar sem
+consumir a API externa.
+
+O Compose constrói o backend com Java 21, inicia MySQL e MongoDB e aguarda os
+health checks antes de liberar a API:
+
+| Serviço | Endereço no host |
+|---|---|
+| Backend | `http://localhost:8080` |
+| Swagger | `http://localhost:8080/swagger-ui/index.html` |
+| MySQL | `localhost:3307` |
+| MongoDB | `localhost:27018` |
+
+Confira o estado e os logs:
+
+```bash
+curl -i http://localhost:8080/actuator/health
+docker compose --env-file .env.docker logs --tail=100 backend
+```
+
+O health check deve responder `200 OK` com `{"status":"UP"}`. No Android
+Emulator, a URL do backend permanece `http://10.0.2.2:8080/`.
+
+Os volumes nomeados preservam os bancos após `docker compose down`. Na primeira
+criação do volume MySQL, o arquivo
+`docker/mysql/init/001_aguiaexpress.sql` restaura os dados demonstrativos,
+incluindo estas contas fictícias, todas com a senha `123456`:
+
+| Perfil | Email |
+|---|---|
+| `LIDER` | `mariana.souza@aguiaexpress.com` |
+| `GESTOR` | `carlos.mendes@aguiaexpress.com` |
+| `OPERACIONAL` | `ana.martins@aguiaexpress.com` |
+
+O MongoDB começa vazio quando não existe um dump BSON em
+`docker/mongodb/dump/aguiaexpress/` e passa a armazenar auditorias e históricos
+de IA durante o uso. Para apagar os volumes e importar novamente os dados
+iniciais:
+
+```bash
+docker compose --env-file .env.docker down -v
+docker compose --env-file .env.docker up --build -d
+```
+
+O parâmetro `-v` apaga os bancos mantidos pelo Compose. Use-o somente quando
+quiser recriar os dados. Para apenas encerrar os serviços preservando os volumes:
+
+```bash
+docker compose --env-file .env.docker down
+```
+
+
+
+## Inicialização manual do backend
+
+Use esta alternativa somente quando quiser executar o backend e os bancos
+diretamente na máquina, sem Docker.
+
+### Pré-requisitos da execução nativa
+
+- Java 21;
+- MySQL instalado e acessível;
+- MongoDB instalado e acessível;
+- `mongosh` e o cliente `mysql` para os testes de conectividade;
+- `curl` para validar a API;
+- uma chave Google AI Studio somente para testar as funcionalidades reais de IA.
+
+Maven não precisa ser instalado globalmente: o repositório inclui `backend/mvnw`.
 
 ### 1. Inicie MySQL e MongoDB
 
@@ -126,9 +197,7 @@ gerar um segredo local:
 openssl rand -base64 48
 ```
 
-O arquivo `.env` real é ignorado pelo Git. O contrato completo, a precedência dos
-valores e o diagnóstico de falhas estão em
-[`docs/environment.md`](docs/environment.md).
+
 
 ### 4. Confira as conexões
 
@@ -182,8 +251,7 @@ Não existe `JWT_EXPIRATION` configurável: a validade atual do token é fixa em
 horas. Propriedades JVM têm precedência sobre variáveis do processo, que têm
 precedência sobre `.env`.
 
-Nunca versione senhas, JWTs, URIs autenticadas, chaves Gemini ou o arquivo
-`backend/.env`.
+
 
 ## Responsabilidade dos bancos
 
@@ -524,12 +592,3 @@ WHERE nm_perfil = 'LIDER'
 Confirme o login em `POST /auth/login`; depois use
 `POST /usuarios/admin` com o JWT do líder para criar contas `GESTOR` ou `LIDER`.
 Finalize com `unset FIRST_LEADER_HASH`.
-
-## Documentação complementar
-
-- [Configuração completa do ambiente](docs/environment.md)
-- [Arquitetura e decisões técnicas](docs/architecture.md)
-- [Roadmap da Sprint 2](docs/roadmap.md)
-- [Matriz de requisitos](docs/sprint2-requirement-matrix.md)
-- [Baseline de regressão](docs/sprint2-regression-baseline.md)
-- [Coleção Postman](postman/README.md)
