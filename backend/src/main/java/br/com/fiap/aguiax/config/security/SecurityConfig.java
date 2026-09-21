@@ -1,5 +1,6 @@
 package br.com.fiap.aguiax.config.security;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -85,6 +86,9 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> {
+                    // Preserve the original status when the servlet container dispatches an error.
+                    // Direct requests to /error still require authentication below.
+                    auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll();
                     auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
                     auth.requestMatchers(HttpMethod.POST, "/usuarios").permitAll();
                     // Public liveness/health check, without component details

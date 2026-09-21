@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -26,6 +27,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
 import java.math.BigDecimal;
 import java.util.stream.Stream;
@@ -53,6 +55,19 @@ class AiIdeaEvaluationControllerTest {
 
     @MockitoBean
     private AiIdeaEvaluationService service;
+
+    @Autowired
+    private RequestMappingHandlerAdapter handlerAdapter;
+
+    @Test
+    void managerCanEvaluateWithoutCompilerParameterNames() throws Exception {
+        handlerAdapter.setParameterNameDiscoverer(null);
+        try {
+            managerReceivesStructuredEvaluation();
+        } finally {
+            handlerAdapter.setParameterNameDiscoverer(new DefaultParameterNameDiscoverer());
+        }
+    }
 
     @Test
     void unauthenticatedCallerReceives401() throws Exception {

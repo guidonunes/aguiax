@@ -124,7 +124,6 @@ final class GeminiStructuredOutputClient {
                     new GeminiGenerationConfig(
                             "application/json",
                             responseSchema,
-                            0.2,
                             MAX_OUTPUT_TOKENS,
                             new GeminiThinkingConfig(THINKING_LEVEL)
                     );
@@ -151,6 +150,8 @@ final class GeminiStructuredOutputClient {
                     .retrieve()
                     .body(String.class);
         } catch (HttpClientErrorException exception) {
+            LOGGER.warn("Falha HTTP no provedor de IA: model={}, httpStatus={}",
+                    model, exception.getStatusCode().value());
             if (exception.getStatusCode().value() == 408) {
                 throw timeoutException(exception);
             }
@@ -169,6 +170,8 @@ final class GeminiStructuredOutputClient {
                     exception
             );
         } catch (HttpServerErrorException exception) {
+            LOGGER.warn("Falha HTTP no provedor de IA: model={}, httpStatus={}",
+                    model, exception.getStatusCode().value());
             if (exception.getStatusCode().value() == 504) {
                 throw timeoutException(exception);
             }
@@ -179,6 +182,8 @@ final class GeminiStructuredOutputClient {
                     exception
             );
         } catch (ResourceAccessException exception) {
+            LOGGER.warn("Falha de conexão com o provedor de IA: model={}, causeType={}",
+                    model, exception.getMostSpecificCause().getClass().getSimpleName());
             if (containsTimeout(exception)) {
                 throw timeoutException(exception);
             }
@@ -408,7 +413,6 @@ final class GeminiStructuredOutputClient {
     private record GeminiGenerationConfig(
             String responseMimeType,
             Map<String, Object> responseJsonSchema,
-            double temperature,
             int maxOutputTokens,
             GeminiThinkingConfig thinkingConfig
     ) {

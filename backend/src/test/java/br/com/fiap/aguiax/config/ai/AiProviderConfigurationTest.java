@@ -30,6 +30,18 @@ class AiProviderConfigurationTest {
                     .withUserConfiguration(AiClientConfiguration.class);
 
     @Test
+    void shouldUseShortProviderTimeoutWithinTheAndroidDeadlineByDefault() {
+        contextRunner.withPropertyValues("AI_ENABLED=false").run(context -> {
+            assertNull(context.getStartupFailure());
+            AiProviderProperties properties = context.getBean(AiProviderProperties.class);
+            assertEquals(Duration.ofSeconds(15), properties.readTimeout());
+            assertTrue(properties.readTimeout().compareTo(Duration.ofSeconds(30)) < 0);
+        });
+        AiProviderProperties defaults = new AiProviderProperties(false, null, null, null, null, null, null);
+        assertEquals(Duration.ofSeconds(15), defaults.readTimeout());
+    }
+
+    @Test
     void shouldStartWithoutApiKeyWhenAiIsDisabled() {
         contextRunner
                 .withPropertyValues("AI_ENABLED=false")

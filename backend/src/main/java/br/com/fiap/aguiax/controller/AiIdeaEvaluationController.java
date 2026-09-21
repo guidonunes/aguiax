@@ -38,7 +38,7 @@ public class AiIdeaEvaluationController {
             @ApiResponse(responseCode = "504", description = "Tempo limite do provedor excedido")
     })
     public ResponseEntity<AiIdeaEvaluationResponse> avaliarIdeia(
-            @PathVariable Long ideaId
+            @PathVariable("ideaId") Long ideaId
     ) {
         return ResponseEntity.ok(
                 aiIdeaEvaluationService.avaliarIdeia(ideaId)

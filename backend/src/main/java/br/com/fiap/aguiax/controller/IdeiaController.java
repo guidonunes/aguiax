@@ -98,7 +98,7 @@ public class IdeiaController {
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<MostrarIdeiaDTO>> listarIdeiasPorUsuario(
-            @PathVariable Long usuarioId
+            @PathVariable("usuarioId") Long usuarioId
     ) {
         List<MostrarIdeiaDTO> ideias = ideiaService.listarIdeiasPorUsuario(usuarioId);
 

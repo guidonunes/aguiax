@@ -66,7 +66,7 @@ public class UsuarioBadgeController {
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<MostrarUsuarioBadgeDTO>> listarBadgesPorUsuario(
-            @PathVariable Long usuarioId
+            @PathVariable("usuarioId") Long usuarioId
     ) {
         List<MostrarUsuarioBadgeDTO> badges =
                 usuarioBadgeService.listarBadgesPorUsuario(usuarioId);

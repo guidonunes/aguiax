@@ -39,7 +39,7 @@ public class DashboardController {
             @ApiResponse(responseCode = "404", description = "Orientação não encontrada")
     })
     public ResponseEntity<DashboardSummaryResponse> buscarResumo(
-            @RequestParam(required = false) Long orientationId
+            @RequestParam(name = "orientationId", required = false) Long orientationId
     ) {
         return ResponseEntity.ok(dashboardService.buscarResumo(orientationId));
     }
@@ -60,7 +60,7 @@ public class DashboardController {
             @ApiResponse(responseCode = "504", description = "Tempo limite excedido pelo provedor de IA")
     })
     public ResponseEntity<DashboardInsightResponse> gerarInsight(
-            @RequestParam(required = false) Long orientationId
+            @RequestParam(name = "orientationId", required = false) Long orientationId
     ) {
         return ResponseEntity.ok(
                 dashboardInsightService.gerarInsight(orientationId)

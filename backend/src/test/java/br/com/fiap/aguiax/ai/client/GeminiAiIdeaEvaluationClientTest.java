@@ -5,12 +5,19 @@ import br.com.fiap.aguiax.dto.ai.AiIdeaEvaluationResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
 import java.util.List;
@@ -21,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -28,9 +36,11 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withTooManyRequests;
 
+@ExtendWith(OutputCaptureExtension.class)
 class GeminiAiIdeaEvaluationClientTest {
 
     private static final String BASE_URL =
@@ -69,6 +79,7 @@ class GeminiAiIdeaEvaluationClientTest {
             throws Exception {
         server.expect(requestTo(ENDPOINT))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(jsonPath("$.generationConfig.temperature").doesNotExist())
                 .andExpect(header("x-goog-api-key", API_KEY))
                 .andExpect(content().contentTypeCompatibleWith(
                         MediaType.APPLICATION_JSON
@@ -239,6 +250,40 @@ class GeminiAiIdeaEvaluationClientTest {
                 AiProviderFailure.UNAVAILABLE,
                 exception.failure()
         );
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {429, 500, 502, 503, 504})
+    void shouldLogOnlySafeHttpDiagnostics(int status, CapturedOutput output) {
+        server.expect(requestTo(ENDPOINT))
+                .andRespond(withStatus(HttpStatus.valueOf(status))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("private-provider-body"));
+
+        AiProviderException exception = assertThrows(AiProviderException.class,
+                () -> client.evaluate(validContext()));
+        AiProviderFailure expected = status == 429 ? AiProviderFailure.RATE_LIMITED
+                : status == 504 ? AiProviderFailure.TIMEOUT : AiProviderFailure.UNAVAILABLE;
+
+        assertEquals(expected, exception.failure());
+        assertTrue(output.getAll().contains("httpStatus=" + status));
+        assertFalse(output.getAll().contains("private-provider-body"));
+        assertFalse(output.getAll().contains(API_KEY));
+        assertFalse(output.getAll().contains("Redução de combustível"));
+    }
+
+    @Test
+    void shouldDistinguishNetworkFailureWithoutLoggingExceptionDetails(CapturedOutput output) {
+        server.expect(requestTo(ENDPOINT))
+                .andRespond(withException(new IOException("private-network-detail")));
+
+        AiProviderException exception = assertThrows(AiProviderException.class,
+                () -> client.evaluate(validContext()));
+
+        assertEquals(AiProviderFailure.UNAVAILABLE, exception.failure());
+        assertTrue(output.getAll().contains("causeType=IOException"));
+        assertFalse(output.getAll().contains("private-network-detail"));
+        assertFalse(output.getAll().contains(API_KEY));
     }
 
     @Test

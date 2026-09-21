@@ -71,6 +71,7 @@ class GeminiDashboardInsightClientTest {
             throws Exception {
         server.expect(requestTo(ENDPOINT))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(jsonPath("$.generationConfig.temperature").doesNotExist())
                 .andExpect(header("x-goog-api-key", API_KEY))
                 .andExpect(content().contentTypeCompatibleWith(
                         MediaType.APPLICATION_JSON
