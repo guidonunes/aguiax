@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document records the state of the active AguiaExpress implementation before
+This document records the state of the active AguiaX implementation before
 Sprint 2 feature work. It is the evidence artifact for roadmap Task 0.2 and allows
 future failures to be distinguished from defects already present at the baseline.
 
@@ -43,8 +43,8 @@ this document.
 ## Existing failure: backend test environment
 
 The only backend test is
-`AguiaexpressApplicationTests.contextLoads`. It fails because the test starts the
-Spring application context without invoking `AguiaexpressApplication.main`.
+`AguiaXApplicationTests.contextLoads`. It fails because the test starts the
+Spring application context without invoking `AguiaXApplication.main`.
 
 The current application loads `.env` values and copies them into system properties
 inside `main`. During `@SpringBootTest`, that setup is not executed, so

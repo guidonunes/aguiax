@@ -1,8 +1,8 @@
-# Sprint 2 Roadmap — AguiaExpress
+# Sprint 2 Roadmap — AguiaX
 
 ## Goal
 
-Complete Sprint 2 by evolving the existing AguiaExpress Sprint 1 implementation into a secure, observable, API-driven platform with:
+Complete Sprint 2 by evolving the existing AguiaX Sprint 1 implementation into a secure, observable, API-driven platform with:
 
 - Java Spring Boot backend;
 - full Android/backend integration;
@@ -345,7 +345,7 @@ Compass guidance to the README. `mongosh` returned a successful ping, and
 connected to MongoDB, and started Tomcat successfully. The application was then
 stopped gracefully. The Task 2.1 exit criterion is satisfied; MongoDB write/read
 proof remains intentionally scoped to Task 2.2. The full backend suite ran 38 tests:
-37 passed and the existing `AguiaexpressApplicationTests.contextLoads` test retained
+37 passed and the existing `AguiaXApplicationTests.contextLoads` test retained
 its previously documented `${DB_URL}` setup error.
 
 ---
@@ -364,7 +364,7 @@ The test suite proves a Mongo document can be written and read.
 
 Implemented and verified by Codex. A focused `@DataMongoTest` uses `MongoTemplate`
 to save and retrieve a test-only document with a unique ID in the dedicated
-`aguiaexpress_task_2_2_<unique-id>` database. The test asserts the persisted fields
+`aguiax_task_2_2_<unique-id>` database. The test asserts the persisted fields
 and drops its isolated database after execution, so concurrent runs do not share
 state and the test does not introduce a throwaway production model or modify the
 relational domain.
@@ -460,7 +460,7 @@ no audit request after failed relational writes, and no event for rejected login
 forbidden idea mutations. Together with the Task 3.1 MongoDB repository test, the
 focused run completed 25 tests with zero failures and zero errors. The complete
 backend run completed 59 tests: 58 passed, while the pre-existing
-`AguiaexpressApplicationTests.contextLoads` retained its documented unresolved
+`AguiaXApplicationTests.contextLoads` retained its documented unresolved
 `${DB_URL}` setup error because `@SpringBootTest` does not execute the `.env`
 bootstrap in `main`.
 
@@ -508,7 +508,7 @@ failed-save behavior, and the later recalculation trigger. Controller tests cove
 `LIDER` denial, and invalid-payload `400`; the authorization inventory also covers
 the new endpoint. The focused run completed 23 tests with zero failures and zero
 errors. The complete backend run completed 68 tests: 67 passed, and the pre-existing
-`AguiaexpressApplicationTests.contextLoads` retained its documented unresolved
+`AguiaXApplicationTests.contextLoads` retained its documented unresolved
 `${DB_URL}` test-configuration error. The Task 4.1 exit criterion is satisfied;
 Android review controls remain Task 9.1.
 
@@ -556,7 +556,7 @@ representative invalid and repeated transitions, terminal states, missing input,
 direct-conversion rejection, persistence, and audit metadata. A controller test
 verifies the structured `400` contract. The focused run completed 35 tests with
 zero failures and zero errors. The complete backend run completed 85 tests: 84
-passed, while the pre-existing `AguiaexpressApplicationTests.contextLoads` retained
+passed, while the pre-existing `AguiaXApplicationTests.contextLoads` retained
 its documented unresolved `${DB_URL}` test-configuration error. The Task 4.2 exit
 criterion is satisfied; Task 4.3 remains responsible for transactional conversion.
 
@@ -611,7 +611,7 @@ failure, flush failure, transaction declaration, operation ordering, and audit
 metadata. Together with the existing project-audit and Task 4.2 tests, the focused
 run completed 31 tests with zero failures and zero errors. The complete backend run
 completed 96 tests: 95 passed, while the pre-existing
-`AguiaexpressApplicationTests.contextLoads` retained its documented unresolved
+`AguiaXApplicationTests.contextLoads` retained its documented unresolved
 `${DB_URL}` test-configuration error. The Task 4.3 exit criterion is satisfied.
 
 ---
@@ -750,7 +750,7 @@ the status counts.
 Four focused tests verify JSON field names and values, complete/immutable status
 counts, and invalid-contract rejection. The focused suite passed 4 of 4 tests.
 The complete backend suite passed 99 of 100 tests; only the previously documented
-`AguiaexpressApplicationTests.contextLoads` error remains because `${DB_URL}` is
+`AguiaXApplicationTests.contextLoads` error remains because `${DB_URL}` is
 not populated by the application's main-method `.env` bootstrap during
 `@SpringBootTest`. No aggregation service, HTTP endpoint, authorization rule, or
 Android integration was added early. The Task 6.1 exit criterion is satisfied.
@@ -1154,7 +1154,7 @@ structured response.
 
 Five service tests and eleven MVC/security test invocations pass. The complete
 backend run completed 154 tests: 153 passed and only the pre-existing
-`AguiaexpressApplicationTests.contextLoads` unresolved `${DB_URL}` setup error
+`AguiaXApplicationTests.contextLoads` unresolved `${DB_URL}` setup error
 remained.
 
 ---
@@ -1209,7 +1209,7 @@ integration test pass in the focused run (19 total). The repository test persist
 two evaluations for idea `42`, verifies that both remain present in newest-first
 order, and drops its isolated test database afterward. The complete backend run
 completed 157 tests: 156 passed and only the pre-existing
-`AguiaexpressApplicationTests.contextLoads` unresolved `${DB_URL}` setup error
+`AguiaXApplicationTests.contextLoads` unresolved `${DB_URL}` setup error
 remained.
 
 ---

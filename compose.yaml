@@ -5,8 +5,8 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-aguiaexpress}
-      MYSQL_USER: ${MYSQL_USER:-aguiaexpress}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-aguiax}
+      MYSQL_USER: ${MYSQL_USER:-aguiax}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD em .env.docker}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD em .env.docker}
     command:
@@ -32,9 +32,9 @@ services:
     image: mongo:8.0
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-aguiaexpress_admin}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-aguiax_admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Defina MONGO_ROOT_PASSWORD em .env.docker}
-      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-aguiaexpress}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-aguiax}
     ports:
       - "${MONGODB_HOST_PORT:-27018}:27017"
     volumes:
@@ -61,12 +61,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-aguiaexpress}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USER: ${MYSQL_USER:-aguiaexpress}
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-aguiax}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USER: ${MYSQL_USER:-aguiax}
       DB_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD em .env.docker}
       JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET em .env.docker}
-      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-aguiaexpress_admin}:${MONGO_ROOT_PASSWORD:?Defina MONGO_ROOT_PASSWORD em .env.docker}@mongodb:27017/${MONGODB_DATABASE:-aguiaexpress}?authSource=admin
-      MONGODB_DATABASE: ${MONGODB_DATABASE:-aguiaexpress}
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-aguiax_admin}:${MONGO_ROOT_PASSWORD:?Defina MONGO_ROOT_PASSWORD em .env.docker}@mongodb:27017/${MONGODB_DATABASE:-aguiax}?authSource=admin
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-aguiax}
       AI_ENABLED: ${AI_ENABLED:-false}
       AI_PROVIDER: ${AI_PROVIDER:-gemini}
       AI_API_KEY: ${AI_API_KEY:-}

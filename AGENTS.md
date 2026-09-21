@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository contains **AguiaExpress**, an academic innovation-management platform for the FIAP / Grupo Águia Branca challenge.
+This repository contains **AguiaX**, an academic innovation-management platform for the FIAP / Grupo Águia Branca challenge.
 
 This file defines the operating rules for Codex and other coding agents working in the repository.
 
@@ -14,7 +14,7 @@ A second, equally important goal is **learning**. Codex must act as a technical 
 
 # 1. Project context
 
-AguiaExpress follows this business flow:
+AguiaX follows this business flow:
 
 **Strategic orientations → ideas → voting/prioritization → projects → results/dashboard → badges**
 
@@ -52,7 +52,7 @@ Sprint 2 must evolve the existing system rather than rebuild it.
 The repository documentation is organized as follows:
 
 ```text
-aguiaexpress/
+aguiax/
 ├── AGENTS.md
 ├── README.md
 ├── docs/
@@ -67,7 +67,7 @@ aguiaexpress/
 
 ## Active implementation scope
 
-Only `backend/` and `frontend/` contain the active AguiaExpress implementation.
+Only `backend/` and `frontend/` contain the active AguiaX implementation.
 
 `aguiaexpress-entrega/` is a historical snapshot of the previous semester's
 activity. It does not participate in current application functionality or Sprint 2.
@@ -391,7 +391,7 @@ For new Sprint 2 functionality, prefer feature-focused packages.
 Suggested additions:
 
 ```text
-backend/src/main/java/br/com/fiap/aguiaexpress/
+backend/src/main/java/br/com/fiap/aguiax/
   ai/
     controller/
     dto/

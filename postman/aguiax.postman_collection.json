@@ -1,0 +1,2239 @@
+{
+  "info": {
+    "_postman_id": "e91c96b9-aaef-4c80-aa05-20bca43237fc",
+    "name": "aguiax",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "35091369",
+    "description": "Coleção conjunta das Sprints 1 e 2. Use a pasta 'Sprint 2 - Fluxo principal' para a demonstração sequencial. Nenhuma credencial real é versionada."
+  },
+  "item": [
+    {
+      "name": "Sprint 2 - Fluxo principal",
+      "description": "Execute em ordem. Preencha somente as credenciais nas variáveis da coleção; tokens e IDs são capturados automaticamente.",
+      "item": [
+        {
+          "name": "01 - Login LIDER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login realizado\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.token).to.be.a(\"string\").and.not.empty;",
+                  "pm.collectionVariables.set(\"liderToken\", body.token);",
+                  "pm.collectionVariables.set(\"liderUserId\", String(body.usuarioId));",
+                  "pm.collectionVariables.set(\"token\", body.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{liderEmail}}\",\"senha\":\"{{liderPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Criar orientação estratégica",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Orientação criada\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"orientationId\", String(pm.response.json().id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/orientacoes",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titulo\":\"Orientação Postman {{$timestamp}}\",\"descricao\":\"Orientação criada pelo fluxo demonstrável da Sprint 2.\",\"areaEstrategica\":\"Eficiência operacional\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Login OPERACIONAL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login realizado\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.token).to.be.a(\"string\").and.not.empty;",
+                  "pm.collectionVariables.set(\"operacionalToken\", body.token);",
+                  "pm.collectionVariables.set(\"operacionalUserId\", String(body.usuarioId));",
+                  "pm.collectionVariables.set(\"token\", body.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{operacionalEmail}}\",\"senha\":\"{{operacionalPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Criar ideia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ideia criada\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.statusIdeia).to.eql(\"NOVA\");",
+                  "pm.collectionVariables.set(\"ideaId\", String(body.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operacionalToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/ideias",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"categoriaId\":{{categoriaId}},\"orientacaoId\":{{orientationId}},\"titulo\":\"Ideia Postman {{$timestamp}}\",\"descricao\":\"Ideia criada pelo fluxo demonstrável da Sprint 2.\",\"problema\":\"Desperdício operacional.\",\"solucaoProposta\":\"Automatizar a análise e priorização.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Votar na ideia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Voto criado\", () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operacionalToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/votos-ideias/ideia/{{ideaId}}",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2."
+          },
+          "response": []
+        },
+        {
+          "name": "06 - Login GESTOR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login realizado\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.token).to.be.a(\"string\").and.not.empty;",
+                  "pm.collectionVariables.set(\"gestorToken\", body.token);",
+                  "pm.collectionVariables.set(\"gestorUserId\", String(body.usuarioId));",
+                  "pm.collectionVariables.set(\"token\", body.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{gestorEmail}}\",\"senha\":\"{{gestorPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Avaliar impacto e viabilidade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Avaliação gerencial salva\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.impacto).to.eql(8);",
+                  "pm.expect(body.viabilidade).to.eql(7);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/ideias/{{ideaId}}/avaliacao",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"impacto\":8,\"viabilidade\":7}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 - Enviar ideia para análise",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ideia em análise\", () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().statusIdeia).to.eql(\"EM_ANALISE\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/ideias/{{ideaId}}/status",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"EM_ANALISE\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 - Solicitar avaliação de IA",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Avaliação de IA concluída\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.ideaId).to.eql(Number(pm.collectionVariables.get(\"ideaId\")));",
+                  "pm.expect(body.overallScore).to.be.within(0, 10);",
+                  "pm.expect(body.summary).to.be.a(\"string\").and.not.empty;"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/ideas/{{ideaId}}/ai-evaluation",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2."
+          },
+          "response": []
+        },
+        {
+          "name": "10 - Aprovar ideia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ideia aprovada\", () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().statusIdeia).to.eql(\"APROVADA\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/ideias/{{ideaId}}/status",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"APROVADA\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 - Converter ideia em projeto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Projeto criado\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.ideiaId).to.eql(Number(pm.collectionVariables.get(\"ideaId\")));",
+                  "pm.collectionVariables.set(\"projectId\", String(body.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projetos",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ideiaId\":{{ideaId}},\"usuarioId\":{{gestorUserId}},\"titulo\":\"Projeto Postman {{$timestamp}}\",\"descricao\":\"Conversão demonstrável de uma ideia aprovada.\",\"objetivo\":\"Validar o fluxo transacional da Sprint 2.\",\"investimento\":10000,\"roi\":12.5,\"retornoFinanceiro\":25000,\"reducaoCustos\":5000,\"ganhoProdutividade\":10,\"dataInicio\":\"2026-09-14\",\"dataPrevisaoFim\":\"2026-12-14\",\"dataConclusao\":null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12 - Consultar dashboard global",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Dashboard global consultado\", () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json()).to.have.property(\"totalProjects\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/dashboard/summary",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2."
+          },
+          "response": []
+        },
+        {
+          "name": "13 - Filtrar dashboard por orientação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Dashboard filtrado consultado\", () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/dashboard/summary?orientationId={{orientationId}}",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2."
+          },
+          "response": []
+        },
+        {
+          "name": "14 - Verificar saúde pública",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Backend saudável\", () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().status).to.eql(\"UP\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/actuator/health",
+            "description": "Parte do fluxo principal demonstrável da Sprint 2."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Listar todos os usuários",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}"
+            },
+            "url": "{{baseUrl}}/usuarios"
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastrar usuário",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Ana Martins\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"OPERACIONAL\",\"cargo\":\"Operadora de Atendimento\",\"departamento\":\"Atendimento\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/usuarios",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuário por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}"
+            },
+            "url": "{{baseUrl}}/usuarios/99",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar usuário por id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}"
+            },
+            "url": "{{baseUrl}}/usuarios/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar usuário",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Ana Martins Silva\",\"email\":\"{{newUserEmail}}\",\"cargo\":\"Operadora Sênior de Atendimento\",\"departamento\":\"Atendimento ao Cliente\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/usuarios/4",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "Listar categoria por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}"
+            },
+            "url": "{{baseUrl}}/categorias/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas categorias",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}"
+            },
+            "url": "{{baseUrl}}/categorias"
+          },
+          "response": []
+        },
+        {
+          "name": "Criar nova categoria",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nomeCategoria\":\"LOGISTICA\",\"descricao\":\"Ideias relacionadas à otimização de rotas, entregas e processos logísticos\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/categorias",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar categoria",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nomeCategoria\":\"LOGISTICA_OPERACIONAL\",\"descricao\":\"Ideias relacionadas à otimização de rotas, entregas, frota e processos logísticos\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/categorias/8",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deleta categorias por id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}"
+            },
+            "url": "{{baseUrl}}/categorias/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "StatusIdeia",
+      "item": [
+        {
+          "name": "Listar todos status de ideias",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/status-ideias"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar status de ideias por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Mariana Souza\",\"email\":\"{{newUserEmail}}\",\"senha\":\"{{newUserPassword}}\",\"nomePerfil\":\"LIDER\",\"cargo\":\"Diretora de Estratégia\",\"departamento\":\"Estratégia\"}"
+            },
+            "url": "{{baseUrl}}/status-ideias/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orientacoes Estrategicas",
+      "item": [
+        {
+          "name": "Criar nova orientação",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titulo\":\"Expansão da cultura de inovação com IA\",\"descricao\":\"Estimular ideias que melhorem processos internos, reduzam custos e aumentem o engajamento dos colaboradores.\",\"areaEstrategica\":\"Inovação\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/orientacoes"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as orientacoes",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":3,\"titulo\":\"Redução de custos operacionais\",\"descricao\":\"Priorizar ideias que reduzam desperdícios, otimizem rotas, melhorem o uso da frota e diminuam custos operacionais.\",\"areaEstrategica\":\"Operações\"}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/orientacoes"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar orientaçoes ativas",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/orientacoes/ativas"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar orientacoes por Id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":3,\"titulo\":\"Redução de custos operacionais\",\"descricao\":\"Priorizar ideias que reduzam desperdícios, otimizem rotas, melhorem o uso da frota e diminuam custos operacionais.\",\"areaEstrategica\":\"Operações\"}"
+            },
+            "url": "{{baseUrl}}/orientacoes/2"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar orientacoes por area estrategica",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/orientacoes/area?areaEstrategica=Tecnologia",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar orientação",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titulo\":\"Redução inteligente de custos operacionais sem IA\",\"descricao\":\"Priorizar ideias que reduzam desperdícios, otimizem rotas, melhorem uso de recursos e gerem economia mensurável para a operação.\",\"areaEstrategica\":\"Operações\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/orientacoes/1"
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar orientacao",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/orientacoes/1"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ideias",
+      "item": [
+        {
+          "name": "Cadastrar ideia nova",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operacionalToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"categoriaId\":2,\"orientacaoId\":1,\"titulo\":\"Teste de ideia para virar projeto com IA\",\"descricao\":\"Ideia criada apenas para testar a criação de projeto com autenticação.\",\"problema\":\"Precisamos validar o fluxo de projeto.\",\"solucaoProposta\":\"Criar uma ideia nova e depois convertê-la em projeto.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/ideias"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as ideias",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores com IA\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/ideias"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar ideias por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}"
+            },
+            "url": "{{baseUrl}}/ideias/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar ideia",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores com IA\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/ideias/3",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operacionalToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar ideia",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operacionalToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores com IA\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/ideias/2"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar status de uma ideia",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"APROVADA\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/ideias/1/status"
+          },
+          "response": []
+        },
+        {
+          "name": "Avaliar Ideia",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"impacto\":8,\"viabilidade\":7}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/ideias/1/avaliacao"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Status Projetos",
+      "item": [
+        {
+          "name": "Mostrar status de todos os projetos",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}"
+            },
+            "url": "{{baseUrl}}/status-projetos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mostrar status dos projetos por Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/status-projetos/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Projetos",
+      "item": [
+        {
+          "name": "Cadastrar novo projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ideiaId\":2,\"usuarioId\":2,\"titulo\":\"Projeto teste com JWT com Figma\",\"descricao\":\"Projeto criado para validar permissão de gestor.\",\"objetivo\":\"Confirmar que apenas gestor consegue criar projeto.\",\"investimento\":10000,\"roi\":12.5,\"retornoFinanceiro\":25000,\"reducaoCustos\":5000,\"ganhoProdutividade\":10,\"dataInicio\":\"2026-06-01\",\"dataPrevisaoFim\":\"2026-08-30\",\"dataConclusao\":null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/projetos"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos os projetos",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ideiaId\":1,\"usuarioId\":2,\"titulo\":\"Projeto de otimização de rotas\",\"descricao\":\"Projeto para implementar melhorias no planejamento de rotas operacionais.\",\"objetivo\":\"Reduzir custos, atrasos e consumo de combustível nas operações.\",\"investimento\":15000,\"roi\":12.5,\"retornoFinanceiro\":30000,\"reducaoCustos\":8000,\"ganhoProdutividade\":15,\"dataInicio\":\"2026-06-01\",\"dataPrevisaoFim\":\"2026-08-30\",\"dataConclusao\":null}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/projetos"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar projetos por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ideiaId\":1,\"usuarioId\":2,\"titulo\":\"Projeto de otimização de rotas\",\"descricao\":\"Projeto para implementar melhorias no planejamento de rotas operacionais.\",\"objetivo\":\"Reduzir custos, atrasos e consumo de combustível nas operações.\",\"investimento\":15000,\"roi\":12.5,\"retornoFinanceiro\":30000,\"reducaoCustos\":8000,\"ganhoProdutividade\":15,\"dataInicio\":\"2026-06-01\",\"dataPrevisaoFim\":\"2026-08-30\",\"dataConclusao\":null}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/projetos/2"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ideiaId\":1,\"usuarioId\":2,\"titulo\":\"Projeto teste gestor JWT atualizado\",\"descricao\":\"Projeto atualizado pelo gestor.\",\"objetivo\":\"Validar edição de projeto pelo perfil gestor.\",\"investimento\":12000,\"roi\":15,\"retornoFinanceiro\":30000,\"reducaoCustos\":7000,\"ganhoProdutividade\":12,\"dataInicio\":\"2026-06-01\",\"dataPrevisaoFim\":\"2026-09-15\",\"dataConclusao\":null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/projetos/1"
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ideiaId\":1,\"usuarioId\":2,\"titulo\":\"Projeto de otimização de rotas com IA\",\"descricao\":\"Projeto para implementar melhorias no planejamento de rotas operacionais.\",\"objetivo\":\"Reduzir custos, atrasos e consumo de combustível nas operações.\",\"investimento\":15000,\"roi\":12.5,\"retornoFinanceiro\":30000,\"reducaoCustos\":8000,\"ganhoProdutividade\":15,\"dataInicio\":\"2026-06-01\",\"dataPrevisaoFim\":\"2026-08-30\",\"dataConclusao\":null}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/projetos/1"
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar status do projeto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"CONCLUIDO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/projetos/2/status"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Badges",
+      "item": [
+        {
+          "name": "Listar todas as badges",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores com IA\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}"
+            },
+            "url": "{{baseUrl}}/badges"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as badges ativas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/badges/ativas",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar badges por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/badges/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar badges por nome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/badges/nome/PRIMEIRA_IDEIA",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuario Badge",
+      "item": [
+        {
+          "name": "Conceder badge por id",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/usuario-badges/usuario/4/badge/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conceder badge por nome",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/usuario-badges/usuario/2/nome/PRIMEIRA_IDEIA",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas as conquistas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuario-badges",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar conquistas por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuario-badges/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar badge de um usuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuario-badges/usuario/1"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuarios que possuem uma badge",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/usuario-badges/badge/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar badge de um usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/usuario-badges/usuario/4/badge/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Votar Ideia",
+      "item": [
+        {
+          "name": "Votar em uma ideia",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/votos-ideias/ideia/2"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos os votos - historico",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}"
+            },
+            "url": "{{baseUrl}}/votos-ideias",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar votos por id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"usuarioId\":2,\"categoriaId\":4,\"orientacaoId\":2,\"titulo\":\"Painel de indicadores para gestores\",\"descricao\":\"Criar um painel com métricas das ideias cadastradas, aprovadas e convertidas em projetos.\",\"problema\":\"Gestores têm dificuldade para visualizar rapidamente quais ideias geram mais impacto.\",\"solucaoProposta\":\"Disponibilizar um dashboard com status, categorias, votos e evolução das ideias.\"}"
+            },
+            "url": "{{baseUrl}}/votos-ideias/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar votos de uma ideia",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/votos-ideias/ideia/1",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar votos de um usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/votos-ideias/usuario/2",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remover voto",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/votos-ideias/ideia/2"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Logar Líder",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{liderEmail}}\",\"senha\":\"{{liderPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login realizado\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.token).to.be.a(\"string\").and.not.empty;",
+                  "pm.collectionVariables.set(\"liderToken\", body.token);",
+                  "pm.collectionVariables.set(\"liderUserId\", String(body.usuarioId));",
+                  "pm.collectionVariables.set(\"token\", body.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logar Operacional",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{operacionalEmail}}\",\"senha\":\"{{operacionalPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login realizado\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.token).to.be.a(\"string\").and.not.empty;",
+                  "pm.collectionVariables.set(\"operacionalToken\", body.token);",
+                  "pm.collectionVariables.set(\"operacionalUserId\", String(body.usuarioId));",
+                  "pm.collectionVariables.set(\"token\", body.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logar Gestor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{gestorEmail}}\",\"senha\":\"{{gestorPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login realizado\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.expect(body.token).to.be.a(\"string\").and.not.empty;",
+                  "pm.collectionVariables.set(\"gestorToken\", body.token);",
+                  "pm.collectionVariables.set(\"gestorUserId\", String(body.usuarioId));",
+                  "pm.collectionVariables.set(\"token\", body.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard summary",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/dashboard/summary?orientationId=1"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "AI Evaluation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{gestorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/ideas/1/ai-evaluation"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Actuator",
+      "item": [
+        {
+          "name": "Actuator Info",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/actuator/info"
+          },
+          "response": []
+        },
+        {
+          "name": "Actuator Metrics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/actuator/metrics/jvm.memory.used"
+          },
+          "response": []
+        },
+        {
+          "name": "Actuator Restrictions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{liderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/actuator/env"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "liderEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "liderPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "liderToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "liderUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operacionalEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operacionalPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operacionalToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "operacionalUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "gestorEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "gestorPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "gestorToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "gestorUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "newUserEmail",
+      "value": "reviewer.operacional@example.com",
+      "type": "string"
+    },
+    {
+      "key": "newUserPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "orientationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ideaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "projectId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

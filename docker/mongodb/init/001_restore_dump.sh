@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-database="${MONGO_INITDB_DATABASE:-aguiaexpress}"
+database="${MONGO_INITDB_DATABASE:-aguiax}"
 dump_directory="/seed/mongodb/${database}"
 
 if [[ -d "${dump_directory}" ]] && find "${dump_directory}" -name '*.bson' -print -quit | grep -q .; then

@@ -1,13 +1,13 @@
-# AguiaExpress Postman collection
+# AguiaX Postman collection
 
-`aguiaexpress.postman_collection.json` is the combined Sprint 1 and Sprint 2
+`aguiax.postman_collection.json` is the combined Sprint 1 and Sprint 2
 collection. It uses Postman Collection v2.1 and contains no environment-specific
 credentials.
 
 ## Import
 
 1. In Postman, select **Import**.
-2. Select `aguiaexpress.postman_collection.json`.
+2. Select `aguiax.postman_collection.json`.
 3. Open the imported collection's **Variables** tab.
 4. Fill the current values for:
    - `liderEmail` and `liderPassword`;

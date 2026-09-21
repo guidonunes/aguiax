@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AguiaExpress"
+rootProject.name = "AguiaX"
 include(":app")
  

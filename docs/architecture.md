@@ -1,8 +1,8 @@
-# AguiaExpress Architecture
+# AguiaX Architecture
 
 ## 1. Purpose
 
-AguiaExpress is an academic innovation-management platform developed for the FIAP / Grupo Águia Branca challenge.
+AguiaX is an academic innovation-management platform developed for the FIAP / Grupo Águia Branca challenge.
 
 The platform supports the flow from strategic direction to employee ideas, prioritization, project execution, and executive results.
 
@@ -224,7 +224,7 @@ The target architecture is:
                                         │ Bearer JWT
                                         ▼
                   ┌──────────────────────────────────────────┐
-                  │ AguiaExpress Backend                     │
+                  │ AguiaX Backend                     │
                   │                                          │
                   │ Java + Spring Boot                       │
                   │ Spring MVC                               │
@@ -420,7 +420,7 @@ Existing package organization should be preserved where practical.
 New Sprint 2 capabilities may use feature-focused packages such as:
 
 ```text
-br.com.fiap.aguiaexpress
+br.com.fiap.aguiax
 │
 ├── ai
 │   ├── client
@@ -639,7 +639,7 @@ role/ownership/input restrictions are incomplete, and **Missing** means the rout
 does not exist (used in section 9.3). This is not a claim of passing integration
 tests. `Auth` in the final column means verify permitted access and `401` without a
 token; `Role` adds `403` for every other role; `Owner` adds cross-user denial and no
-mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/aguiaexpress/controller/`.
+mutation. Each controller name refers to `backend/src/main/java/br/com/fiap/aguiax/controller/`.
 
 | Controller | Endpoint | Target policy | Current state | Verification / enforcement task |
 |---|---|---|---|---|
@@ -828,7 +828,7 @@ narrow screens or with large font scaling. Sample values are preview/test-only.
 
 ### Android appearance and semantic color contract — 2026-09-15
 
-The existing `AguiaExpressTheme` is the single Material 3 theme boundary. It now
+The existing `AguiaXTheme` is the single Material 3 theme boundary. It now
 uses the supplied coral/blue/gold light and dark palettes, with explicit foreground
 roles and layered `surfaceContainer*` roles supported by the installed Material 3
 version. Wallpaper-derived dynamic colors are intentionally disabled so brand and
@@ -860,7 +860,7 @@ accessible defaults, retaining native button behavior and validation state.
 
 `ThemeMode.SYSTEM`, `LIGHT`, and `DARK` are owned by an activity-scoped
 `ThemeViewModel`, not individual screens. `MainActivity` collects this state
-lifecycle-aware and passes the resolved darkness to `AguiaExpressTheme`;
+lifecycle-aware and passes the resolved darkness to `AguiaXTheme`;
 `SYSTEM` reads `isSystemInDarkTheme()`, while explicit choices override it.
 One application-context Preferences DataStore (`appearance`, key `theme_mode`)
 persists the choice independently of authentication/logout. The navigation tree is
@@ -2124,10 +2124,10 @@ Spring Boot Actuator / Micrometer should expose at least:
 Task 10.3 adds these custom metrics:
 
 ```text
-aguiaexpress.ai.evaluation.duration     timer, outcome=success|failure
-aguiaexpress.ai.evaluation.failures    counter
-aguiaexpress.ideas.approved             counter
-aguiaexpress.projects.created           counter
+aguiax.ai.evaluation.duration     timer, outcome=success|failure
+aguiax.ai.evaluation.failures    counter
+aguiax.ideas.approved             counter
+aguiax.projects.created           counter
 ```
 
 The AI timer measures the complete validated evaluation orchestration and its

@@ -25,11 +25,11 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY --from=build --chown=aguiax:aguiax \
-    /workspace/target/aguiaexpress-0.0.1-SNAPSHOT.jar \
-    /app/aguiaexpress.jar
+    /workspace/target/aguiax-0.0.1-SNAPSHOT.jar \
+    /app/aguiax.jar
 
 USER aguiax
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/aguiaexpress.jar"]
+ENTRYPOINT ["java", "-jar", "/app/aguiax.jar"]

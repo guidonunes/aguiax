@@ -1,0 +1,51 @@
+package br.com.fiap.aguiax;
+
+import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class AguiaXApplication {
+
+    public static void main(String[] args) {
+        carregarConfiguracaoLocal();
+
+        SpringApplication.run(AguiaXApplication.class, args);
+    }
+
+    private static void carregarConfiguracaoLocal() {
+        Dotenv dotenv = Dotenv.configure()
+                .ignoreIfMissing()
+                .load();
+
+        definirPropriedadeSePresente(dotenv, "DB_URL");
+        definirPropriedadeSePresente(dotenv, "DB_USER");
+        definirPropriedadeSePresente(dotenv, "DB_PASSWORD");
+        definirPropriedadeSePresente(dotenv, "JWT_SECRET");
+        definirPropriedadeSePresente(dotenv, "MONGODB_URI");
+        definirPropriedadeSePresente(dotenv, "MONGODB_DATABASE");
+
+        definirPropriedadeSePresente(dotenv, "AI_ENABLED");
+        definirPropriedadeSePresente(dotenv, "AI_PROVIDER");
+        definirPropriedadeSePresente(dotenv, "AI_API_KEY");
+        definirPropriedadeSePresente(dotenv, "AI_MODEL");
+        definirPropriedadeSePresente(dotenv, "AI_BASE_URL");
+        definirPropriedadeSePresente(dotenv, "AI_CONNECT_TIMEOUT_MS");
+        definirPropriedadeSePresente(dotenv, "AI_READ_TIMEOUT_MS");
+    }
+
+    private static void definirPropriedadeSePresente(
+            Dotenv dotenv,
+            String nome
+    ) {
+        if (System.getProperty(nome) != null) {
+            return;
+        }
+
+        String valor = dotenv.get(nome, System.getenv(nome));
+
+        if (valor != null && !valor.isBlank()) {
+            System.setProperty(nome, valor);
+        }
+    }
+}

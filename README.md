@@ -1,6 +1,6 @@
-# AguiaExpress
+# AguiaX
 
-AguiaExpress é uma plataforma acadêmica de gestão de inovação desenvolvida para
+AguiaX é uma plataforma acadêmica de gestão de inovação desenvolvida para
 o Challenge FIAP / Grupo Águia Branca. O fluxo principal conecta orientações
 estratégicas, ideias, votação e priorização, projetos, resultados executivos e
 medalhas.
@@ -76,7 +76,8 @@ docker compose --env-file .env.docker ps
 
 Antes de iniciar, abra `.env.docker` e substitua as senhas e o `JWT_SECRET` de
 exemplo. A chave Gemini é opcional: mantenha `AI_ENABLED=false` para executar sem
-consumir a API externa.
+consumir a API externa. Para habilitar as funcionalidades de IA, consulte
+[Configuração do Gemini com Docker Compose](#configuração-do-gemini-com-docker-compose).
 
 O Compose constrói o backend com Java 21, inicia MySQL e MongoDB e aguarda os
 health checks antes de liberar a API:
@@ -100,17 +101,17 @@ Emulator, a URL do backend permanece `http://10.0.2.2:8080/`.
 
 Os volumes nomeados preservam os bancos após `docker compose down`. Na primeira
 criação do volume MySQL, o arquivo
-`docker/mysql/init/001_aguiaexpress.sql` restaura os dados demonstrativos,
+`docker/mysql/init/001_aguiax.sql` restaura os dados demonstrativos,
 incluindo estas contas fictícias, todas com a senha `123456`:
 
 | Perfil | Email |
 |---|---|
-| `LIDER` | `mariana.souza@aguiaexpress.com` |
-| `GESTOR` | `carlos.mendes@aguiaexpress.com` |
-| `OPERACIONAL` | `ana.martins@aguiaexpress.com` |
+| `LIDER` | `mariana.souza@aguiax.com` |
+| `GESTOR` | `carlos.mendes@aguiax.com` |
+| `OPERACIONAL` | `ana.martins@aguiax.com` |
 
 O MongoDB começa vazio quando não existe um dump BSON em
-`docker/mongodb/dump/aguiaexpress/` e passa a armazenar auditorias e históricos
+`docker/mongodb/dump/aguiax/` e passa a armazenar auditorias e históricos
 de IA durante o uso. Para apagar os volumes e importar novamente os dados
 iniciais:
 
@@ -169,13 +170,13 @@ sudo mysql
 Escolha uma senha local e execute, uma vez:
 
 ```sql
-CREATE DATABASE aguiaexpress
+CREATE DATABASE aguiax
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
-CREATE USER 'aguiaexpress_local'@'localhost'
+CREATE USER 'aguiax_local'@'localhost'
     IDENTIFIED BY 'replace-with-your-local-mysql-password';
-GRANT ALL PRIVILEGES ON aguiaexpress.*
-    TO 'aguiaexpress_local'@'localhost';
+GRANT ALL PRIVILEGES ON aguiax.*
+    TO 'aguiax_local'@'localhost';
 ```
 
 O texto `replace-with-your-local-mysql-password` é apenas um marcador. Use uma
@@ -202,7 +203,7 @@ openssl rand -base64 48
 ### 4. Confira as conexões
 
 ```bash
-mysql --host=localhost --user=aguiaexpress_local --password aguiaexpress \
+mysql --host=localhost --user=aguiax_local --password aguiax \
   --execute='SELECT 1;'
 mongosh "mongodb://localhost:27017/admin" --quiet \
   --eval 'db.runCommand({ping: 1}).ok'
@@ -233,12 +234,12 @@ O modelo seguro versionado é [`backend/.env.example`](backend/.env.example).
 
 | Variável | Obrigatoriedade | Finalidade/padrão |
 |---|---|---|
-| `DB_URL` | Obrigatória | URL JDBC do MySQL; exemplo local: `jdbc:mysql://localhost:3306/aguiaexpress`. |
+| `DB_URL` | Obrigatória | URL JDBC do MySQL; exemplo local: `jdbc:mysql://localhost:3306/aguiax`. |
 | `DB_USER` | Obrigatória | Usuário MySQL da aplicação. |
 | `DB_PASSWORD` | Obrigatória | Senha privada do usuário MySQL. |
 | `JWT_SECRET` | Obrigatória | Segredo privado usado para assinar JWTs. |
 | `MONGODB_URI` | Obrigatória | URI do MongoDB; exemplo local: `mongodb://localhost:27017`. |
-| `MONGODB_DATABASE` | Obrigatória | Banco documental; exemplo local: `aguiaexpress`. |
+| `MONGODB_DATABASE` | Obrigatória | Banco documental; exemplo local: `aguiax`. |
 | `AI_ENABLED` | Opcional | `false`; habilita explicitamente a integração Gemini. |
 | `AI_PROVIDER` | Opcional | `gemini`; único provedor aceito atualmente. |
 | `AI_API_KEY` | Condicional | Obrigatória somente quando `AI_ENABLED=true`. |
@@ -372,9 +373,72 @@ AI_API_KEY=
 ```
 
 Nesse modo, apenas o endpoint de IA retorna `503 Service Unavailable`; o restante
-da aplicação continua funcionando. Para uma demonstração real, configure a chave
-somente no `.env` local, altere `AI_ENABLED=true` e reinicie o backend. A chave
-nunca deve chegar ao Android ou à coleção Postman.
+da aplicação continua funcionando. A chave nunca deve chegar ao Android, à
+coleção Postman, ao Git ou aos arquivos ZIP da entrega.
+
+### Configuração do Gemini com Docker Compose
+
+Cada avaliador deve utilizar sua própria chave do Google AI Studio. Na raiz do
+projeto, crie o arquivo local caso ele ainda não exista:
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+Abra `.env.docker` e configure:
+
+```dotenv
+AI_ENABLED=true
+AI_PROVIDER=gemini
+AI_API_KEY=COLE_AQUI_SUA_CHAVE_DO_GOOGLE_AI_STUDIO
+AI_MODEL=gemini-3.6-flash
+AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+AI_CONNECT_TIMEOUT_MS=3000
+AI_READ_TIMEOUT_MS=15000
+```
+
+Se os contêineres já estiverem em execução, recrie somente o backend para que as
+novas variáveis sejam carregadas:
+
+```bash
+docker compose --env-file .env.docker \
+  up -d --force-recreate --no-deps backend
+```
+
+Confira a saúde do serviço:
+
+```bash
+docker compose --env-file .env.docker ps
+curl http://localhost:8080/actuator/health
+```
+
+Também é possível confirmar a configuração sem imprimir a chave:
+
+```bash
+docker compose --env-file .env.docker exec -T backend sh -c \
+  'echo "AI_ENABLED=$AI_ENABLED"; if [ -n "$AI_API_KEY" ]; then echo "AI_API_KEY=configurada"; else echo "AI_API_KEY=vazia"; fi'
+```
+
+O resultado deve indicar `AI_ENABLED=true` e `AI_API_KEY=configurada`. Não é
+necessário reconstruir ou reinstalar o APK, pois o Android chama o backend e é o
+backend que se comunica com o Gemini.
+
+Para acompanhar uma chamada durante o teste:
+
+```bash
+docker compose --env-file .env.docker logs -f backend
+```
+
+Use uma conta `GESTOR` para solicitar a avaliação de uma ideia e uma conta
+`LIDER` para gerar a análise executiva do dashboard. Uma conta `OPERACIONAL` não
+possui autorização para essas operações.
+
+### Configuração do Gemini na execução manual
+
+Ao executar o backend sem Docker, configure as mesmas variáveis no arquivo local
+`backend/.env`, altere `AI_ENABLED=true` e reinicie o processo Spring Boot. O
+arquivo real permanece ignorado pelo Git; apenas `backend/.env.example` deve ser
+distribuído.
 
 ### Análise executiva do dashboard por IA
 
@@ -428,7 +492,7 @@ volta a ficar oculta quando a tela é recriada. O botão exibe “Entrando...”
 desabilitado durante a autenticação já existente.
 
 O Retrofit está configurado em
-[`RetrofitClient.kt`](frontend/app/src/main/java/br/com/fiap/aguiaexpress/data/remote/RetrofitClient.kt)
+[`RetrofitClient.kt`](frontend/app/src/main/java/br/com/fiap/aguiax/data/remote/RetrofitClient.kt)
 com:
 
 ```kotlin
@@ -478,7 +542,7 @@ documentação em produção.
 ## Postman
 
 A coleção conjunta das Sprints 1 e 2 está em
-[`postman/aguiaexpress.postman_collection.json`](postman/aguiaexpress.postman_collection.json).
+[`postman/aguiax.postman_collection.json`](postman/aguiax.postman_collection.json).
 Ela não contém credenciais e inclui a pasta numerada **Sprint 2 - Fluxo
 principal**, que captura tokens e IDs automaticamente. Consulte as
 [`instruções da coleção`](postman/README.md).
@@ -495,10 +559,10 @@ principal**, que captura tokens e IDs automaticamente. Consulte as
 Outros endpoints Actuator, detalhes/componentes de saúde, descoberta e JMX não
 ficam expostos. As métricas de negócio são:
 
-- `aguiaexpress.ai.evaluation.duration`;
-- `aguiaexpress.ai.evaluation.failures`;
-- `aguiaexpress.ideas.approved`;
-- `aguiaexpress.projects.created`.
+- `aguiax.ai.evaluation.duration`;
+- `aguiax.ai.evaluation.failures`;
+- `aguiax.ideas.approved`;
+- `aguiax.projects.created`.
 
 Os logs usam SLF4J e não devem conter senhas, JWTs, cabeçalhos Authorization,
 chaves de IA, prompts ou respostas do provedor.
@@ -521,7 +585,7 @@ Testes úteis isolados:
 
 ```bash
 # Contexto sem .env nem bancos externos
-./mvnw -Dtest=AguiaexpressApplicationTests test
+./mvnw -Dtest=AguiaXApplicationTests test
 
 # Persistência MongoDB em banco exclusivo de teste
 ./mvnw -Dtest=MongoPersistenceIntegrationTest test
@@ -569,7 +633,7 @@ MySQL sem histórico e informe a senha do banco interativamente:
 
 ```bash
 MYSQL_HISTFILE=/dev/null mysql \
-  --host=localhost --user=aguiaexpress_local --password aguiaexpress
+  --host=localhost --user=aguiax_local --password aguiax
 ```
 
 Substitua os marcadores e execute uma única vez:
